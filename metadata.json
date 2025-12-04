@@ -1,0 +1,5 @@
+{
+  "name": "Daily Cube",
+  "description": "A daily clicker mobile app with a 3D cube. Collect points once a day and compete in the leaderboard.",
+  "requestFramePermissions": []
+}
