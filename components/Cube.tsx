@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion, useAnimation, useSpring } from 'framer-motion';
 import { Target, Lock, Trophy, Zap, Star, Hexagon } from 'lucide-react';
 
@@ -8,7 +8,6 @@ interface CubeProps {
 }
 
 const Cube: React.FC<CubeProps> = ({ canClick, onClick }) => {
-  const [isHovered, setIsHovered] = useState(false);
   const controls = useAnimation();
 
   const handleClick = () => {
@@ -44,8 +43,6 @@ const Cube: React.FC<CubeProps> = ({ canClick, onClick }) => {
       <motion.div
         className={`relative ${size} preserve-3d cursor-pointer`}
         onClick={handleClick}
-        onHoverStart={() => setIsHovered(true)}
-        onHoverEnd={() => setIsHovered(false)}
         animate={controls}
         style={{
            rotateX: useSpring(20, { stiffness: 100, damping: 30 }),

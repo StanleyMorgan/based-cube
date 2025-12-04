@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { LeaderboardEntry, UserState } from '../types';
 import { getLeaderboardData } from '../services/storage';
-import { Trophy, User, Medal } from 'lucide-react';
+import { Trophy, Medal } from 'lucide-react';
 
 interface LeaderboardProps {
   currentUser: UserState;
