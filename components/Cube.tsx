@@ -33,11 +33,6 @@ const Cube: React.FC<CubeProps> = ({ canClick, onClick }) => {
   // The size of the cube in pixels (Tailwind w-48 is 12rem = 192px, sm:w-64 is 16rem = 256px)
   const size = "w-48 h-48 sm:w-64 sm:h-64";
   
-  // Transform values for base (6rem) and sm (8rem)
-  // We use explicit tailwind arbitrary values for each breakpoint to ensure valid CSS generation
-  const baseZ = "6rem";
-  const smZ = "8rem";
-
   return (
     <div className="relative flex items-center justify-center perspective-1000 py-12">
       <motion.div
@@ -47,11 +42,13 @@ const Cube: React.FC<CubeProps> = ({ canClick, onClick }) => {
         style={{
            rotateX: useSpring(20, { stiffness: 100, damping: 30 }),
            rotateY: useSpring(45, { stiffness: 100, damping: 30 }),
+           transformStyle: 'preserve-3d'
         }}
         whileTap={{ scale: 0.95 }}
       >
         <motion.div 
             className={`w-full h-full preserve-3d`}
+            style={{ transformStyle: 'preserve-3d' }}
             animate={{ 
                 rotateY: 360, 
                 rotateX: 360 
@@ -63,7 +60,7 @@ const Cube: React.FC<CubeProps> = ({ canClick, onClick }) => {
             }}
         >
             {/* Front */}
-            <div className={`${faceClass} [transform:translateZ(${baseZ})] sm:[transform:translateZ(${smZ})]`}>
+            <div className={`${faceClass} [transform:translateZ(6rem)] sm:[transform:translateZ(8rem)]`}>
                 {canClick ? (
                     <div className="flex flex-col items-center gap-2">
                         <Target size={64} strokeWidth={1.5} className="drop-shadow-[0_0_10px_rgba(56,189,248,0.8)]" />
@@ -78,27 +75,27 @@ const Cube: React.FC<CubeProps> = ({ canClick, onClick }) => {
             </div>
 
             {/* Back */}
-            <div className={`${faceClass} [transform:rotateY(180deg)_translateZ(${baseZ})] sm:[transform:rotateY(180deg)_translateZ(${smZ})]`}>
+            <div className={`${faceClass} [transform:rotateY(180deg)_translateZ(6rem)] sm:[transform:rotateY(180deg)_translateZ(8rem)]`}>
                 <Hexagon size={80} strokeWidth={0.5} className="opacity-30" />
             </div>
 
             {/* Right */}
-            <div className={`${faceClass} [transform:rotateY(90deg)_translateZ(${baseZ})] sm:[transform:rotateY(90deg)_translateZ(${smZ})]`}>
+            <div className={`${faceClass} [transform:rotateY(90deg)_translateZ(6rem)] sm:[transform:rotateY(90deg)_translateZ(8rem)]`}>
                 <Trophy size={70} strokeWidth={0.5} className="opacity-30" />
             </div>
 
             {/* Left */}
-            <div className={`${faceClass} [transform:rotateY(-90deg)_translateZ(${baseZ})] sm:[transform:rotateY(-90deg)_translateZ(${smZ})]`}>
+            <div className={`${faceClass} [transform:rotateY(-90deg)_translateZ(6rem)] sm:[transform:rotateY(-90deg)_translateZ(8rem)]`}>
                 <Zap size={70} strokeWidth={0.5} className="opacity-30" />
             </div>
 
             {/* Top */}
-            <div className={`${faceClass} [transform:rotateX(90deg)_translateZ(${baseZ})] sm:[transform:rotateX(90deg)_translateZ(${smZ})]`}>
+            <div className={`${faceClass} [transform:rotateX(90deg)_translateZ(6rem)] sm:[transform:rotateX(90deg)_translateZ(8rem)]`}>
                 <Star size={70} strokeWidth={0.5} className="opacity-30" />
             </div>
 
             {/* Bottom */}
-            <div className={`${faceClass} [transform:rotateX(-90deg)_translateZ(${baseZ})] sm:[transform:rotateX(-90deg)_translateZ(${smZ})]`}>
+            <div className={`${faceClass} [transform:rotateX(-90deg)_translateZ(6rem)] sm:[transform:rotateX(-90deg)_translateZ(8rem)]`}>
                 {/* Example of inline SVG for custom graphics */}
                 <svg width="80" height="80" viewBox="0 0 100 100" className="opacity-20 stroke-current" fill="none" strokeWidth="2">
                     <circle cx="50" cy="50" r="40" />
