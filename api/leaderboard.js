@@ -6,7 +6,7 @@ export default async function handler(request, response) {
   });
 
   try {
-    // Rank logic: Score higher OR (Score equal AND Updated earlier)
+    // Rank logic: Score higher OR (Score equal AND Updated earlier) OR (Score equal AND Updated equal AND FID lower)
     const result = await pool.sql`
       SELECT fid, username, score, pfp_url, 
       (
@@ -14,9 +14,10 @@ export default async function handler(request, response) {
         FROM users u2 
         WHERE u2.score > u1.score 
            OR (u2.score = u1.score AND u2.updated_at < u1.updated_at)
+           OR (u2.score = u1.score AND u2.updated_at = u1.updated_at AND u2.fid < u1.fid)
       ) as rank
       FROM users u1
-      ORDER BY score DESC, updated_at ASC
+      ORDER BY score DESC, updated_at ASC, fid ASC
       LIMIT 50;
     `;
     

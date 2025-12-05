@@ -10,7 +10,7 @@ export default async function handler(request, response) {
       const { fid } = request.query;
       if (!fid) return response.status(400).json({ error: 'FID is required' });
 
-      // Get user and their current rank (breaking ties with updated_at)
+      // Get user and their current rank (breaking ties with updated_at AND fid)
       const result = await pool.sql`
         SELECT *, 
         (
@@ -18,6 +18,7 @@ export default async function handler(request, response) {
           FROM users u2 
           WHERE u2.score > u1.score 
              OR (u2.score = u1.score AND u2.updated_at < u1.updated_at)
+             OR (u2.score = u1.score AND u2.updated_at = u1.updated_at AND u2.fid < u1.fid)
         ) as rank
         FROM users u1 
         WHERE fid = ${fid};
@@ -97,6 +98,7 @@ export default async function handler(request, response) {
           FROM users u2 
           WHERE u2.score > users.score 
              OR (u2.score = users.score AND u2.updated_at < users.updated_at)
+             OR (u2.score = users.score AND u2.updated_at = users.updated_at AND u2.fid < users.fid)
         ) as rank;
       `;
 

@@ -71,6 +71,7 @@ export default async function handler(request, response) {
         FROM users u2 
         WHERE u2.score > users.score 
            OR (u2.score = users.score AND u2.updated_at < users.updated_at)
+           OR (u2.score = users.score AND u2.updated_at = users.updated_at AND u2.fid < users.fid)
       ) as rank;
     `;
 
