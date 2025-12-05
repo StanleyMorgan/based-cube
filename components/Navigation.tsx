@@ -19,7 +19,7 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
         }`}
       >
         <Box size={20} />
-        <span className="font-medium">Tesseract</span>
+        <span className="font-medium">Main</span>
       </button>
 
       <button
@@ -31,7 +31,7 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
         }`}
       >
         <BarChart3 size={20} />
-        <span className="font-medium">Leaders</span>
+        <span className="font-medium">Top</span>
       </button>
     </div>
   );
