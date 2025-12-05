@@ -55,14 +55,29 @@ export const getClickPower = (streak: number): number => {
 export const performClick = (currentState: UserState): UserState => {
   const today = getTodayString();
   
-  const power = getClickPower(currentState.streak);
+  // Logic to determine streak continuity
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayString = yesterday.toISOString().split('T')[0];
+
+  let effectiveStreak = 0;
+  
+  // Only maintain streak if last click was exactly yesterday
+  if (currentState.lastClickDate === yesterdayString) {
+      effectiveStreak = currentState.streak;
+  }
+  
+  // If lastClickDate is null (first time) or older than yesterday, effectiveStreak starts at 0.
+  
+  const power = getClickPower(effectiveStreak); 
+  const newStreak = effectiveStreak + 1;
   const newScore = currentState.score + power;
   
   const newState: UserState = {
     ...currentState,
     score: newScore,
     lastClickDate: today,
-    streak: currentState.streak + 1,
+    streak: newStreak,
   };
   
   saveUserState(newState);

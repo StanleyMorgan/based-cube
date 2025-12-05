@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { UserState } from '../types';
 import { getTimeUntilNextClick } from '../services/storage';
-import { Trophy, Zap } from 'lucide-react';
+import { Trophy, Zap, Flame } from 'lucide-react';
 
 interface StatsProps {
   userState: UserState;
@@ -57,20 +57,27 @@ const Stats: React.FC<StatsProps> = ({ userState, canClick, rank, clickPower }) 
         </div>
       </div>
 
-      {/* Timer / Status */}
-      <div className="h-8 flex items-center justify-center">
+      {/* Timer / Status Row */}
+      <div className="flex items-center justify-center gap-3 w-full">
+        {/* Status/Timer Pill */}
         {!canClick ? (
-            <div className="px-4 py-1.5 bg-slate-900/80 rounded-full border border-slate-800 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-            <span className="text-gray-400 text-xs">Next in:</span>
-            <span className="font-mono text-sky-300 text-sm">{timeLeft}</span>
+            <div className="px-4 py-1.5 bg-slate-900/80 rounded-full border border-slate-800 flex items-center gap-2 shadow-lg">
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                <span className="text-gray-400 text-xs whitespace-nowrap">Next in:</span>
+                <span className="font-mono text-sky-300 text-sm">{timeLeft}</span>
             </div>
         ) : (
-            <div className="px-4 py-1.5 bg-emerald-900/20 rounded-full border border-emerald-500/30 animate-pulse flex items-center gap-2">
+            <div className="px-4 py-1.5 bg-emerald-900/20 rounded-full border border-emerald-500/30 animate-pulse flex items-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
                 <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                <span className="text-emerald-300 text-sm font-bold">Ready to click</span>
+                <span className="text-emerald-300 text-sm font-bold">Ready</span>
             </div>
         )}
+
+        {/* Streak Pill */}
+        <div className="px-3 py-1.5 bg-orange-900/10 rounded-full border border-orange-500/20 flex items-center gap-1.5 shadow-lg" title="Daily Streak">
+            <Flame size={14} className="text-orange-500 fill-orange-500" />
+            <span className="text-orange-300 text-sm font-bold">{userState.streak}</span>
+        </div>
       </div>
     </div>
   );

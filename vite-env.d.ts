@@ -2,36 +2,36 @@
 // because the environment reported it could not find the type definition file for 'vite/client'.
 
 declare module '*.css' {
-  const content: Record<string, string>;
-  export default content;
+  const css: Record<string, string>;
+  export default css;
 }
 
 declare module '*.svg' {
-  const src: string;
-  export default src;
+  const svg: string;
+  export default svg;
 }
 
 declare module '*.png' {
-  const src: string;
-  export default src;
+  const png: string;
+  export default png;
 }
 
 declare module '*.jpg' {
-  const src: string;
-  export default src;
+  const jpg: string;
+  export default jpg;
 }
 
 declare module '*.jpeg' {
-  const src: string;
-  export default src;
+  const jpeg: string;
+  export default jpeg;
 }
 
 declare module '*.gif' {
-  const src: string;
-  export default src;
+  const gif: string;
+  export default gif;
 }
 
 declare module '*.webp' {
-  const src: string;
-  export default src;
+  const webp: string;
+  export default webp;
 }
