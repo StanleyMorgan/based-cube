@@ -87,7 +87,7 @@ export const getLeaderboardData = (currentUserState: UserState): LeaderboardEntr
     isCurrentUser: true,
   };
   
-  const allEntries = [...STATIC_MOCK_DATA.map((d, i) => ({
+  const allEntries = [...STATIC_MOCK_DATA.map((d) => ({
     ...d, 
     rank: 0, // placeholder
     isCurrentUser: false
