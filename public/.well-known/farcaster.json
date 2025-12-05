@@ -7,9 +7,9 @@
   "miniapp": {
     "version": "1",
     "name": "Based Cube",
-    "iconUrl": "https://placehold.co/200x200/png?text=Cube",
-    "homeUrl": "https://example.com",
+    "iconUrl": "https://based-cube.vercel.app/icon.png",
+    "homeUrl": "https://based-cube.vercel.app/",
     "description": "A daily clicker mobile app with a 3D cube.",
-    "buttonTitle": "Play"
+    "buttonTitle": "Play Based Cube"
   }
 }
