@@ -28,11 +28,13 @@ export const canClickCube = (lastClickDate: string | null): boolean => {
   return dbDate !== today;
 };
 
-export const getClickPower = (streak: number): number => {
-  // Logic matches server: Base 100 + 10 per streak day (minus the first one usually, but let's keep visual simple)
-  // Server uses: 100 + ((newStreak - 1) * 10)
-  // Visual estimation:
-  return 100 + ((streak > 0 ? streak - 1 : 0) * 10);
+export const getClickPower = (streak: number, neynarScore: number = 0): number => {
+  // Logic: 100 * Neynar Score + Streak (max 30)
+  // neynarScore is typically 0.0 to 1.0 (e.g. 0.95)
+  // If neynarScore is not available (0), base power is 0.
+  const basePower = Math.floor(100 * neynarScore);
+  const streakBonus = Math.min(streak, 30);
+  return basePower + streakBonus;
 };
 
 // --- API CLIENT ---
@@ -55,7 +57,8 @@ export const api = {
       streak: data.streak,
       lastClickDate: data.last_click_date,
       pfpUrl: data.pfp_url,
-      rank: parseInt(data.rank)
+      rank: parseInt(data.rank),
+      neynarScore: data.neynar_score || 0
     };
   },
 
@@ -79,7 +82,8 @@ export const api = {
       streak: data.streak,
       lastClickDate: data.last_click_date,
       pfpUrl: data.pfp_url,
-      rank: parseInt(data.rank)
+      rank: parseInt(data.rank),
+      neynarScore: data.neynar_score || 0
     };
   },
 

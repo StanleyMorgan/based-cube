@@ -48,7 +48,12 @@ export default async function handler(request, response) {
     }
 
     // Calculate Power
-    const clickPower = 100 + ((newStreak - 1) * 10);
+    // Formula: floor(100 * Neynar Score) + min(streak, 30)
+    const neynarScore = user.neynar_score || 0;
+    const basePower = Math.floor(100 * neynarScore);
+    const streakBonus = Math.min(newStreak, 30);
+    const clickPower = basePower + streakBonus;
+    
     const newScore = user.score + clickPower;
 
     // Update DB and calculate new rank with tie-breaker

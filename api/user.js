@@ -34,14 +34,37 @@ export default async function handler(request, response) {
       const { fid, username, pfpUrl } = request.body;
       if (!fid) return response.status(400).json({ error: 'FID is required' });
 
+      // Fetch Neynar Score if API key is present
+      let neynarScore = 0;
+      if (process.env.NEYNAR_API_KEY) {
+        try {
+            const neynarRes = await fetch(`https://api.neynar.com/v2/farcaster/user/bulk?fids=${fid}`, {
+                headers: { 
+                    'api_key': process.env.NEYNAR_API_KEY,
+                    'accept': 'application/json'
+                }
+            });
+            if (neynarRes.ok) {
+                const data = await neynarRes.json();
+                if (data.users && data.users.length > 0) {
+                    neynarScore = data.users[0]?.experimental?.neynar_user_score || 0;
+                }
+            }
+        } catch (e) {
+            console.warn("Failed to fetch Neynar score", e);
+        }
+      }
+
       // Upsert user and return rank with tie-breaker logic
+      // Also updates neynar_score on sync
       const result = await pool.sql`
-        INSERT INTO users (fid, username, pfp_url, score, streak)
-        VALUES (${fid}, ${username}, ${pfpUrl}, 0, 0)
+        INSERT INTO users (fid, username, pfp_url, score, streak, neynar_score)
+        VALUES (${fid}, ${username}, ${pfpUrl}, 0, 0, ${neynarScore})
         ON CONFLICT (fid) 
         DO UPDATE SET 
           username = EXCLUDED.username,
           pfp_url = EXCLUDED.pfp_url,
+          neynar_score = EXCLUDED.neynar_score,
           updated_at = CURRENT_TIMESTAMP
         RETURNING *, 
         (

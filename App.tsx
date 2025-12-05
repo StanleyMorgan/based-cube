@@ -17,7 +17,8 @@ const App: React.FC = () => {
     score: 0,
     streak: 0,
     username: 'Loading...',
-    lastClickDate: null
+    lastClickDate: null,
+    neynarScore: 0
   });
   
   const [canClick, setCanClick] = useState(false);
@@ -25,7 +26,7 @@ const App: React.FC = () => {
   
   // Stats State
   const [rank, setRank] = useState(0);
-  const [clickPower, setClickPower] = useState(100);
+  const [clickPower, setClickPower] = useState(0);
 
   // Animation States
   const [showReward, setShowReward] = useState(false);
@@ -63,7 +64,7 @@ const App: React.FC = () => {
   // Update derived state when userState changes
   useEffect(() => {
     setCanClick(canClickCube(userState.lastClickDate));
-    setClickPower(getClickPower(userState.streak));
+    setClickPower(getClickPower(userState.streak, userState.neynarScore));
   }, [userState]);
 
   const handleCubeClick = async () => {
