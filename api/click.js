@@ -51,7 +51,7 @@ export default async function handler(request, response) {
     const clickPower = 100 + ((newStreak - 1) * 10);
     const newScore = user.score + clickPower;
 
-    // Update DB
+    // Update DB and calculate new rank with tie-breaker
     const updateResult = await pool.sql`
       UPDATE users 
       SET 
@@ -60,7 +60,13 @@ export default async function handler(request, response) {
         last_click_date = ${todayStr},
         updated_at = CURRENT_TIMESTAMP
       WHERE fid = ${fid}
-      RETURNING *, (SELECT COUNT(*) + 1 FROM users u2 WHERE u2.score > users.score) as rank;
+      RETURNING *, 
+      (
+        SELECT COUNT(*) + 1 
+        FROM users u2 
+        WHERE u2.score > users.score 
+           OR (u2.score = users.score AND u2.updated_at < users.updated_at)
+      ) as rank;
     `;
 
     return response.status(200).json(updateResult.rows[0]);

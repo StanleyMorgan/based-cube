@@ -6,11 +6,17 @@ export default async function handler(request, response) {
   });
 
   try {
+    // Rank logic: Score higher OR (Score equal AND Updated earlier)
     const result = await pool.sql`
       SELECT fid, username, score, pfp_url, 
-      (SELECT COUNT(*) + 1 FROM users u2 WHERE u2.score > u1.score) as rank
+      (
+        SELECT COUNT(*) + 1 
+        FROM users u2 
+        WHERE u2.score > u1.score 
+           OR (u2.score = u1.score AND u2.updated_at < u1.updated_at)
+      ) as rank
       FROM users u1
-      ORDER BY score DESC
+      ORDER BY score DESC, updated_at ASC
       LIMIT 50;
     `;
     
