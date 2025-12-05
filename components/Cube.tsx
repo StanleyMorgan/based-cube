@@ -14,7 +14,7 @@ const Cube: React.FC<CubeProps> = ({ canClick, onClick }) => {
     if (!canClick) {
         // Shake animation if disabled
         controls.start({
-            x: [0, -10, 10, -10, 10, 0],
+            x: [0, -5, 5, -5, 5, 0], // Reduced shake distance for smaller cube
             transition: { duration: 0.4 }
         });
         return;
@@ -28,10 +28,11 @@ const Cube: React.FC<CubeProps> = ({ canClick, onClick }) => {
 
   // Face common styles
   // Added shadow-inset to enhance depth perception
-  const faceClass = `absolute w-full h-full border-2 ${borderColor} ${faceBg} ${textColor} backdrop-blur-md flex items-center justify-center select-none transition-all duration-500 cube-face-glow shadow-[0_0_20px_rgba(0,0,0,0.5)_inset]`;
+  const faceClass = `absolute w-full h-full border-2 ${borderColor} ${faceBg} ${textColor} backdrop-blur-md flex items-center justify-center select-none transition-all duration-500 cube-face-glow shadow-[0_0_10px_rgba(0,0,0,0.5)_inset]`;
 
-  // The size of the cube in pixels (Tailwind w-48 is 12rem = 192px, sm:w-64 is 16rem = 256px)
-  const size = "w-48 h-48 sm:w-64 sm:h-64";
+  // The size of the cube in pixels (Tailwind w-24 is 6rem = 96px, sm:w-32 is 8rem = 128px)
+  // Previous size was w-48/w-64.
+  const size = "w-24 h-24 sm:w-32 sm:h-32";
   
   return (
     <div className="relative flex items-center justify-center perspective-1000 py-12">
@@ -60,44 +61,45 @@ const Cube: React.FC<CubeProps> = ({ canClick, onClick }) => {
             }}
         >
             {/* Front */}
-            <div className={`${faceClass} [transform:translateZ(6rem)] sm:[transform:translateZ(8rem)]`}>
+            {/* TranslateZ is half the width. w-24 (6rem) -> 3rem. sm:w-32 (8rem) -> 4rem. */}
+            <div className={`${faceClass} [transform:translateZ(3rem)] sm:[transform:translateZ(4rem)]`}>
                 {canClick ? (
-                    <div className="flex flex-col items-center gap-2">
-                        <Target size={64} strokeWidth={1.5} className="drop-shadow-[0_0_10px_rgba(56,189,248,0.8)]" />
-                        <span className="text-xl font-black tracking-widest">CLICK</span>
+                    <div className="flex flex-col items-center gap-1">
+                        <Target size={32} strokeWidth={1.5} className="drop-shadow-[0_0_10px_rgba(56,189,248,0.8)]" />
+                        <span className="text-xs font-black tracking-widest">CLICK</span>
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center gap-2 text-red-300/50">
-                        <Lock size={64} strokeWidth={1.5} />
-                        <span className="text-xl font-black tracking-widest">24h</span>
+                    <div className="flex flex-col items-center gap-1 text-red-300/50">
+                        <Lock size={32} strokeWidth={1.5} />
+                        <span className="text-xs font-black tracking-widest">24h</span>
                     </div>
                 )}
             </div>
 
             {/* Back */}
-            <div className={`${faceClass} [transform:rotateY(180deg)_translateZ(6rem)] sm:[transform:rotateY(180deg)_translateZ(8rem)]`}>
-                <Hexagon size={80} strokeWidth={0.5} className="opacity-30" />
+            <div className={`${faceClass} [transform:rotateY(180deg)_translateZ(3rem)] sm:[transform:rotateY(180deg)_translateZ(4rem)]`}>
+                <Hexagon size={40} strokeWidth={0.5} className="opacity-30" />
             </div>
 
             {/* Right */}
-            <div className={`${faceClass} [transform:rotateY(90deg)_translateZ(6rem)] sm:[transform:rotateY(90deg)_translateZ(8rem)]`}>
-                <Trophy size={70} strokeWidth={0.5} className="opacity-30" />
+            <div className={`${faceClass} [transform:rotateY(90deg)_translateZ(3rem)] sm:[transform:rotateY(90deg)_translateZ(4rem)]`}>
+                <Trophy size={35} strokeWidth={0.5} className="opacity-30" />
             </div>
 
             {/* Left */}
-            <div className={`${faceClass} [transform:rotateY(-90deg)_translateZ(6rem)] sm:[transform:rotateY(-90deg)_translateZ(8rem)]`}>
-                <Zap size={70} strokeWidth={0.5} className="opacity-30" />
+            <div className={`${faceClass} [transform:rotateY(-90deg)_translateZ(3rem)] sm:[transform:rotateY(-90deg)_translateZ(4rem)]`}>
+                <Zap size={35} strokeWidth={0.5} className="opacity-30" />
             </div>
 
             {/* Top */}
-            <div className={`${faceClass} [transform:rotateX(90deg)_translateZ(6rem)] sm:[transform:rotateX(90deg)_translateZ(8rem)]`}>
-                <Star size={70} strokeWidth={0.5} className="opacity-30" />
+            <div className={`${faceClass} [transform:rotateX(90deg)_translateZ(3rem)] sm:[transform:rotateX(90deg)_translateZ(4rem)]`}>
+                <Star size={35} strokeWidth={0.5} className="opacity-30" />
             </div>
 
             {/* Bottom */}
-            <div className={`${faceClass} [transform:rotateX(-90deg)_translateZ(6rem)] sm:[transform:rotateX(-90deg)_translateZ(8rem)]`}>
-                {/* Example of inline SVG for custom graphics */}
-                <svg width="80" height="80" viewBox="0 0 100 100" className="opacity-20 stroke-current" fill="none" strokeWidth="2">
+            <div className={`${faceClass} [transform:rotateX(-90deg)_translateZ(3rem)] sm:[transform:rotateX(-90deg)_translateZ(4rem)]`}>
+                {/* Scaled down SVG */}
+                <svg width="40" height="40" viewBox="0 0 100 100" className="opacity-20 stroke-current" fill="none" strokeWidth="4">
                     <circle cx="50" cy="50" r="40" />
                     <circle cx="50" cy="50" r="25" />
                     <line x1="50" y1="10" x2="50" y2="90" />
@@ -106,7 +108,7 @@ const Cube: React.FC<CubeProps> = ({ canClick, onClick }) => {
             </div>
             
             {/* Inner Core for visual effect */}
-            <div className={`absolute top-1/2 left-1/2 w-24 h-24 ${canClick ? 'bg-sky-500/20' : 'bg-red-500/10'} -translate-x-1/2 -translate-y-1/2 blur-2xl rounded-full pointer-events-none transform-gpu`}></div>
+            <div className={`absolute top-1/2 left-1/2 w-12 h-12 ${canClick ? 'bg-sky-500/20' : 'bg-red-500/10'} -translate-x-1/2 -translate-y-1/2 blur-xl rounded-full pointer-events-none transform-gpu`}></div>
 
         </motion.div>
       </motion.div>
