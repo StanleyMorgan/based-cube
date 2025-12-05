@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { sdk } from '@farcaster/miniapp-sdk';
-import { getUserState, canClickCube, performClick, calculateRank, getClickPower, saveUserState } from './services/storage';
+import { api, canClickCube, getClickPower } from './services/storage';
 import { Tab, UserState } from './types';
 import Cube from './components/Cube';
 import Leaderboard from './components/Leaderboard';
@@ -11,8 +11,17 @@ import { Info, ArrowUp } from 'lucide-react';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>(Tab.GAME);
-  const [userState, setUserState] = useState<UserState>(getUserState());
+  
+  // Initial state with defaults
+  const [userState, setUserState] = useState<UserState>({
+    score: 0,
+    streak: 0,
+    username: 'Loading...',
+    lastClickDate: null
+  });
+  
   const [canClick, setCanClick] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Stats State
   const [rank, setRank] = useState(0);
@@ -22,61 +31,76 @@ const App: React.FC = () => {
   const [showReward, setShowReward] = useState(false);
   const [showRankUp, setShowRankUp] = useState<{show: boolean, old: number, new: number} | null>(null);
 
-  // Initialize Farcaster SDK and User
+  // Initialize Farcaster SDK and Sync User with DB
   useEffect(() => {
-    const initFarcaster = async () => {
+    const initApp = async () => {
         try {
             const context = await sdk.context;
-            if (context.user) {
-                // Update local state with Farcaster user info
-                setUserState((current) => {
-                    const updated = {
-                        ...current,
-                        username: context.user.displayName || context.user.username || current.username,
-                        fid: context.user.fid,
-                        pfpUrl: context.user.pfpUrl
-                    };
-                    saveUserState(updated); // Sync with storage
-                    return updated;
-                });
-            }
+            
+            // Default user data if running outside Farcaster (e.g. dev)
+            // In prod, context.user should exist
+            const fid = context.user?.fid || 1001; // Fallback for dev testing
+            const username = context.user?.displayName || context.user?.username || 'Player';
+            const pfpUrl = context.user?.pfpUrl;
+
+            // Sync with DB
+            const syncedUser = await api.syncUser(fid, username, pfpUrl);
+            
+            setUserState(syncedUser);
+            setRank(syncedUser.rank);
+            
             await sdk.actions.ready();
         } catch (error) {
-            console.error('Failed to initialize Farcaster SDK:', error);
-            // Fallback for browser testing without Farcaster context
+            console.error('Failed to initialize app:', error);
+        } finally {
+            setIsLoading(false);
         }
     };
     
-    initFarcaster();
+    initApp();
   }, []);
 
-  // Initialize and check status
+  // Update derived state when userState changes
   useEffect(() => {
     setCanClick(canClickCube(userState.lastClickDate));
-    setRank(calculateRank(userState.score));
     setClickPower(getClickPower(userState.streak));
   }, [userState]);
 
-  const handleCubeClick = () => {
-    if (!canClick) return;
+  const handleCubeClick = async () => {
+    if (!canClick || !userState.fid) return;
 
-    const oldRank = calculateRank(userState.score);
-    const newState = performClick(userState);
-    const newRank = calculateRank(newState.score);
+    try {
+        const oldRank = rank;
+        
+        // Call API
+        const newState = await api.performClick(userState.fid);
+        
+        setUserState(newState);
+        setRank(newState.rank);
+        setCanClick(false);
+        
+        // Show reward animation
+        setShowReward(true);
+        setTimeout(() => setShowReward(false), 2000);
 
-    setUserState(newState);
-    setCanClick(false);
-    
-    // Show reward animation
-    setShowReward(true);
-    setTimeout(() => setShowReward(false), 2000);
-
-    // Show Rank Up animation if rank improved (lower number is better)
-    if (newRank < oldRank) {
-      setShowRankUp({ show: true, old: oldRank, new: newRank });
-      setTimeout(() => setShowRankUp(null), 3000);
+        // Show Rank Up animation if rank improved (lower number is better)
+        if (newState.rank < oldRank) {
+            setShowRankUp({ show: true, old: oldRank, new: newState.rank });
+            setTimeout(() => setShowRankUp(null), 3000);
+        }
+    } catch (e) {
+        console.error("Click failed", e);
+        // Optional: Show error toast
     }
   };
+
+  if (isLoading) {
+      return (
+          <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
+              <div className="animate-pulse">Loading Based Cube...</div>
+          </div>
+      );
+  }
 
   return (
     <div className="min-h-screen w-full bg-slate-950 text-white flex flex-col relative overflow-hidden">
