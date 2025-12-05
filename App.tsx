@@ -7,7 +7,7 @@ import Cube from './components/Cube';
 import Leaderboard from './components/Leaderboard';
 import Navigation from './components/Navigation';
 import Stats from './components/Stats';
-import { Info, ArrowUp, Zap, Flame } from 'lucide-react';
+import { Info, ArrowUp, Zap, Flame, Star } from 'lucide-react';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>(Tab.GAME);
@@ -226,26 +226,35 @@ const App: React.FC = () => {
                     className="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-3xl p-6 shadow-2xl relative z-10"
                 >
                     <div className="text-center mb-6">
-                        <h2 className="text-2xl font-bold text-white">Power Breakdown</h2>
+                        <h2 className="text-2xl font-bold text-white">Power</h2>
                     </div>
 
                     <div className="space-y-4">
-                        {/* Neynar Power */}
+                        {/* Neynar */}
                         <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex justify-between items-center">
                             <div className="flex items-center gap-3 text-sky-400">
                                 <Zap size={22} className="fill-sky-400/20" />
-                                <span className="font-bold text-lg">Neynar Power</span>
+                                <span className="font-bold text-lg">Neynar</span>
                             </div>
                             <span className="text-2xl font-black text-white">+{neynarPowerCalc}</span>
                         </div>
 
-                        {/* Streak Power */}
+                        {/* Streak */}
                         <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex justify-between items-center">
                             <div className="flex items-center gap-3 text-orange-400">
                                 <Flame size={22} className="fill-orange-400/20" />
-                                <span className="font-bold text-lg">Streak Power</span>
+                                <span className="font-bold text-lg">Streak</span>
                             </div>
                             <span className="text-2xl font-black text-white">+{streakPowerCalc}</span>
+                        </div>
+
+                        {/* Bonus */}
+                        <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex justify-between items-center">
+                            <div className="flex items-center gap-3 text-yellow-400">
+                                <Star size={22} className="fill-yellow-400/20" />
+                                <span className="font-bold text-lg">Bonus</span>
+                            </div>
+                            <span className="text-2xl font-black text-white">+0</span>
                         </div>
                     </div>
                 </motion.div>
