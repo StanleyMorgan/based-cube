@@ -11,5 +11,8 @@
     "homeUrl": "https://based-cube.vercel.app/",
     "description": "A daily clicker mobile app with a 3D cube.",
     "buttonTitle": "Play Based Cube"
+  },
+  "baseBuilder": {
+    "ownerAddress": "0x4dBc9249D183B226260a96F13Fcc6B38A4c01C99"
   }
 }
