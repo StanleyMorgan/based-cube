@@ -7,7 +7,7 @@ import Cube from './components/Cube';
 import Leaderboard from './components/Leaderboard';
 import Navigation from './components/Navigation';
 import Stats from './components/Stats';
-import { Info, ArrowUp, X, Zap, Flame } from 'lucide-react';
+import { Info, ArrowUp, Zap, Flame } from 'lucide-react';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>(Tab.GAME);
@@ -225,59 +225,28 @@ const App: React.FC = () => {
                     exit={{ opacity: 0, scale: 0.9, y: 20 }}
                     className="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-3xl p-6 shadow-2xl relative z-10"
                 >
-                    <div className="flex justify-between items-center mb-6">
+                    <div className="text-center mb-6">
                         <h2 className="text-2xl font-bold text-white">Power Breakdown</h2>
-                        <button onClick={() => setShowInfo(false)} className="p-2 rounded-full bg-slate-800 text-slate-400 hover:text-white">
-                            <X size={20} />
-                        </button>
                     </div>
 
                     <div className="space-y-4">
                         {/* Neynar Power */}
-                        <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50">
-                            <div className="flex justify-between items-start mb-1">
-                                <div className="flex items-center gap-2 text-sky-400">
-                                    <Zap size={18} className="fill-sky-400/20" />
-                                    <span className="font-bold">Neynar Power</span>
-                                </div>
-                                <span className="text-xl font-bold text-white">+{neynarPowerCalc}</span>
+                        <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex justify-between items-center">
+                            <div className="flex items-center gap-3 text-sky-400">
+                                <Zap size={22} className="fill-sky-400/20" />
+                                <span className="font-bold text-lg">Neynar Power</span>
                             </div>
-                            <div className="text-xs text-slate-400 flex justify-between">
-                                <span>Based on Neynar Score ({(userState.neynarScore || 0).toFixed(4)})</span>
-                                <span>x 100</span>
-                            </div>
+                            <span className="text-2xl font-black text-white">+{neynarPowerCalc}</span>
                         </div>
 
                         {/* Streak Power */}
-                        <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50">
-                            <div className="flex justify-between items-start mb-1">
-                                <div className="flex items-center gap-2 text-orange-400">
-                                    <Flame size={18} className="fill-orange-400/20" />
-                                    <span className="font-bold">Streak Power</span>
-                                </div>
-                                <span className="text-xl font-bold text-white">+{streakPowerCalc}</span>
+                        <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex justify-between items-center">
+                            <div className="flex items-center gap-3 text-orange-400">
+                                <Flame size={22} className="fill-orange-400/20" />
+                                <span className="font-bold text-lg">Streak Power</span>
                             </div>
-                            <div className="text-xs text-slate-400 flex justify-between">
-                                <span>Current streak days</span>
-                                <span>Max 30</span>
-                            </div>
+                            <span className="text-2xl font-black text-white">+{streakPowerCalc}</span>
                         </div>
-
-                        {/* Total */}
-                        <div className="pt-2">
-                             <div className="flex justify-between items-center px-2">
-                                <span className="text-slate-400 font-medium">Total Power per Click</span>
-                                <span className="text-2xl font-black text-emerald-400">
-                                    {neynarPowerCalc + streakPowerCalc}
-                                </span>
-                             </div>
-                        </div>
-                    </div>
-
-                    <div className="mt-8 text-center">
-                        <p className="text-xs text-slate-500 max-w-[250px] mx-auto">
-                            Increase your Neynar Score and maintain your daily streak to earn more points!
-                        </p>
                     </div>
                 </motion.div>
             </div>
