@@ -1,18 +1,18 @@
-import { sql } from '@vercel/postgres';
+import { createPool } from '@vercel/postgres';
 
 export default async function handler(request, response) {
+  const pool = createPool({
+    connectionString: process.env.cube_POSTGRES_URL,
+  });
+
   try {
-    const result = await sql`
+    const result = await pool.sql`
       SELECT fid, username, score, pfp_url, 
       (SELECT COUNT(*) + 1 FROM users u2 WHERE u2.score > u1.score) as rank
       FROM users u1
       ORDER BY score DESC
       LIMIT 50;
     `;
-
-    // Map DB fields to frontend expected format if necessary, 
-    // but the query matches well. 
-    // Front end expects: id, username, score, rank, pfpUrl
     
     const entries = result.rows.map(row => ({
       id: row.fid.toString(),
