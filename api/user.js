@@ -10,7 +10,8 @@ export default async function handler(request, response) {
       const { fid } = request.query;
       if (!fid) return response.status(400).json({ error: 'FID is required' });
 
-      // Get user and their current rank (breaking ties with updated_at AND fid)
+      // Get user and their current rank
+      // For GET requests, the subquery approach is generally safe, but ensuring exact logic match
       const result = await pool.sql`
         SELECT *, 
         (
@@ -76,13 +77,11 @@ export default async function handler(request, response) {
             }
         } catch (e) {
             console.warn("Failed to fetch Neynar score", e);
-            // On failure, keep existing score/timestamp to try again later or keep old data
         }
       }
 
-      // 3. Upsert user with new or existing Neynar data
-      // We pass the potentially updated neynarScore and neynarLastUpdated
-      const result = await pool.sql`
+      // 3. Upsert user (Split into Write and Read to fix Rank calculation bug)
+      const upsertResult = await pool.sql`
         INSERT INTO users (fid, username, pfp_url, score, streak, neynar_score, neynar_last_updated)
         VALUES (${fid}, ${username}, ${pfpUrl}, 0, 0, ${neynarScore}, ${neynarLastUpdated})
         ON CONFLICT (fid) 
@@ -92,17 +91,24 @@ export default async function handler(request, response) {
           neynar_score = EXCLUDED.neynar_score,
           neynar_last_updated = EXCLUDED.neynar_last_updated,
           updated_at = CURRENT_TIMESTAMP
-        RETURNING *, 
-        (
-          SELECT COUNT(*) + 1 
-          FROM users u2 
-          WHERE u2.score > users.score 
-             OR (u2.score = users.score AND u2.updated_at < users.updated_at)
-             OR (u2.score = users.score AND u2.updated_at = users.updated_at AND u2.fid < users.fid)
-        ) as rank;
+        RETURNING *;
       `;
 
-      return response.status(200).json(result.rows[0]);
+      const user = upsertResult.rows[0];
+
+      // 4. Calculate Rank in a separate query to ensure consistency
+      const rankResult = await pool.sql`
+        SELECT COUNT(*) + 1 as rank
+        FROM users
+        WHERE score > ${user.score} 
+           OR (score = ${user.score} AND updated_at < ${user.updated_at})
+           OR (score = ${user.score} AND updated_at = ${user.updated_at} AND fid < ${user.fid})
+      `;
+
+      return response.status(200).json({
+        ...user,
+        rank: parseInt(rankResult.rows[0].rank)
+      });
     }
 
     return response.status(405).json({ error: 'Method not allowed' });

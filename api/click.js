@@ -13,7 +13,6 @@ export default async function handler(request, response) {
     const { fid } = request.body;
     if (!fid) return response.status(400).json({ error: 'FID is required' });
 
-    // Transaction to ensure data integrity
     // 1. Get current user state
     const userResult = await pool.sql`SELECT * FROM users WHERE fid = ${fid}`;
     
@@ -26,7 +25,6 @@ export default async function handler(request, response) {
     const todayStr = now.toISOString().split('T')[0];
     
     // Check if already clicked today
-    // Note: dates from Postgres might be Date objects
     let lastClickStr = null;
     if (user.last_click_date) {
         lastClickStr = new Date(user.last_click_date).toISOString().split('T')[0];
@@ -37,7 +35,6 @@ export default async function handler(request, response) {
     }
 
     // Calculate Streak
-    // Logic: If last click was yesterday (today - 1 day), increment streak. Else reset to 1.
     const yesterday = new Date(now);
     yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayStr = yesterday.toISOString().split('T')[0];
@@ -48,7 +45,6 @@ export default async function handler(request, response) {
     }
 
     // Calculate Power
-    // Formula: floor(100 * Neynar Score) + min(streak, 30)
     const neynarScore = user.neynar_score || 0;
     const basePower = Math.floor(100 * neynarScore);
     const streakBonus = Math.min(newStreak, 30);
@@ -56,7 +52,7 @@ export default async function handler(request, response) {
     
     const newScore = user.score + clickPower;
 
-    // Update DB and calculate new rank with tie-breaker
+    // 2. Update DB (Split into Write and Read to fix Rank calculation bug)
     const updateResult = await pool.sql`
       UPDATE users 
       SET 
@@ -65,17 +61,24 @@ export default async function handler(request, response) {
         last_click_date = ${todayStr},
         updated_at = CURRENT_TIMESTAMP
       WHERE fid = ${fid}
-      RETURNING *, 
-      (
-        SELECT COUNT(*) + 1 
-        FROM users u2 
-        WHERE u2.score > users.score 
-           OR (u2.score = users.score AND u2.updated_at < users.updated_at)
-           OR (u2.score = users.score AND u2.updated_at = users.updated_at AND u2.fid < users.fid)
-      ) as rank;
+      RETURNING *;
     `;
 
-    return response.status(200).json(updateResult.rows[0]);
+    const updatedUser = updateResult.rows[0];
+
+    // 3. Calculate Rank in a separate query
+    const rankResult = await pool.sql`
+      SELECT COUNT(*) + 1 as rank
+      FROM users
+      WHERE score > ${updatedUser.score} 
+         OR (score = ${updatedUser.score} AND updated_at < ${updatedUser.updated_at})
+         OR (score = ${updatedUser.score} AND updated_at = ${updatedUser.updated_at} AND fid < ${updatedUser.fid})
+    `;
+
+    return response.status(200).json({
+      ...updatedUser,
+      rank: parseInt(rankResult.rows[0].rank)
+    });
 
   } catch (error) {
     console.error(error);
