@@ -7,7 +7,7 @@ import Cube from './components/Cube';
 import Leaderboard from './components/Leaderboard';
 import Navigation from './components/Navigation';
 import Stats from './components/Stats';
-import { Info, ArrowUp } from 'lucide-react';
+import { Info, ArrowUp, X, Zap, Flame } from 'lucide-react';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>(Tab.GAME);
@@ -23,6 +23,7 @@ const App: React.FC = () => {
   
   const [canClick, setCanClick] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showInfo, setShowInfo] = useState(false);
   
   // Stats State
   const [rank, setRank] = useState(0);
@@ -95,6 +96,9 @@ const App: React.FC = () => {
     }
   };
 
+  const neynarPowerCalc = Math.floor(100 * (userState.neynarScore || 0));
+  const streakPowerCalc = Math.min(userState.streak, 30);
+
   if (isLoading) {
       return (
           <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
@@ -117,7 +121,10 @@ const App: React.FC = () => {
         <h1 className="text-xl font-bold tracking-tighter bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
           BASED CUBE
         </h1>
-        <button className="p-2 rounded-full bg-slate-800/50 text-slate-400 hover:text-white transition-colors">
+        <button 
+            onClick={() => setShowInfo(true)}
+            className="p-2 rounded-full bg-slate-800/50 text-slate-400 hover:text-white transition-colors border border-slate-700/50"
+        >
             <Info size={20} />
         </button>
       </header>
@@ -200,6 +207,82 @@ const App: React.FC = () => {
           )}
         </AnimatePresence>
       </main>
+
+      {/* Info Modal */}
+      <AnimatePresence>
+        {showInfo && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setShowInfo(false)}
+                    className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                />
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                    className="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-3xl p-6 shadow-2xl relative z-10"
+                >
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-2xl font-bold text-white">Power Breakdown</h2>
+                        <button onClick={() => setShowInfo(false)} className="p-2 rounded-full bg-slate-800 text-slate-400 hover:text-white">
+                            <X size={20} />
+                        </button>
+                    </div>
+
+                    <div className="space-y-4">
+                        {/* Neynar Power */}
+                        <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50">
+                            <div className="flex justify-between items-start mb-1">
+                                <div className="flex items-center gap-2 text-sky-400">
+                                    <Zap size={18} className="fill-sky-400/20" />
+                                    <span className="font-bold">Neynar Power</span>
+                                </div>
+                                <span className="text-xl font-bold text-white">+{neynarPowerCalc}</span>
+                            </div>
+                            <div className="text-xs text-slate-400 flex justify-between">
+                                <span>Based on Neynar Score ({(userState.neynarScore || 0).toFixed(4)})</span>
+                                <span>x 100</span>
+                            </div>
+                        </div>
+
+                        {/* Streak Power */}
+                        <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50">
+                            <div className="flex justify-between items-start mb-1">
+                                <div className="flex items-center gap-2 text-orange-400">
+                                    <Flame size={18} className="fill-orange-400/20" />
+                                    <span className="font-bold">Streak Power</span>
+                                </div>
+                                <span className="text-xl font-bold text-white">+{streakPowerCalc}</span>
+                            </div>
+                            <div className="text-xs text-slate-400 flex justify-between">
+                                <span>Current streak days</span>
+                                <span>Max 30</span>
+                            </div>
+                        </div>
+
+                        {/* Total */}
+                        <div className="pt-2">
+                             <div className="flex justify-between items-center px-2">
+                                <span className="text-slate-400 font-medium">Total Power per Click</span>
+                                <span className="text-2xl font-black text-emerald-400">
+                                    {neynarPowerCalc + streakPowerCalc}
+                                </span>
+                             </div>
+                        </div>
+                    </div>
+
+                    <div className="mt-8 text-center">
+                        <p className="text-xs text-slate-500 max-w-[250px] mx-auto">
+                            Increase your Neynar Score and maintain your daily streak to earn more points!
+                        </p>
+                    </div>
+                </motion.div>
+            </div>
+        )}
+      </AnimatePresence>
 
       {/* Navigation */}
       <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
