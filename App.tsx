@@ -102,7 +102,7 @@ const App: React.FC = () => {
   if (isLoading) {
       return (
           <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
-              <div className="animate-pulse">Loading Based Cube...</div>
+              <div className="animate-pulse">Loading Tesseract...</div>
           </div>
       );
   }
@@ -119,7 +119,7 @@ const App: React.FC = () => {
       {/* Header */}
       <header className="p-6 flex justify-between items-center z-10 flex-shrink-0">
         <h1 className="text-xl font-bold tracking-tighter bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
-          BASED CUBE
+          TESSERACT
         </h1>
         <button 
             onClick={() => setShowInfo(true)}

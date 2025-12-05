@@ -19,7 +19,7 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
         }`}
       >
         <Box size={20} />
-        <span className="font-medium">Cube</span>
+        <span className="font-medium">Tesseract</span>
       </button>
 
       <button
