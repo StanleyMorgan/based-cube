@@ -7,15 +7,13 @@ const getTodayString = (): string => {
   return new Date().toISOString().split('T')[0];
 };
 
-const generateMockLeaderboard = (): LeaderboardEntry[] => {
-  const names = ['CryptoKing', 'CubeMaster', 'Alex_777', 'Elena_Win', 'Satoshi_N', 'ToTheMoon', 'ClickerPro', 'Ivan_Dev'];
-  return names.map((name, i) => ({
-    id: `mock-${i}`,
-    username: name,
-    score: Math.floor(Math.random() * 5000) + 100,
-    rank: i + 1,
-  })).sort((a, b) => b.score - a.score);
-};
+// Static mock data to ensure rank calculations are consistent during the session
+const MOCK_NAMES = ['CryptoKing', 'CubeMaster', 'Alex_777', 'Elena_Win', 'Satoshi_N', 'ToTheMoon', 'ClickerPro', 'Ivan_Dev'];
+const STATIC_MOCK_DATA = MOCK_NAMES.map((name, i) => ({
+  id: `mock-${i}`,
+  username: name,
+  score: 500 + Math.floor(Math.random() * 5000), // Random score between 500 and 5500
+})).sort((a, b) => b.score - a.score);
 
 // Initial State
 const initialState: UserState = {
@@ -50,12 +48,15 @@ export const canClickCube = (lastClickDate: string | null): boolean => {
   return lastClickDate !== getTodayString();
 };
 
+export const getClickPower = (streak: number): number => {
+  return 100 + (streak * 10);
+};
+
 export const performClick = (currentState: UserState): UserState => {
   const today = getTodayString();
   
-  // Logic for streak could be improved to check if yesterday was clicked, 
-  // but for simplicity, we just increment.
-  const newScore = currentState.score + 100 + (currentState.streak * 10);
+  const power = getClickPower(currentState.streak);
+  const newScore = currentState.score + power;
   
   const newState: UserState = {
     ...currentState,
@@ -68,11 +69,16 @@ export const performClick = (currentState: UserState): UserState => {
   return newState;
 };
 
+export const calculateRank = (score: number): number => {
+  // Combine user score with mock scores and find index
+  const allScores = [...STATIC_MOCK_DATA.map(d => d.score), score];
+  allScores.sort((a, b) => b - a);
+  // rank is index + 1
+  return allScores.indexOf(score) + 1;
+};
+
 export const getLeaderboardData = (currentUserState: UserState): LeaderboardEntry[] => {
-  // Generate static mock data (stable for session typically, but regenerating here for simplicity)
-  const mockData = generateMockLeaderboard();
-  
-  // Add current user
+  // Add current user to static mock data
   const userEntry: LeaderboardEntry = {
     id: 'current-user',
     username: currentUserState.username,
@@ -81,7 +87,11 @@ export const getLeaderboardData = (currentUserState: UserState): LeaderboardEntr
     isCurrentUser: true,
   };
   
-  const allEntries = [...mockData, userEntry].sort((a, b) => b.score - a.score);
+  const allEntries = [...STATIC_MOCK_DATA.map((d, i) => ({
+    ...d, 
+    rank: 0, // placeholder
+    isCurrentUser: false
+  })), userEntry].sort((a, b) => b.score - a.score);
   
   // Re-assign ranks
   return allEntries.map((entry, index) => ({

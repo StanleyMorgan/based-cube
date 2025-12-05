@@ -1,34 +1,52 @@
 import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { getUserState, canClickCube, performClick } from './services/storage';
+import { getUserState, canClickCube, performClick, calculateRank, getClickPower } from './services/storage';
 import { Tab, UserState } from './types';
 import Cube from './components/Cube';
 import Leaderboard from './components/Leaderboard';
 import Navigation from './components/Navigation';
 import Stats from './components/Stats';
-import { Info } from 'lucide-react';
+import { Info, ArrowUp } from 'lucide-react';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>(Tab.GAME);
   const [userState, setUserState] = useState<UserState>(getUserState());
   const [canClick, setCanClick] = useState(false);
+  
+  // Stats State
+  const [rank, setRank] = useState(0);
+  const [clickPower, setClickPower] = useState(100);
+
+  // Animation States
   const [showReward, setShowReward] = useState(false);
+  const [showRankUp, setShowRankUp] = useState<{show: boolean, old: number, new: number} | null>(null);
 
   // Initialize and check status
   useEffect(() => {
     setCanClick(canClickCube(userState.lastClickDate));
+    setRank(calculateRank(userState.score));
+    setClickPower(getClickPower(userState.streak));
   }, [userState]);
 
   const handleCubeClick = () => {
     if (!canClick) return;
 
+    const oldRank = calculateRank(userState.score);
     const newState = performClick(userState);
+    const newRank = calculateRank(newState.score);
+
     setUserState(newState);
     setCanClick(false);
     
     // Show reward animation
     setShowReward(true);
     setTimeout(() => setShowReward(false), 2000);
+
+    // Show Rank Up animation if rank improved (lower number is better)
+    if (newRank < oldRank) {
+      setShowRankUp({ show: true, old: oldRank, new: newRank });
+      setTimeout(() => setShowRankUp(null), 3000);
+    }
   };
 
   return (
@@ -61,36 +79,59 @@ const App: React.FC = () => {
               exit={{ opacity: 0, x: 20 }}
               className="flex-grow flex flex-col items-center justify-center pb-24"
             >
-              <Stats userState={userState} canClick={canClick} />
+              <Stats 
+                userState={userState} 
+                canClick={canClick} 
+                rank={rank}
+                clickPower={clickPower}
+              />
               
               <div className="relative">
                 <Cube canClick={canClick} onClick={handleCubeClick} />
                 
-                {/* Floating Reward Animation */}
+                {/* Floating Reward Animation (Score) */}
                 <AnimatePresence>
                   {showReward && (
                     <motion.div
                       initial={{ opacity: 0, y: 0, scale: 0.5 }}
                       animate={{ opacity: 1, y: -100, scale: 1.5 }}
                       exit={{ opacity: 0 }}
-                      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-50"
+                      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-50 flex flex-col items-center"
                     >
                       <div className="text-4xl font-black text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]">
-                        +100
+                        +{clickPower}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                 {/* Floating Rank Up Animation */}
+                 <AnimatePresence>
+                  {showRankUp && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 50, scale: 0.8 }}
+                      animate={{ opacity: 1, y: -160, scale: 1 }}
+                      exit={{ opacity: 0, y: -200 }}
+                      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-50 w-64"
+                    >
+                      <div className="bg-slate-900/90 border border-emerald-500/50 backdrop-blur-md px-4 py-3 rounded-xl shadow-2xl flex items-center justify-center gap-3">
+                         <div className="bg-emerald-500/20 p-2 rounded-full">
+                            <ArrowUp className="text-emerald-400" size={24} />
+                         </div>
+                         <div className="flex flex-col">
+                            <span className="text-emerald-400 font-bold uppercase text-xs tracking-wider">Rank Up!</span>
+                            <div className="flex items-center gap-2 text-white font-bold">
+                                <span className="text-slate-400">#{showRankUp.old}</span>
+                                <span className="text-emerald-500">→</span>
+                                <span className="text-xl">#{showRankUp.new}</span>
+                            </div>
+                         </div>
                       </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
               
-              <div className="mt-12 text-center px-6">
-                <p className="text-slate-500 text-sm">
-                  {canClick 
-                    ? "Tap the cube to claim your daily reward!" 
-                    : "Come back tomorrow for a new reward."}
-                </p>
-              </div>
-
             </motion.div>
           ) : (
             <motion.div

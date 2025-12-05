@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { UserState } from '../types';
 import { getTimeUntilNextClick } from '../services/storage';
+import { Trophy, Zap } from 'lucide-react';
 
 interface StatsProps {
   userState: UserState;
   canClick: boolean;
+  rank: number;
+  clickPower: number;
 }
 
-const Stats: React.FC<StatsProps> = ({ userState, canClick }) => {
+const Stats: React.FC<StatsProps> = ({ userState, canClick, rank, clickPower }) => {
   const [timeLeft, setTimeLeft] = useState('');
 
   useEffect(() => {
@@ -24,26 +27,51 @@ const Stats: React.FC<StatsProps> = ({ userState, canClick }) => {
   }, [canClick]);
 
   return (
-    <div className="flex flex-col items-center gap-4 mb-8">
+    <div className="flex flex-col items-center gap-6 mb-8 w-full max-w-xs px-4">
+      {/* Main Score */}
       <div className="flex flex-col items-center">
-        <span className="text-gray-400 text-sm uppercase tracking-wider">Your Score</span>
-        <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-emerald-400 drop-shadow-lg">
+        <span className="text-gray-400 text-xs uppercase tracking-wider mb-1">Total Score</span>
+        <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-emerald-400 drop-shadow-lg tracking-tight">
           {userState.score.toLocaleString()}
         </span>
       </div>
 
-      {!canClick && (
-        <div className="px-4 py-2 bg-slate-800/50 rounded-full border border-slate-700/50 backdrop-blur-md">
-          <span className="text-gray-400 text-xs mr-2">Next click:</span>
-          <span className="font-mono text-sky-300">{timeLeft}</span>
+      {/* Secondary Stats Grid */}
+      <div className="grid grid-cols-2 gap-4 w-full">
+        {/* Rank */}
+        <div className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-3 flex flex-col items-center justify-center backdrop-blur-sm">
+          <div className="flex items-center gap-1.5 text-yellow-400 mb-1">
+            <Trophy size={14} />
+            <span className="text-xs font-bold uppercase tracking-wide text-slate-400">Rank</span>
+          </div>
+          <span className="text-xl font-bold text-white">#{rank}</span>
         </div>
-      )}
-      
-      {canClick && (
-         <div className="px-4 py-2 bg-emerald-900/30 rounded-full border border-emerald-500/30 animate-pulse">
-            <span className="text-emerald-300 text-sm font-bold">Cube is ready!</span>
-         </div>
-      )}
+
+        {/* Power */}
+        <div className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-3 flex flex-col items-center justify-center backdrop-blur-sm">
+          <div className="flex items-center gap-1.5 text-sky-400 mb-1">
+            <Zap size={14} />
+            <span className="text-xs font-bold uppercase tracking-wide text-slate-400">Power</span>
+          </div>
+          <span className="text-xl font-bold text-white">+{clickPower}</span>
+        </div>
+      </div>
+
+      {/* Timer / Status */}
+      <div className="h-8 flex items-center justify-center">
+        {!canClick ? (
+            <div className="px-4 py-1.5 bg-slate-900/80 rounded-full border border-slate-800 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+            <span className="text-gray-400 text-xs">Next in:</span>
+            <span className="font-mono text-sky-300 text-sm">{timeLeft}</span>
+            </div>
+        ) : (
+            <div className="px-4 py-1.5 bg-emerald-900/20 rounded-full border border-emerald-500/30 animate-pulse flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span className="text-emerald-300 text-sm font-bold">Ready to click</span>
+            </div>
+        )}
+      </div>
     </div>
   );
 };
