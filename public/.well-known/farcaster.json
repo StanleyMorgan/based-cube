@@ -7,7 +7,7 @@
   "miniapp": {
     "version": "1",
     "name": "Based Cube",
-    "iconUrl": "https://based-cube.vercel.app/icon.png",
+    "iconUrl": "https://raw.githubusercontent.com/StanleyMorgan/graphics/main/app/based-cube/logo.png",
     "homeUrl": "https://based-cube.vercel.app/",
     "description": "A daily clicker mobile app with a 3D cube.",
     "buttonTitle": "Play Based Cube"
