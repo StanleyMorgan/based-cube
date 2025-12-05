@@ -100,6 +100,7 @@ export const getLeaderboardData = (currentUserState: UserState): LeaderboardEntr
     score: currentUserState.score,
     rank: 0,
     isCurrentUser: true,
+    pfpUrl: currentUserState.pfpUrl,
   };
   
   const allEntries = [...STATIC_MOCK_DATA.map((d) => ({

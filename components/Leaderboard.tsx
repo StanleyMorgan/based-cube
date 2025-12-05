@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { LeaderboardEntry, UserState } from '../types';
 import { getLeaderboardData } from '../services/storage';
-import { Trophy, Medal } from 'lucide-react';
+import { Trophy, Medal, User } from 'lucide-react';
 
 interface LeaderboardProps {
   currentUser: UserState;
@@ -38,7 +38,17 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
               {entry.rank > 3 && <span className="text-slate-500">#{entry.rank}</span>}
             </div>
 
-            <div className="ml-4 flex-grow">
+            <div className="ml-3 flex-shrink-0">
+               {entry.pfpUrl ? (
+                   <img src={entry.pfpUrl} alt={entry.username} className="w-8 h-8 rounded-full border border-slate-600" />
+               ) : (
+                   <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center border border-slate-600">
+                       <User size={16} className="text-slate-400" />
+                   </div>
+               )}
+            </div>
+
+            <div className="ml-3 flex-grow">
               <div className="font-semibold text-slate-100 flex items-center gap-2">
                 {entry.username}
                 {entry.isCurrentUser && (

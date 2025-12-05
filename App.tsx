@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { getUserState, canClickCube, performClick, calculateRank, getClickPower } from './services/storage';
+import { sdk } from '@farcaster/miniapp-sdk';
+import { getUserState, canClickCube, performClick, calculateRank, getClickPower, saveUserState } from './services/storage';
 import { Tab, UserState } from './types';
 import Cube from './components/Cube';
 import Leaderboard from './components/Leaderboard';
@@ -20,6 +21,34 @@ const App: React.FC = () => {
   // Animation States
   const [showReward, setShowReward] = useState(false);
   const [showRankUp, setShowRankUp] = useState<{show: boolean, old: number, new: number} | null>(null);
+
+  // Initialize Farcaster SDK and User
+  useEffect(() => {
+    const initFarcaster = async () => {
+        try {
+            const context = await sdk.context;
+            if (context.user) {
+                // Update local state with Farcaster user info
+                setUserState((current) => {
+                    const updated = {
+                        ...current,
+                        username: context.user.displayName || context.user.username || current.username,
+                        fid: context.user.fid,
+                        pfpUrl: context.user.pfpUrl
+                    };
+                    saveUserState(updated); // Sync with storage
+                    return updated;
+                });
+            }
+            await sdk.actions.ready();
+        } catch (error) {
+            console.error('Failed to initialize Farcaster SDK:', error);
+            // Fallback for browser testing without Farcaster context
+        }
+    };
+    
+    initFarcaster();
+  }, []);
 
   // Initialize and check status
   useEffect(() => {

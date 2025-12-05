@@ -1,0 +1,15 @@
+{
+  "accountAssociation": {
+    "header": "eyJmaWQiOjM2MjEsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHgyY2Q4NWEwOTMyNjFmNTkyNzA4MDRBNkVBNjk3Q2VBNENlQkVjYWZFIn0",
+    "payload": "eyJkb21haW4iOiJleGFtcGxlLmNvbSJ9",
+    "signature": "MHgyY2Q4NWEwOTMyNjFmNTkyNzA4MDRBNkVBNjk3Q2VBNENlQkVjYWZF"
+  },
+  "miniapp": {
+    "version": "1",
+    "name": "Based Cube",
+    "iconUrl": "https://placehold.co/200x200/png?text=Cube",
+    "homeUrl": "https://example.com",
+    "description": "A daily clicker mobile app with a 3D cube.",
+    "buttonTitle": "Play"
+  }
+}
