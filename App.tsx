@@ -43,7 +43,7 @@ const App: React.FC = () => {
       {/* Header */}
       <header className="p-6 flex justify-between items-center z-10">
         <h1 className="text-xl font-bold tracking-tighter bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
-          DAILY CUBE
+          BASED CUBE
         </h1>
         <button className="p-2 rounded-full bg-slate-800/50 text-slate-400 hover:text-white transition-colors">
             <Info size={20} />
