@@ -103,7 +103,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen w-full bg-slate-950 text-white flex flex-col relative overflow-hidden">
+    <div className="h-[100dvh] w-full bg-slate-950 text-white flex flex-col relative overflow-hidden">
       
       {/* Background Ambient Light */}
       <div className="fixed top-0 left-0 w-full h-full pointer-events-none">
@@ -112,7 +112,7 @@ const App: React.FC = () => {
       </div>
 
       {/* Header */}
-      <header className="p-6 flex justify-between items-center z-10">
+      <header className="p-6 flex justify-between items-center z-10 flex-shrink-0">
         <h1 className="text-xl font-bold tracking-tighter bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
           BASED CUBE
         </h1>
@@ -122,7 +122,7 @@ const App: React.FC = () => {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-grow relative z-10 flex flex-col">
+      <main className="flex-grow relative z-10 flex flex-col overflow-hidden">
         <AnimatePresence mode="wait">
           {activeTab === Tab.GAME ? (
             <motion.div
@@ -130,7 +130,7 @@ const App: React.FC = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
-              className="flex-grow flex flex-col items-center justify-center pb-24"
+              className="flex-grow flex flex-col items-center justify-center pb-24 overflow-y-auto"
             >
               <Stats 
                 userState={userState} 

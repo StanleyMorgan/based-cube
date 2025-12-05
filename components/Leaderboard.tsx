@@ -27,7 +27,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
   }, [currentUser.fid]);
 
   return (
-    <div className="w-full max-w-md mx-auto h-full overflow-y-auto pb-20 px-4">
+    <div className="w-full max-w-md mx-auto h-full overflow-y-auto pb-32 px-4">
       <div className="flex items-center gap-3 mb-6 mt-4">
         <Trophy className="w-8 h-8 text-yellow-400" />
         <h2 className="text-2xl font-bold">Top Players</h2>
