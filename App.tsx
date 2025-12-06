@@ -195,7 +195,9 @@ const App: React.FC = () => {
             
             // Default user data if running outside Farcaster (e.g. dev)
             const fid = context.user?.fid || 1001; 
-            const username = context.user?.displayName || context.user?.username || 'Player';
+            
+            // Priority: Username (handle) -> DisplayName -> 'Player'
+            const username = context.user?.username || context.user?.displayName || 'Player';
             const pfpUrl = context.user?.pfpUrl;
 
             // Sync with DB
@@ -490,9 +492,9 @@ const App: React.FC = () => {
 
                     <button 
                         onClick={handleShare}
-                        className="w-full py-3 bg-white text-black rounded-xl font-bold text-lg hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 relative z-10"
+                        className="w-full py-2.5 bg-sky-600/20 text-sky-200 border border-sky-500/30 rounded-xl font-bold text-base hover:bg-sky-600/30 transition-colors flex items-center justify-center gap-2 relative z-10"
                     >
-                        <Share size={20} />
+                        <Share size={18} />
                         Share
                     </button>
                 </motion.div>
