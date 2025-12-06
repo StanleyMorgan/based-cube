@@ -22,26 +22,44 @@ export default async function handler(request, response) {
 
     const user = userResult.rows[0];
     const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
     
-    // Check if already clicked today
-    let lastClickStr = null;
+    // Check 5 minutes cooldown
+    // Note: Database column last_click_date must be TIMESTAMP for this to work precisely
     if (user.last_click_date) {
-        lastClickStr = new Date(user.last_click_date).toISOString().split('T')[0];
-    }
-
-    if (lastClickStr === todayStr) {
-       return response.status(400).json({ error: 'Already clicked today' });
+        const lastClick = new Date(user.last_click_date);
+        const diff = now.getTime() - lastClick.getTime();
+        // DEBUG: 5 minutes cooldown
+        const cooldown = 5 * 60 * 1000; 
+        
+        // Allow a small buffer (e.g. 5 seconds) to prevent edge case sync issues
+        if (diff < (cooldown - 5000)) {
+           return response.status(400).json({ error: 'Cooldown active' });
+        }
     }
 
     // Calculate Streak
-    const yesterday = new Date(now);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
-
+    // Streak logic: If last click was within (5m to 10m) window, increment. 
+    // If > 10m, reset.
     let newStreak = 1;
-    if (lastClickStr === yesterdayStr) {
-      newStreak = user.streak + 1;
+    
+    if (user.last_click_date) {
+        const lastClick = new Date(user.last_click_date);
+        const diff = now.getTime() - lastClick.getTime();
+        
+        // DEBUG: 5m window start, 10m window end
+        const windowStart = 5 * 60 * 1000;
+        const windowEnd = 10 * 60 * 1000;
+        
+        if (diff >= windowStart && diff < windowEnd) {
+            // Maintained streak
+            newStreak = user.streak + 1;
+        } else if (diff >= windowEnd) {
+            // Missed a day (window)
+            newStreak = 1;
+        } else {
+             // Should not happen due to cooldown check, but if forced, keep streak
+             newStreak = user.streak;
+        }
     }
 
     // Calculate Power
@@ -53,12 +71,13 @@ export default async function handler(request, response) {
     const newScore = user.score + clickPower;
 
     // 2. Update DB (Split into Write and Read to fix Rank calculation bug)
+    // IMPORTANT: last_click_date is set to CURRENT_TIMESTAMP to capture exact time
     const updateResult = await pool.sql`
       UPDATE users 
       SET 
         score = ${newScore},
         streak = ${newStreak},
-        last_click_date = ${todayStr},
+        last_click_date = CURRENT_TIMESTAMP,
         updated_at = CURRENT_TIMESTAMP
       WHERE fid = ${fid}
       RETURNING *;

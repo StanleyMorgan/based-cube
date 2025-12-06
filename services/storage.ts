@@ -5,13 +5,19 @@ export const getTodayString = (): string => {
   return new Date().toISOString().split('T')[0];
 };
 
-export const getTimeUntilNextClick = (): string => {
-  const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(0, 0, 0, 0);
+export const getTimeUntilNextClick = (lastClickDate: string | null): string => {
+  if (!lastClickDate) return "00:00:00";
   
-  const diff = tomorrow.getTime() - now.getTime();
+  const lastClick = new Date(lastClickDate);
+  const now = new Date();
+  
+  // Calculate next click time: last click + 5 minutes
+  const nextClick = new Date(lastClick.getTime() + 5 * 60 * 1000);
+  
+  const diff = nextClick.getTime() - now.getTime();
+  
+  // If time passed, show 00:00:00
+  if (diff <= 0) return "00:00:00";
   
   const hours = Math.floor(diff / (1000 * 60 * 60));
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
@@ -22,10 +28,12 @@ export const getTimeUntilNextClick = (): string => {
 
 export const canClickCube = (lastClickDate: string | null): boolean => {
   if (!lastClickDate) return true;
-  // Convert DB date string to local YYYY-MM-DD for comparison
-  const dbDate = new Date(lastClickDate).toISOString().split('T')[0];
-  const today = getTodayString();
-  return dbDate !== today;
+  
+  const lastClick = new Date(lastClickDate);
+  const now = new Date();
+  const cooldown = 5 * 60 * 1000; // 5 minutes in ms
+  
+  return (now.getTime() - lastClick.getTime()) >= cooldown;
 };
 
 export const getClickPower = (streak: number, neynarScore: number = 0): number => {

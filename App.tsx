@@ -7,11 +7,11 @@ import Cube from './components/Cube';
 import Leaderboard from './components/Leaderboard';
 import Navigation from './components/Navigation';
 import Stats from './components/Stats';
-import { Info, ArrowUp, Zap, Flame, Star, Wallet, Loader2 } from 'lucide-react';
+import { Info, ArrowUp, Zap, Flame, Star, Wallet, Loader2, Share, X } from 'lucide-react';
 
 // Wagmi & Contract imports
 import { useAccount, useConnect, useWriteContract, useReadContract } from 'wagmi';
-import { base } from 'wagmi/chains';
+import { baseSepolia } from 'wagmi/chains';
 import { GMLoggerABI, CONTRACT_ADDRESS } from './src/abi';
 
 const App: React.FC = () => {
@@ -34,9 +34,15 @@ const App: React.FC = () => {
   const [rank, setRank] = useState(0);
   const [clickPower, setClickPower] = useState(0);
 
-  // Animation States
+  // Animation & Modal States
   const [showReward, setShowReward] = useState(false);
-  const [showRankUp, setShowRankUp] = useState<{show: boolean, old: number, new: number} | null>(null);
+  // Replaced showRankUp with a full success modal state
+  const [successModal, setSuccessModal] = useState<{
+    show: boolean;
+    points: number;
+    oldRank: number;
+    newRank: number;
+  } | null>(null);
 
   // Wagmi hooks
   const { isConnected, address } = useAccount();
@@ -110,10 +116,8 @@ const App: React.FC = () => {
 
     try {
         // 1. Execute On-Chain GM
-        // Use the fee from contract or default to 0 (though contract requires fee if set)
         const fee = gmFee ? BigInt(gmFee) : BigInt(0);
-        
-        // Using zero address as referrer for now, or could use a specific address
+        // Using zero address as referrer for now
         const referrer = "0x0000000000000000000000000000000000000000";
 
         await writeContractAsync({
@@ -123,11 +127,8 @@ const App: React.FC = () => {
             args: [referrer as `0x${string}`],
             value: fee,
             account: address,
-            chain: base,
+            chain: baseSepolia,
         });
-
-        // Optimistically proceed or wait for receipt (here we proceed to API call after signature)
-        // Ideally we would wait for useWaitForTransactionReceipt but for UI speed we trigger API after wallet confirm.
         
         const oldRank = rank;
         
@@ -138,20 +139,43 @@ const App: React.FC = () => {
         setRank(newState.rank);
         setCanClick(false);
         
-        // Show reward animation
+        // Show reward animation (floating text)
         setShowReward(true);
         setTimeout(() => setShowReward(false), 2000);
 
-        // Show Rank Up animation if rank improved
-        if (newState.rank < oldRank) {
-            setShowRankUp({ show: true, old: oldRank, new: newState.rank });
-            setTimeout(() => setShowRankUp(null), 3000);
-        }
+        // Show Success/Share Modal
+        setSuccessModal({
+            show: true,
+            points: clickPower,
+            oldRank: oldRank,
+            newRank: newState.rank
+        });
+
     } catch (e) {
         console.error("Click failed", e);
-        // User might have rejected transaction
     } finally {
         setIsProcessing(false);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!successModal) return;
+
+    const rankText = successModal.newRank < successModal.oldRank 
+        ? `I just ranked up to #${successModal.newRank}!` 
+        : `Current Rank: #${successModal.newRank}`;
+
+    const text = `I collected +${successModal.points} Power on Tesseract! 🧊\n\n${rankText}\n\nStart your streak:`;
+    const embedUrl = 'https://tesseract-base.vercel.app'; // Production URL
+
+    try {
+        await sdk.actions.composeCast({
+            text: text,
+            embeds: [embedUrl]
+        });
+        setSuccessModal(null);
+    } catch (e) {
+        console.error("Share failed", e);
     }
   };
 
@@ -239,32 +263,6 @@ const App: React.FC = () => {
                     </motion.div>
                   )}
                 </AnimatePresence>
-
-                 {/* Floating Rank Up Animation */}
-                 <AnimatePresence>
-                  {showRankUp && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 50, scale: 0.8 }}
-                      animate={{ opacity: 1, y: -160, scale: 1 }}
-                      exit={{ opacity: 0, y: -200 }}
-                      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-50 w-64"
-                    >
-                      <div className="bg-slate-900/90 border border-emerald-500/50 backdrop-blur-md px-4 py-3 rounded-xl shadow-2xl flex items-center justify-center gap-3">
-                         <div className="bg-emerald-500/20 p-2 rounded-full">
-                            <ArrowUp className="text-emerald-400" size={24} />
-                         </div>
-                         <div className="flex flex-col">
-                            <span className="text-emerald-400 font-bold uppercase text-xs tracking-wider">Rank Up!</span>
-                            <div className="flex items-center gap-2 text-white font-bold">
-                                <span className="text-slate-400">#{showRankUp.old}</span>
-                                <span className="text-emerald-500">→</span>
-                                <span className="text-xl">#{showRankUp.new}</span>
-                            </div>
-                         </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </div>
               
             </motion.div>
@@ -281,6 +279,69 @@ const App: React.FC = () => {
           )}
         </AnimatePresence>
       </main>
+
+      {/* Success / Share Modal */}
+      <AnimatePresence>
+        {successModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setSuccessModal(null)}
+                    className="absolute inset-0 bg-black/80 backdrop-blur-md"
+                />
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.8, y: 20 }}
+                    className="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-3xl p-6 shadow-2xl relative z-50 flex flex-col items-center"
+                >
+                    <button 
+                        onClick={() => setSuccessModal(null)} 
+                        className="absolute top-4 right-4 text-slate-500 hover:text-white"
+                    >
+                        <X size={24} />
+                    </button>
+
+                    <div className="mb-6 flex flex-col items-center">
+                        <div className="w-16 h-16 bg-yellow-400/20 rounded-full flex items-center justify-center mb-4 ring-2 ring-yellow-400/50 shadow-[0_0_20px_rgba(250,204,21,0.3)]">
+                            <Star className="text-yellow-400 fill-yellow-400" size={32} />
+                        </div>
+                        <h2 className="text-3xl font-black text-white">+{successModal.points}</h2>
+                        <span className="text-slate-400 uppercase tracking-widest text-xs font-bold mt-1">Power Collected</span>
+                    </div>
+
+                    <div className="w-full bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 mb-6 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-sky-500/20 p-2 rounded-lg">
+                                <Trophy className="text-sky-400" size={20} />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-slate-400 text-xs font-bold uppercase">Current Rank</span>
+                                <span className="text-white font-bold text-lg">#{successModal.newRank}</span>
+                            </div>
+                        </div>
+                        
+                        {successModal.newRank < successModal.oldRank && (
+                            <div className="flex items-center gap-1 text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-lg">
+                                <ArrowUp size={16} />
+                                <span className="text-sm font-bold">Up!</span>
+                            </div>
+                        )}
+                    </div>
+
+                    <button 
+                        onClick={handleShare}
+                        className="w-full py-4 bg-white text-black rounded-xl font-bold text-lg hover:bg-slate-200 transition-colors flex items-center justify-center gap-2"
+                    >
+                        <Share size={20} />
+                        Share Result
+                    </button>
+                </motion.div>
+            </div>
+        )}
+      </AnimatePresence>
 
       {/* Info Modal */}
       <AnimatePresence>
@@ -341,5 +402,28 @@ const App: React.FC = () => {
     </div>
   );
 };
+
+// Helper component for Trophy in the modal
+const Trophy = ({ size, className }: { size?: number, className?: string }) => (
+    <svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        width={size || 24} 
+        height={size || 24} 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        strokeWidth="2" 
+        strokeLinecap="round" 
+        strokeLinejoin="round" 
+        className={className}
+    >
+        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+        <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+        <path d="M4 22h16" />
+        <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+        <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+        <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+    </svg>
+);
 
 export default App;

@@ -71,7 +71,7 @@ const Cube: React.FC<CubeProps> = ({ canClick, onClick }) => {
                 ) : (
                     <div className="flex flex-col items-center gap-1 text-red-300/50">
                         <Lock size={32} strokeWidth={1.5} />
-                        <span className="text-xs font-black tracking-widest">24h</span>
+                        <span className="text-xs font-black tracking-widest">5m</span>
                     </div>
                 )}
             </div>

@@ -9,7 +9,7 @@
     "name": "Tesseract",
     "iconUrl": "https://raw.githubusercontent.com/StanleyMorgan/graphics/main/app/tesseract-base/logo.png",
     "homeUrl": "https://tesseract-base.vercel.app/",
-    "description": "A daily clicker mobile app with a 3D cube.",
+    "description": "Use Your Superpower",
     "buttonTitle": "Play Tesseract"
   },
   "baseBuilder": {

@@ -16,15 +16,17 @@ const Stats: React.FC<StatsProps> = ({ userState, canClick, rank, clickPower }) 
   useEffect(() => {
     if (canClick) return;
 
-    const timer = setInterval(() => {
-      setTimeLeft(getTimeUntilNextClick());
-    }, 1000);
+    const updateTimer = () => {
+      setTimeLeft(getTimeUntilNextClick(userState.lastClickDate));
+    };
+
+    const timer = setInterval(updateTimer, 1000);
     
     // Initial call
-    setTimeLeft(getTimeUntilNextClick());
+    updateTimer();
 
     return () => clearInterval(timer);
-  }, [canClick]);
+  }, [canClick, userState.lastClickDate]);
 
   return (
     <div className="flex flex-col items-center gap-6 mb-8 w-full max-w-xs px-4">
