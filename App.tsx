@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { sdk } from '@farcaster/miniapp-sdk';
 import { api, canClickCube, getClickPower } from './services/storage';
 import { Tab, UserState } from './types';
@@ -13,6 +13,52 @@ import { Info, ArrowUp, Zap, Flame, Star, Wallet, Loader2, Share, X } from 'luci
 import { useAccount, useConnect, useWriteContract, useReadContract } from 'wagmi';
 import { baseSepolia } from 'wagmi/chains';
 import { GMLoggerABI, CONTRACT_ADDRESS } from './src/abi';
+
+// --- Animated Components ---
+
+const RankTicker = ({ from, to }: { from: number; to: number }) => {
+  const count = useMotionValue(from);
+  const rounded = useTransform(count, (latest) => Math.round(latest));
+
+  useEffect(() => {
+    // Animate from old rank to new rank over 1.5 seconds
+    const controls = animate(count, to, { duration: 1.5, ease: "circOut" });
+    return controls.stop;
+  }, [from, to]);
+
+  return <motion.span>{rounded}</motion.span>;
+};
+
+const Confetti = () => {
+  // Simple particle explosion effect
+  const particles = Array.from({ length: 20 });
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
+      {particles.map((_, i) => (
+        <motion.div
+          key={i}
+          className={`absolute w-2 h-2 rounded-full ${i % 2 === 0 ? 'bg-yellow-400' : 'bg-sky-400'}`}
+          initial={{ 
+            x: "50%", 
+            y: "50%", 
+            opacity: 1, 
+            scale: 0 
+          }}
+          animate={{ 
+            x: `${50 + (Math.random() - 0.5) * 150}%`, 
+            y: `${50 + (Math.random() - 0.5) * 150}%`, 
+            opacity: 0, 
+            scale: Math.random() * 1.5 
+          }}
+          transition={{ 
+            duration: 1 + Math.random(), 
+            ease: "easeOut" 
+          }}
+        />
+      ))}
+    </div>
+  );
+};
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>(Tab.GAME);
@@ -36,7 +82,7 @@ const App: React.FC = () => {
 
   // Animation & Modal States
   const [showReward, setShowReward] = useState(false);
-  // Replaced showRankUp with a full success modal state
+  
   const [successModal, setSuccessModal] = useState<{
     show: boolean;
     points: number;
@@ -295,16 +341,19 @@ const App: React.FC = () => {
                     initial={{ opacity: 0, scale: 0.8, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.8, y: 20 }}
-                    className="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-3xl p-6 shadow-2xl relative z-50 flex flex-col items-center"
+                    className="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-3xl p-6 shadow-2xl relative z-50 flex flex-col items-center overflow-hidden"
                 >
+                    {/* Background visual effects */}
+                    {successModal.newRank < successModal.oldRank && <Confetti />}
+                    
                     <button 
                         onClick={() => setSuccessModal(null)} 
-                        className="absolute top-4 right-4 text-slate-500 hover:text-white"
+                        className="absolute top-4 right-4 text-slate-500 hover:text-white z-10"
                     >
                         <X size={24} />
                     </button>
 
-                    <div className="mb-6 flex flex-col items-center">
+                    <div className="mb-6 flex flex-col items-center relative z-10">
                         <div className="w-16 h-16 bg-yellow-400/20 rounded-full flex items-center justify-center mb-4 ring-2 ring-yellow-400/50 shadow-[0_0_20px_rgba(250,204,21,0.3)]">
                             <Star className="text-yellow-400 fill-yellow-400" size={32} />
                         </div>
@@ -312,28 +361,35 @@ const App: React.FC = () => {
                         <span className="text-slate-400 uppercase tracking-widest text-xs font-bold mt-1">Power Collected</span>
                     </div>
 
-                    <div className="w-full bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 mb-6 flex items-center justify-between">
+                    <div className="w-full bg-slate-800/80 backdrop-blur-sm rounded-2xl p-4 border border-slate-700/50 mb-6 flex items-center justify-between relative z-10">
                         <div className="flex items-center gap-3">
                             <div className="bg-sky-500/20 p-2 rounded-lg">
                                 <Trophy className="text-sky-400" size={20} />
                             </div>
                             <div className="flex flex-col">
                                 <span className="text-slate-400 text-xs font-bold uppercase">Current Rank</span>
-                                <span className="text-white font-bold text-lg">#{successModal.newRank}</span>
+                                <span className="text-white font-bold text-lg flex items-center gap-1">
+                                    #<RankTicker from={successModal.oldRank} to={successModal.newRank} />
+                                </span>
                             </div>
                         </div>
                         
                         {successModal.newRank < successModal.oldRank && (
-                            <div className="flex items-center gap-1 text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-lg">
+                            <motion.div 
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.5, type: "spring" }}
+                                className="flex items-center gap-1 text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-lg"
+                            >
                                 <ArrowUp size={16} />
                                 <span className="text-sm font-bold">Up!</span>
-                            </div>
+                            </motion.div>
                         )}
                     </div>
 
                     <button 
                         onClick={handleShare}
-                        className="w-full py-4 bg-white text-black rounded-xl font-bold text-lg hover:bg-slate-200 transition-colors flex items-center justify-center gap-2"
+                        className="w-full py-4 bg-white text-black rounded-xl font-bold text-lg hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 relative z-10"
                     >
                         <Share size={20} />
                         Share Result
