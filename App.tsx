@@ -10,10 +10,9 @@ import Stats from './components/Stats';
 import { Info, ArrowUp, Zap, Flame, Star, Wallet, Loader2 } from 'lucide-react';
 
 // Wagmi & Contract imports
-import { useAccount, useConnect, useWriteContract, useReadContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useConnect, useWriteContract, useReadContract } from 'wagmi';
 import { base } from 'wagmi/chains';
 import { GMLoggerABI, CONTRACT_ADDRESS } from './src/abi';
-import { parseEther } from 'viem';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>(Tab.GAME);
@@ -42,7 +41,7 @@ const App: React.FC = () => {
   // Wagmi hooks
   const { isConnected, address } = useAccount();
   const { connect, connectors } = useConnect();
-  const { writeContractAsync, isPending: isTxPending, data: txHash } = useWriteContract();
+  const { writeContractAsync, isPending: isTxPending } = useWriteContract();
   
   // Read Fee from contract
   const { data: gmFee } = useReadContract({
