@@ -7,8 +7,8 @@
   "miniapp": {
     "version": "1",
     "name": "Tesseract",
-    "iconUrl": "https://raw.githubusercontent.com/StanleyMorgan/graphics/main/app/based-cube/logo.png",
-    "homeUrl": "https://based-cube.vercel.app/",
+    "iconUrl": "https://raw.githubusercontent.com/StanleyMorgan/graphics/main/app/tesseract-base/logo.png",
+    "homeUrl": "https://tesseract-base.vercel.app/",
     "description": "A daily clicker mobile app with a 3D cube.",
     "buttonTitle": "Play Tesseract"
   },
