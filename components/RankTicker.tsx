@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 
 const RankTicker = ({ from, to }: { from: number; to: number }) => {
