@@ -14,5 +14,12 @@
   },
   "baseBuilder": {
     "ownerAddress": "0x4dBc9249D183B226260a96F13Fcc6B38A4c01C99"
-  }
+  },
+    "primaryCategory": "social",
+    "tags": ["game", "social"],
+    "heroImageUrl": "https://raw.githubusercontent.com/StanleyMorgan/graphics/main/app/tesseract-base/embed.png",
+    "tagline": "Use Your Superpower!",
+    "ogTitle": "Tesseract",
+    "ogDescription": "Tesseract Social Game on Base.",
+    "ogImageUrl": "https://raw.githubusercontent.com/StanleyMorgan/graphics/main/app/tesseract-base/embed.png"
 }
