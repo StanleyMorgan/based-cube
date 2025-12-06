@@ -7,7 +7,7 @@ import Cube from './components/Cube';
 import Leaderboard from './components/Leaderboard';
 import Navigation from './components/Navigation';
 import Stats from './components/Stats';
-import { Info, ArrowUp, Zap, Flame, Star, Wallet, Loader2, Share, X, Medal, User } from 'lucide-react';
+import { Info, ArrowUp, Zap, Flame, Star, Wallet, Loader2, Share, X, User } from 'lucide-react';
 
 // Wagmi & Contract imports
 import { useAccount, useConnect, useWriteContract, useReadContract } from 'wagmi';
