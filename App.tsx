@@ -459,15 +459,7 @@ const App: React.FC = () => {
                         <X size={24} />
                     </button>
 
-                    <div className="mb-4 flex flex-col items-center relative z-10">
-                        <div className="w-14 h-14 bg-yellow-400/20 rounded-full flex items-center justify-center mb-2 ring-2 ring-yellow-400/50 shadow-[0_0_20px_rgba(250,204,21,0.3)]">
-                            <Star className="text-yellow-400 fill-yellow-400" size={28} />
-                        </div>
-                        <h2 className="text-2xl font-black text-white">+{successModal.points}</h2>
-                        <span className="text-slate-400 uppercase tracking-widest text-xs font-bold">Power Collected</span>
-                    </div>
-
-                    <div className="w-full bg-slate-800/80 backdrop-blur-sm rounded-2xl p-4 border border-slate-700/50 mb-4 flex flex-col relative z-10">
+                    <div className="w-full mt-6 bg-slate-800/80 backdrop-blur-sm rounded-2xl p-4 border border-slate-700/50 mb-4 flex flex-col relative z-10">
                          {/* Rank Summary */}
                         <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
@@ -501,7 +493,7 @@ const App: React.FC = () => {
                         className="w-full py-3 bg-white text-black rounded-xl font-bold text-lg hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 relative z-10"
                     >
                         <Share size={20} />
-                        Share Result
+                        Share
                     </button>
                 </motion.div>
             </div>
