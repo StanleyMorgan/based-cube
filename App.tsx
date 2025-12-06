@@ -7,7 +7,13 @@ import Cube from './components/Cube';
 import Leaderboard from './components/Leaderboard';
 import Navigation from './components/Navigation';
 import Stats from './components/Stats';
-import { Info, ArrowUp, Zap, Flame, Star } from 'lucide-react';
+import { Info, ArrowUp, Zap, Flame, Star, Wallet, Loader2 } from 'lucide-react';
+
+// Wagmi & Contract imports
+import { useAccount, useConnect, useWriteContract, useReadContract, useWaitForTransactionReceipt } from 'wagmi';
+import { base } from 'wagmi/chains';
+import { GMLoggerABI, CONTRACT_ADDRESS } from './src/abi';
+import { parseEther } from 'viem';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>(Tab.GAME);
@@ -33,6 +39,20 @@ const App: React.FC = () => {
   const [showReward, setShowReward] = useState(false);
   const [showRankUp, setShowRankUp] = useState<{show: boolean, old: number, new: number} | null>(null);
 
+  // Wagmi hooks
+  const { isConnected, address } = useAccount();
+  const { connect, connectors } = useConnect();
+  const { writeContractAsync, isPending: isTxPending, data: txHash } = useWriteContract();
+  
+  // Read Fee from contract
+  const { data: gmFee } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: GMLoggerABI,
+    functionName: 'gmFee',
+  });
+
+  const [isProcessing, setIsProcessing] = useState(false);
+
   // Initialize Farcaster SDK and Sync User with DB
   useEffect(() => {
     const initApp = async () => {
@@ -40,8 +60,7 @@ const App: React.FC = () => {
             const context = await sdk.context;
             
             // Default user data if running outside Farcaster (e.g. dev)
-            // In prod, context.user should exist
-            const fid = context.user?.fid || 1001; // Fallback for dev testing
+            const fid = context.user?.fid || 1001; 
             const username = context.user?.displayName || context.user?.username || 'Player';
             const pfpUrl = context.user?.pfpUrl;
 
@@ -51,6 +70,11 @@ const App: React.FC = () => {
             setUserState(syncedUser);
             setRank(syncedUser.rank);
             
+            // Try to connect wallet if available in connector
+            if (!isConnected && connectors.length > 0) {
+                 connect({ connector: connectors[0] });
+            }
+
             await sdk.actions.ready();
         } catch (error) {
             console.error('Failed to initialize app:', error);
@@ -70,11 +94,45 @@ const App: React.FC = () => {
 
   const handleCubeClick = async () => {
     if (!canClick || !userState.fid) return;
+    if (isProcessing || isTxPending) return;
+
+    // Check Wallet Connection
+    if (!isConnected || !address) {
+        if (connectors.length > 0) {
+            connect({ connector: connectors[0] });
+            return;
+        } else {
+             alert("Please connect your wallet to play.");
+             return;
+        }
+    }
+
+    setIsProcessing(true);
 
     try {
+        // 1. Execute On-Chain GM
+        // Use the fee from contract or default to 0 (though contract requires fee if set)
+        const fee = gmFee ? BigInt(gmFee) : BigInt(0);
+        
+        // Using zero address as referrer for now, or could use a specific address
+        const referrer = "0x0000000000000000000000000000000000000000";
+
+        await writeContractAsync({
+            address: CONTRACT_ADDRESS,
+            abi: GMLoggerABI,
+            functionName: 'GM',
+            args: [referrer as `0x${string}`],
+            value: fee,
+            account: address,
+            chain: base,
+        });
+
+        // Optimistically proceed or wait for receipt (here we proceed to API call after signature)
+        // Ideally we would wait for useWaitForTransactionReceipt but for UI speed we trigger API after wallet confirm.
+        
         const oldRank = rank;
         
-        // Call API
+        // 2. Call API to update Score in DB
         const newState = await api.performClick(userState.fid);
         
         setUserState(newState);
@@ -85,14 +143,16 @@ const App: React.FC = () => {
         setShowReward(true);
         setTimeout(() => setShowReward(false), 2000);
 
-        // Show Rank Up animation if rank improved (lower number is better)
+        // Show Rank Up animation if rank improved
         if (newState.rank < oldRank) {
             setShowRankUp({ show: true, old: oldRank, new: newState.rank });
             setTimeout(() => setShowRankUp(null), 3000);
         }
     } catch (e) {
         console.error("Click failed", e);
-        // Optional: Show error toast
+        // User might have rejected transaction
+    } finally {
+        setIsProcessing(false);
     }
   };
 
@@ -121,12 +181,19 @@ const App: React.FC = () => {
         <h1 className="text-xl font-bold tracking-tighter bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
           TESSERACT
         </h1>
-        <button 
-            onClick={() => setShowInfo(true)}
-            className="p-2 rounded-full bg-slate-800/50 text-slate-400 hover:text-white transition-colors border border-slate-700/50"
-        >
-            <Info size={20} />
-        </button>
+        <div className="flex gap-2">
+            {!isConnected && (
+                <button onClick={() => connectors[0] && connect({ connector: connectors[0] })} className="p-2 rounded-full bg-slate-800/50 text-slate-400 border border-slate-700/50">
+                    <Wallet size={20} />
+                </button>
+            )}
+            <button 
+                onClick={() => setShowInfo(true)}
+                className="p-2 rounded-full bg-slate-800/50 text-slate-400 hover:text-white transition-colors border border-slate-700/50"
+            >
+                <Info size={20} />
+            </button>
+        </div>
       </header>
 
       {/* Main Content Area */}
@@ -148,6 +215,14 @@ const App: React.FC = () => {
               />
               
               <div className="relative">
+                {/* Overlay for processing state */}
+                {(isProcessing || isTxPending) && (
+                    <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm rounded-xl">
+                        <Loader2 className="w-10 h-10 text-sky-400 animate-spin mb-2" />
+                        <span className="text-sm font-bold text-sky-100">Confirming...</span>
+                    </div>
+                )}
+                
                 <Cube canClick={canClick} onClick={handleCubeClick} />
                 
                 {/* Floating Reward Animation (Score) */}
