@@ -7,12 +7,13 @@ import Trophy from '../Trophy';
 import RankTicker from '../RankTicker';
 import AnimatedLeaderboardList from '../AnimatedLeaderboardList';
 
-interface SuccessModalData {
+export interface SuccessModalData {
     show: boolean;
     points: number;
     oldRank: number;
     newRank: number;
     leaderboardSnippet?: LeaderboardEntry[];
+    overtakenUser?: string;
 }
 
 interface SuccessModalProps {

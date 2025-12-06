@@ -8,7 +8,7 @@ import Leaderboard from './components/Leaderboard';
 import Navigation from './components/Navigation';
 import Stats from './components/Stats';
 import InfoModal from './components/modals/InfoModal';
-import SuccessModal from './components/modals/SuccessModal';
+import SuccessModal, { SuccessModalData } from './components/modals/SuccessModal';
 import { Info, Wallet, Loader2 } from 'lucide-react';
 
 // Wagmi & Contract imports
@@ -39,13 +39,7 @@ const App: React.FC = () => {
   // Animation & Modal States
   const [showReward, setShowReward] = useState(false);
   
-  const [successModal, setSuccessModal] = useState<{
-    show: boolean;
-    points: number;
-    oldRank: number;
-    newRank: number;
-    leaderboardSnippet?: LeaderboardEntry[];
-  } | null>(null);
+  const [successModal, setSuccessModal] = useState<SuccessModalData | null>(null);
 
   // Wagmi hooks
   const { isConnected, address } = useAccount();
@@ -143,6 +137,8 @@ const App: React.FC = () => {
         // 3. Fetch Leaderboard to show visualization (Snippet)
         // We fetch the full leaderboard and slice it around the user
         let lbSnippet: LeaderboardEntry[] = [];
+        let overtakenUser: string | undefined;
+
         try {
             const allEntries = await api.getLeaderboard(userState.fid);
             const userIndex = allEntries.findIndex(e => e.isCurrentUser);
@@ -157,6 +153,15 @@ const App: React.FC = () => {
                 if (userIndex === 0) end = Math.min(allEntries.length, 3);
                 
                 lbSnippet = allEntries.slice(start, end);
+
+                // Find overtaken user if we ranked up
+                if (newState.rank < oldRank) {
+                    // The person we displaced is now at (our_rank + 1)
+                    const overtakenEntry = allEntries.find(e => e.rank === newState.rank + 1);
+                    if (overtakenEntry) {
+                        overtakenUser = overtakenEntry.username;
+                    }
+                }
             }
         } catch (err) {
             console.warn("Could not fetch leaderboard for snippet", err);
@@ -176,7 +181,8 @@ const App: React.FC = () => {
             points: clickPower,
             oldRank: oldRank,
             newRank: newState.rank,
-            leaderboardSnippet: lbSnippet
+            leaderboardSnippet: lbSnippet,
+            overtakenUser: overtakenUser
         });
 
     } catch (e) {
@@ -189,9 +195,13 @@ const App: React.FC = () => {
   const handleShare = async () => {
     if (!successModal) return;
 
-    const rankText = successModal.newRank < successModal.oldRank 
+    let rankText = successModal.newRank < successModal.oldRank 
         ? `I just ranked up to #${successModal.newRank}!` 
         : `Current Rank: #${successModal.newRank}`;
+
+    if (successModal.overtakenUser) {
+        rankText += ` Overtook @${successModal.overtakenUser} 🏎️💨`;
+    }
 
     const text = `I collected +${successModal.points} Power on Tesseract! 🧊\n\n${rankText}\n\nStart your streak:`;
     const embedUrl = 'https://tesseract-base.vercel.app'; // Production URL
