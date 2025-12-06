@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { sdk } from '@farcaster/miniapp-sdk';
 import { api, canClickCube, getClickPower } from './services/storage';
-import { Tab, UserState } from './types';
+import { Tab, UserState, LeaderboardEntry } from './types';
 import Cube from './components/Cube';
 import Leaderboard from './components/Leaderboard';
 import Navigation from './components/Navigation';
 import Stats from './components/Stats';
-import { Info, ArrowUp, Zap, Flame, Star, Wallet, Loader2, Share, X } from 'lucide-react';
+import { Info, ArrowUp, Zap, Flame, Star, Wallet, Loader2, Share, X, Medal, User } from 'lucide-react';
 
 // Wagmi & Contract imports
 import { useAccount, useConnect, useWriteContract, useReadContract } from 'wagmi';
@@ -88,6 +88,7 @@ const App: React.FC = () => {
     points: number;
     oldRank: number;
     newRank: number;
+    leaderboardSnippet?: LeaderboardEntry[];
   } | null>(null);
 
   // Wagmi hooks
@@ -181,6 +182,28 @@ const App: React.FC = () => {
         // 2. Call API to update Score in DB
         const newState = await api.performClick(userState.fid);
         
+        // 3. Fetch Leaderboard to show visualization (Snippet)
+        // We fetch the full leaderboard and slice it around the user
+        let lbSnippet: LeaderboardEntry[] = [];
+        try {
+            const allEntries = await api.getLeaderboard(userState.fid);
+            const userIndex = allEntries.findIndex(e => e.isCurrentUser);
+            
+            if (userIndex !== -1) {
+                // Determine slice window (try to show 1 above and 1 below if possible)
+                // We want to show 3 items total usually
+                let start = Math.max(0, userIndex - 1);
+                let end = Math.min(allEntries.length, userIndex + 2);
+                
+                // Adjust if we are at the very top to show top 3
+                if (userIndex === 0) end = Math.min(allEntries.length, 3);
+                
+                lbSnippet = allEntries.slice(start, end);
+            }
+        } catch (err) {
+            console.warn("Could not fetch leaderboard for snippet", err);
+        }
+
         setUserState(newState);
         setRank(newState.rank);
         setCanClick(false);
@@ -194,7 +217,8 @@ const App: React.FC = () => {
             show: true,
             points: clickPower,
             oldRank: oldRank,
-            newRank: newState.rank
+            newRank: newState.rank,
+            leaderboardSnippet: lbSnippet
         });
 
     } catch (e) {
@@ -353,43 +377,68 @@ const App: React.FC = () => {
                         <X size={24} />
                     </button>
 
-                    <div className="mb-6 flex flex-col items-center relative z-10">
-                        <div className="w-16 h-16 bg-yellow-400/20 rounded-full flex items-center justify-center mb-4 ring-2 ring-yellow-400/50 shadow-[0_0_20px_rgba(250,204,21,0.3)]">
-                            <Star className="text-yellow-400 fill-yellow-400" size={32} />
+                    <div className="mb-4 flex flex-col items-center relative z-10">
+                        <div className="w-14 h-14 bg-yellow-400/20 rounded-full flex items-center justify-center mb-2 ring-2 ring-yellow-400/50 shadow-[0_0_20px_rgba(250,204,21,0.3)]">
+                            <Star className="text-yellow-400 fill-yellow-400" size={28} />
                         </div>
-                        <h2 className="text-3xl font-black text-white">+{successModal.points}</h2>
-                        <span className="text-slate-400 uppercase tracking-widest text-xs font-bold mt-1">Power Collected</span>
+                        <h2 className="text-2xl font-black text-white">+{successModal.points}</h2>
+                        <span className="text-slate-400 uppercase tracking-widest text-xs font-bold">Power Collected</span>
                     </div>
 
-                    <div className="w-full bg-slate-800/80 backdrop-blur-sm rounded-2xl p-4 border border-slate-700/50 mb-6 flex items-center justify-between relative z-10">
-                        <div className="flex items-center gap-3">
-                            <div className="bg-sky-500/20 p-2 rounded-lg">
-                                <Trophy className="text-sky-400" size={20} />
+                    <div className="w-full bg-slate-800/80 backdrop-blur-sm rounded-2xl p-4 border border-slate-700/50 mb-4 flex flex-col relative z-10">
+                         {/* Rank Summary */}
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                                <Trophy className="text-sky-400" size={18} />
+                                <span className="text-slate-400 text-xs font-bold uppercase">Rank</span>
                             </div>
-                            <div className="flex flex-col">
-                                <span className="text-slate-400 text-xs font-bold uppercase">Current Rank</span>
+                            <div className="flex items-center gap-2">
                                 <span className="text-white font-bold text-lg flex items-center gap-1">
                                     #<RankTicker from={successModal.oldRank} to={successModal.newRank} />
                                 </span>
+                                {successModal.newRank < successModal.oldRank && (
+                                    <div className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded flex items-center">
+                                        <ArrowUp size={12} /> Up
+                                    </div>
+                                )}
                             </div>
                         </div>
-                        
-                        {successModal.newRank < successModal.oldRank && (
-                            <motion.div 
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.5, type: "spring" }}
-                                className="flex items-center gap-1 text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-lg"
-                            >
-                                <ArrowUp size={16} />
-                                <span className="text-sm font-bold">Up!</span>
-                            </motion.div>
+
+                        {/* Mini Leaderboard Snippet */}
+                        {successModal.leaderboardSnippet && successModal.leaderboardSnippet.length > 0 && (
+                            <div className="space-y-1.5 pt-3 border-t border-slate-700/50">
+                                {successModal.leaderboardSnippet.map((entry) => (
+                                    <div 
+                                        key={entry.id} 
+                                        className={`flex items-center justify-between p-2 rounded-lg text-sm ${entry.isCurrentUser ? 'bg-sky-500/20 border border-sky-500/30' : 'bg-slate-700/20 border border-transparent opacity-60'}`}
+                                    >
+                                        <div className="flex items-center gap-2 overflow-hidden">
+                                            <span className={`font-mono font-bold w-6 text-center ${entry.isCurrentUser ? 'text-sky-300' : 'text-slate-500'}`}>
+                                                #{entry.rank}
+                                            </span>
+                                            {entry.pfpUrl ? (
+                                                <img src={entry.pfpUrl} alt="" className="w-5 h-5 rounded-full" />
+                                            ) : (
+                                                <div className="w-5 h-5 rounded-full bg-slate-600 flex items-center justify-center">
+                                                    <User size={12} className="text-slate-400" />
+                                                </div>
+                                            )}
+                                            <span className={`truncate max-w-[80px] ${entry.isCurrentUser ? 'font-bold text-white' : 'text-slate-300'}`}>
+                                                {entry.username}
+                                            </span>
+                                        </div>
+                                        <span className="font-mono text-xs text-slate-400">
+                                            {entry.score.toLocaleString()}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
                         )}
                     </div>
 
                     <button 
                         onClick={handleShare}
-                        className="w-full py-4 bg-white text-black rounded-xl font-bold text-lg hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 relative z-10"
+                        className="w-full py-3 bg-white text-black rounded-xl font-bold text-lg hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 relative z-10"
                     >
                         <Share size={20} />
                         Share Result
