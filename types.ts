@@ -6,6 +6,7 @@ export interface UserState {
   fid?: number;
   pfpUrl?: string;
   neynarScore?: number;
+  primaryAddress?: string;
 }
 
 export interface LeaderboardEntry {

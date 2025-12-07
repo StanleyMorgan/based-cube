@@ -33,7 +33,7 @@ export default async function handler(request, response) {
     }
 
     if (request.method === 'POST') {
-      const { fid, username, pfpUrl } = request.body;
+      const { fid, username, pfpUrl, primaryAddress } = request.body;
       if (!fid) return response.status(400).json({ error: 'FID is required' });
 
       // 1. Check existing user data to determine if we need to fetch Neynar Score
@@ -81,15 +81,18 @@ export default async function handler(request, response) {
       }
 
       // 3. Upsert user (Split into Write and Read to fix Rank calculation bug)
+      // We use COALESCE for primary_address to ensure we don't overwrite an existing address with NULL
+      // if the client sends a sync request without the address (e.g. before wallet connect).
       const upsertResult = await pool.sql`
-        INSERT INTO users (fid, username, pfp_url, score, streak, neynar_score, neynar_last_updated)
-        VALUES (${fid}, ${username}, ${pfpUrl}, 0, 0, ${neynarScore}, ${neynarLastUpdated})
+        INSERT INTO users (fid, username, pfp_url, score, streak, neynar_score, neynar_last_updated, primary_address)
+        VALUES (${fid}, ${username}, ${pfpUrl}, 0, 0, ${neynarScore}, ${neynarLastUpdated}, ${primaryAddress || null})
         ON CONFLICT (fid) 
         DO UPDATE SET 
           username = EXCLUDED.username,
           pfp_url = EXCLUDED.pfp_url,
           neynar_score = EXCLUDED.neynar_score,
           neynar_last_updated = EXCLUDED.neynar_last_updated,
+          primary_address = COALESCE(EXCLUDED.primary_address, users.primary_address),
           updated_at = CURRENT_TIMESTAMP
         RETURNING *;
       `;

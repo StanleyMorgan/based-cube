@@ -68,8 +68,8 @@ const App: React.FC = () => {
             const username = context.user?.username || context.user?.displayName || 'Player';
             const pfpUrl = context.user?.pfpUrl;
 
-            // Sync with DB
-            const syncedUser = await api.syncUser(fid, username, pfpUrl);
+            // Sync with DB (pass address if available, though unlikely on first render)
+            const syncedUser = await api.syncUser(fid, username, pfpUrl, address);
             
             setUserState(syncedUser);
             setRank(syncedUser.rank);
@@ -89,6 +89,20 @@ const App: React.FC = () => {
     
     initApp();
   }, []);
+
+  // Sync wallet address when it changes and we have a valid user
+  useEffect(() => {
+    if (userState.fid && address && userState.username !== 'Loading...') {
+       // Check if we need to update the address on the backend
+       if (userState.primaryAddress !== address) {
+           api.syncUser(userState.fid, userState.username, userState.pfpUrl, address)
+              .then(newUserState => {
+                  setUserState(newUserState);
+              })
+              .catch(err => console.error("Failed to sync wallet address", err));
+       }
+    }
+  }, [address, userState.fid, userState.username, userState.pfpUrl, userState.primaryAddress]);
 
   // Update derived state when userState changes
   useEffect(() => {
