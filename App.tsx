@@ -203,8 +203,8 @@ const App: React.FC = () => {
         rankText += ` Overtook @${successModal.overtakenUser} 🏎️💨`;
     }
 
-    const text = `I collected +${successModal.points} Power on Tesseract! 🧊\n\n${rankText}\n\nStart your streak:`;
-    const embedUrl = 'https://tesseract-base.vercel.app'; // Production URL
+    const text = `I collected +${successModal.points} Power on Tesseract! 🧊\n${rankText}\nStart your streak:`;
+    const embedUrl = 'https://farcaster.xyz/miniapps/Xsf0F9GOSyy3/tesseract'; // Production URL
 
     try {
         await sdk.actions.composeCast({
