@@ -151,9 +151,13 @@ const App: React.FC = () => {
         });
         
         const oldRank = rank;
+        const oldScore = userState.score;
         
         // 2. Call API to update Score in DB
         const newState = await api.performClick(userState.fid);
+        
+        // Calculate actual points earned (Server Logic: Neynar * 100 + NEW Streak)
+        const earnedPoints = newState.score - oldScore;
         
         // 3. Fetch Leaderboard to show visualization (Snippet)
         // We fetch the full leaderboard and slice it around the user
@@ -199,7 +203,7 @@ const App: React.FC = () => {
         // Show Success/Share Modal
         setSuccessModal({
             show: true,
-            points: clickPower,
+            points: earnedPoints,
             oldRank: oldRank,
             newRank: newState.rank,
             leaderboardSnippet: lbSnippet,
