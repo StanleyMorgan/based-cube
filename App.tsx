@@ -79,6 +79,13 @@ const App: React.FC = () => {
                  connect({ connector: connectors[0] });
             }
 
+            // Prompt user to add the app (SDK handles check if already added)
+            try {
+                await sdk.actions.addMiniApp();
+            } catch (e) {
+                console.warn("Add MiniApp action failed or rejected", e);
+            }
+
             await sdk.actions.ready();
         } catch (error) {
             console.error('Failed to initialize app:', error);
