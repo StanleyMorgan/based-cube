@@ -203,7 +203,7 @@ const App: React.FC = () => {
         rankText += ` Overtook @${successModal.overtakenUser} 🏎️💨`;
     }
 
-    const text = `I collected +${successModal.points} Power on Tesseract! 🧊\n${rankText}\nStart your streak:`;
+    const text = `I collected +${successModal.points} Power on Tesseract! 🧊\n${rankText}\nUse your Neynar Superpower:`;
     const embedUrl = 'https://farcaster.xyz/miniapps/Xsf0F9GOSyy3/tesseract'; // Production URL
 
     try {
