@@ -23,13 +23,13 @@ export default async function handler(request, response) {
     const user = userResult.rows[0];
     const now = new Date();
     
-    // Check 5 minutes cooldown
+    // Check 24 hours cooldown
     // Note: Database column last_click_date must be TIMESTAMP for this to work precisely
     if (user.last_click_date) {
         const lastClick = new Date(user.last_click_date);
         const diff = now.getTime() - lastClick.getTime();
-        // DEBUG: 5 minutes cooldown
-        const cooldown = 5 * 60 * 1000; 
+        // 24 hours cooldown
+        const cooldown = 24 * 60 * 60 * 1000; 
         
         // Allow a small buffer (e.g. 5 seconds) to prevent edge case sync issues
         if (diff < (cooldown - 5000)) {
@@ -38,17 +38,17 @@ export default async function handler(request, response) {
     }
 
     // Calculate Streak
-    // Streak logic: If last click was within (5m to 10m) window, increment. 
-    // If > 10m, reset.
+    // Streak logic: If last click was within (24h to 48h) window, increment. 
+    // If > 48h, reset.
     let newStreak = 1;
     
     if (user.last_click_date) {
         const lastClick = new Date(user.last_click_date);
         const diff = now.getTime() - lastClick.getTime();
         
-        // DEBUG: 5m window start, 10m window end
-        const windowStart = 5 * 60 * 1000;
-        const windowEnd = 10 * 60 * 1000;
+        // 24h window start, 48h window end
+        const windowStart = 24 * 60 * 60 * 1000;
+        const windowEnd = 48 * 60 * 60 * 1000;
         
         if (diff >= windowStart && diff < windowEnd) {
             // Maintained streak

@@ -11,8 +11,8 @@ export const getTimeUntilNextClick = (lastClickDate: string | null): string => {
   const lastClick = new Date(lastClickDate);
   const now = new Date();
   
-  // Calculate next click time: last click + 5 minutes
-  const nextClick = new Date(lastClick.getTime() + 5 * 60 * 1000);
+  // Calculate next click time: last click + 24 hours
+  const nextClick = new Date(lastClick.getTime() + 24 * 60 * 60 * 1000);
   
   const diff = nextClick.getTime() - now.getTime();
   
@@ -31,7 +31,7 @@ export const canClickCube = (lastClickDate: string | null): boolean => {
   
   const lastClick = new Date(lastClickDate);
   const now = new Date();
-  const cooldown = 5 * 60 * 1000; // 5 minutes in ms
+  const cooldown = 24 * 60 * 60 * 1000; // 24 hours in ms
   
   return (now.getTime() - lastClick.getTime()) >= cooldown;
 };

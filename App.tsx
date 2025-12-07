@@ -13,7 +13,7 @@ import { Info, Wallet, Loader2 } from 'lucide-react';
 
 // Wagmi & Contract imports
 import { useAccount, useConnect, useWriteContract, useReadContract } from 'wagmi';
-import { baseSepolia } from 'wagmi/chains';
+import { base } from 'wagmi/chains';
 import { GMLoggerABI, CONTRACT_ADDRESS } from './src/abi';
 
 const App: React.FC = () => {
@@ -140,7 +140,7 @@ const App: React.FC = () => {
             args: [referrer as `0x${string}`],
             value: fee,
             account: address,
-            chain: baseSepolia,
+            chain: base,
         });
         
         const oldRank = rank;
