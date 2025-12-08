@@ -236,7 +236,10 @@ const App: React.FC = () => {
     }
 
     const text = `I collected +${successModal.points} Power on Tesseract! 🧊\n${rankText}\nUse your Neynar Superpower:`;
-    const embedUrl = `https://farcaster.xyz/miniapps/Xsf0F9GOSyy3/tesseract?ref=${userState.fid}`; // Production URL with ref
+    
+    // Use the dynamic Frame Proxy URL instead of the direct app URL
+    // This ensures the feed shows the dynamic image
+    const embedUrl = `https://tesseract-base.vercel.app/api/share/frame?fid=${userState.fid}`;
 
     try {
         await sdk.actions.composeCast({
