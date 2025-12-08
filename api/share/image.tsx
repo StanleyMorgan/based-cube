@@ -65,7 +65,7 @@ export default async function handler(req: Request) {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'flex-end',
-            paddingBottom: '55px',
+            paddingBottom: '110px',
             backgroundColor: '#0f172a',
             backgroundImage: `url(${bgImage})`,
             backgroundSize: '100% 100%',
@@ -125,7 +125,7 @@ export default async function handler(req: Request) {
       ),
       {
         width: 1200,
-        height: 630,
+        height: 800,
         fonts: [
           {
             name: 'Inter',
