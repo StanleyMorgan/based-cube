@@ -65,7 +65,7 @@ export default async function handler(req: Request) {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'flex-end',
-            paddingBottom: '110px',
+            paddingBottom: '100px',
             backgroundColor: '#0f172a',
             backgroundImage: `url(${bgImage})`,
             backgroundSize: '100% 100%',
