@@ -101,27 +101,28 @@ export default async function handler(req: Request) {
             )}
 
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <div style={{ fontSize: '32px', color: '#94a3b8', fontWeight: 600, marginBottom: '8px' }}>
-                    @{username}
+                <div style={{ display: 'flex', fontSize: '32px', color: '#94a3b8', fontWeight: 600, marginBottom: '8px' }}>
+                    {username}
                 </div>
                 
                 <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '30px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <div style={{ fontSize: '24px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rank</div>
-                        <div style={{ fontSize: '64px', color: '#ffffff', fontWeight: 700, lineHeight: 1 }}>{rank}</div>
+                        <div style={{ display: 'flex', fontSize: '24px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rank</div>
+                        <div style={{ display: 'flex', fontSize: '64px', color: '#ffffff', fontWeight: 700, lineHeight: 1 }}>{rank}</div>
                     </div>
                     
-                    <div style={{ width: '2px', height: '80px', backgroundColor: '#334155' }}></div>
+                    <div style={{ display: 'flex', width: '2px', height: '80px', backgroundColor: '#334155' }}></div>
 
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <div style={{ fontSize: '24px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Score</div>
-                        <div style={{ fontSize: '64px', color: '#38bdf8', fontWeight: 700, lineHeight: 1 }}>{score}</div>
+                        <div style={{ display: 'flex', fontSize: '24px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Score</div>
+                        <div style={{ display: 'flex', fontSize: '64px', color: '#38bdf8', fontWeight: 700, lineHeight: 1 }}>{score}</div>
                     </div>
                 </div>
             </div>
           </div>
           
           <div style={{
+              display: 'flex',
               position: 'absolute',
               bottom: '40px',
               fontSize: '24px',
