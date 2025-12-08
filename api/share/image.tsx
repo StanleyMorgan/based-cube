@@ -53,7 +53,7 @@ export default async function handler(req: Request) {
     const fontData = await interBold;
 
     // Background Image
-    const bgImage = 'https://raw.githubusercontent.com/StanleyMorgan/graphics/main/app/tesseract-base/og-bg.png';
+    const bgImage = 'https://raw.githubusercontent.com/StanleyMorgan/graphics/main/app/tesseract-base/background.png';
 
     return new ImageResponse(
       (
