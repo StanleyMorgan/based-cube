@@ -64,7 +64,8 @@ export default async function handler(req: Request) {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'center',
+            justifyContent: 'flex-end',
+            paddingBottom: '55px',
             backgroundColor: '#0f172a',
             backgroundImage: `url(${bgImage})`,
             backgroundSize: '100% 100%',
@@ -83,7 +84,6 @@ export default async function handler(req: Request) {
               border: '1px solid rgba(56, 189, 248, 0.3)',
               padding: '40px',
               boxShadow: '0 0 60px rgba(0,0,0,0.5)',
-              marginTop: '160px', // Shift down by approx 1/4 of height (630px)
             }}
           >
             {/* Avatar */}
