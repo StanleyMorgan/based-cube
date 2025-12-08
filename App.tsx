@@ -61,6 +61,11 @@ const App: React.FC = () => {
         try {
             const context = await sdk.context;
             
+            // Check for referral param in URL
+            const params = new URLSearchParams(window.location.search);
+            const refParam = params.get('ref');
+            const referrerFid = refParam ? parseInt(refParam) : undefined;
+
             // Default user data if running outside Farcaster (e.g. dev)
             const fid = context.user?.fid || 1001; 
             
@@ -69,7 +74,8 @@ const App: React.FC = () => {
             const pfpUrl = context.user?.pfpUrl;
 
             // Sync with DB (pass address if available, though unlikely on first render)
-            const syncedUser = await api.syncUser(fid, username, pfpUrl, address);
+            // Also pass referrerFid if found in URL
+            const syncedUser = await api.syncUser(fid, username, pfpUrl, address, referrerFid);
             
             setUserState(syncedUser);
             setRank(syncedUser.rank);
@@ -137,8 +143,9 @@ const App: React.FC = () => {
     try {
         // 1. Execute On-Chain GM
         const fee = gmFee ? BigInt(gmFee) : BigInt(0);
-        // Using zero address as referrer for now
-        const referrer = "0x0000000000000000000000000000000000000000";
+        
+        // Use referrer address from backend if available, otherwise zero address
+        const referrer = userState.referrerAddress || "0x0000000000000000000000000000000000000000";
 
         await writeContractAsync({
             address: CONTRACT_ADDRESS,
@@ -229,7 +236,7 @@ const App: React.FC = () => {
     }
 
     const text = `I collected +${successModal.points} Power on Tesseract! 🧊\n${rankText}\nUse your Neynar Superpower:`;
-    const embedUrl = 'https://farcaster.xyz/miniapps/Xsf0F9GOSyy3/tesseract'; // Production URL
+    const embedUrl = `https://farcaster.xyz/miniapps/Xsf0F9GOSyy3/tesseract?ref=${userState.fid}`; // Production URL with ref
 
     try {
         await sdk.actions.composeCast({

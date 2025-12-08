@@ -48,11 +48,11 @@ export const getClickPower = (streak: number, neynarScore: number = 0): number =
 // --- API CLIENT ---
 
 export const api = {
-  syncUser: async (fid: number, username: string, pfpUrl?: string, primaryAddress?: string): Promise<UserState & { rank: number }> => {
+  syncUser: async (fid: number, username: string, pfpUrl?: string, primaryAddress?: string, referrerFid?: number): Promise<UserState & { rank: number }> => {
     const res = await fetch('/api/user', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fid, username, pfpUrl, primaryAddress }),
+      body: JSON.stringify({ fid, username, pfpUrl, primaryAddress, referrerFid }),
     });
     
     if (!res.ok) throw new Error('Failed to sync user');
@@ -67,7 +67,9 @@ export const api = {
       pfpUrl: data.pfp_url,
       rank: parseInt(data.rank),
       neynarScore: data.neynar_score || 0,
-      primaryAddress: data.primary_address
+      primaryAddress: data.primary_address,
+      referrerFid: data.referrer_fid ? parseInt(data.referrer_fid) : undefined,
+      referrerAddress: data.referrerAddress
     };
   },
 

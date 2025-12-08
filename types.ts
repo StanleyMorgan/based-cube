@@ -7,6 +7,8 @@ export interface UserState {
   pfpUrl?: string;
   neynarScore?: number;
   primaryAddress?: string;
+  referrerFid?: number;
+  referrerAddress?: string;
 }
 
 export interface LeaderboardEntry {

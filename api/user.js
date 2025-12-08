@@ -33,12 +33,12 @@ export default async function handler(request, response) {
     }
 
     if (request.method === 'POST') {
-      const { fid, username, pfpUrl, primaryAddress } = request.body;
+      const { fid, username, pfpUrl, primaryAddress, referrerFid } = request.body;
       if (!fid) return response.status(400).json({ error: 'FID is required' });
 
       // 1. Check existing user data to determine if we need to fetch Neynar Score
       const existingUserRes = await pool.sql`
-        SELECT neynar_score, neynar_last_updated 
+        SELECT neynar_score, neynar_last_updated, referrer_fid
         FROM users 
         WHERE fid = ${fid}
       `;
@@ -83,9 +83,12 @@ export default async function handler(request, response) {
       // 3. Upsert user (Split into Write and Read to fix Rank calculation bug)
       // We use COALESCE for primary_address to ensure we don't overwrite an existing address with NULL
       // if the client sends a sync request without the address (e.g. before wallet connect).
+      
+      const referrerValue = referrerFid ? referrerFid : null;
+
       const upsertResult = await pool.sql`
-        INSERT INTO users (fid, username, pfp_url, score, streak, neynar_score, neynar_last_updated, primary_address)
-        VALUES (${fid}, ${username}, ${pfpUrl}, 0, 0, ${neynarScore}, ${neynarLastUpdated}, ${primaryAddress || null})
+        INSERT INTO users (fid, username, pfp_url, score, streak, neynar_score, neynar_last_updated, primary_address, referrer_fid)
+        VALUES (${fid}, ${username}, ${pfpUrl}, 0, 0, ${neynarScore}, ${neynarLastUpdated}, ${primaryAddress || null}, ${referrerValue})
         ON CONFLICT (fid) 
         DO UPDATE SET 
           username = EXCLUDED.username,
@@ -93,6 +96,7 @@ export default async function handler(request, response) {
           neynar_score = EXCLUDED.neynar_score,
           neynar_last_updated = EXCLUDED.neynar_last_updated,
           primary_address = COALESCE(EXCLUDED.primary_address, users.primary_address),
+          referrer_fid = COALESCE(EXCLUDED.referrer_fid, users.referrer_fid),
           updated_at = CURRENT_TIMESTAMP
         RETURNING *;
       `;
@@ -108,9 +112,21 @@ export default async function handler(request, response) {
            OR (score = ${user.score} AND updated_at = ${user.updated_at} AND fid < ${user.fid})
       `;
 
+      // 5. Look up Referrer Address
+      let referrerAddress = null;
+      if (user.referrer_fid) {
+          const referrerRes = await pool.sql`
+            SELECT primary_address FROM users WHERE fid = ${user.referrer_fid}
+          `;
+          if (referrerRes.rows.length > 0) {
+              referrerAddress = referrerRes.rows[0].primary_address;
+          }
+      }
+
       return response.status(200).json({
         ...user,
-        rank: parseInt(rankResult.rows[0].rank)
+        rank: parseInt(rankResult.rows[0].rank),
+        referrerAddress
       });
     }
 
