@@ -6,7 +6,8 @@ export const config = {
 };
 
 // Font loader
-const interBold = fetch(new URL('https://raw.githubusercontent.com/StanleyMorgan/graphics/refs/heads/main/fonts/Inter-Bold.ttf', import.meta.url)).then(
+const fontUrl = 'https://raw.githubusercontent.com/StanleyMorgan/graphics/refs/heads/main/fonts/Inter-Bold.ttf';
+const interBold = fetch(fontUrl).then(
   (res) => res.arrayBuffer()
 );
 
