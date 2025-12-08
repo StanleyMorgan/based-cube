@@ -12,8 +12,7 @@ export default async function handler(req: Request) {
     const origin = host ? `https://${host}` : 'https://tesseract-base.vercel.app';
 
     // Image URL points to our generator
-    // We add a timestamp to bust cache if needed, or rely on headers
-    const imageUrl = `${origin}/api/share/image?fid=${fid}&t=${Date.now()}`;
+    const imageUrl = `${origin}/api/share/image?fid=${fid}`;
     
     // App Launch URL (with referral)
     let appUrl = `${origin}/`;
