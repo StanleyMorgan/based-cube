@@ -83,6 +83,7 @@ export default async function handler(req: Request) {
               border: '1px solid rgba(56, 189, 248, 0.3)',
               padding: '40px',
               boxShadow: '0 0 60px rgba(0,0,0,0.5)',
+              marginTop: '160px', // Shift down by approx 1/4 of height (630px)
             }}
           >
             {/* Avatar */}
@@ -102,7 +103,7 @@ export default async function handler(req: Request) {
 
             <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', fontSize: '32px', color: '#94a3b8', fontWeight: 600, marginBottom: '8px' }}>
-                    {username}
+                    {`${username}`}
                 </div>
                 
                 <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '30px' }}>
@@ -119,17 +120,6 @@ export default async function handler(req: Request) {
                     </div>
                 </div>
             </div>
-          </div>
-          
-          <div style={{
-              display: 'flex',
-              position: 'absolute',
-              bottom: '40px',
-              fontSize: '24px',
-              color: '#475569',
-              fontWeight: 600
-          }}>
-              tesseract-base.vercel.app
           </div>
         </div>
       ),
