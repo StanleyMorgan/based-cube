@@ -237,9 +237,8 @@ const App: React.FC = () => {
 
     const text = `I collected +${successModal.points} Power on Tesseract! 🧊\n${rankText}\nUse your Neynar Superpower:`;
     
-    // Use the dynamic Frame Proxy URL instead of the direct app URL
-    // This ensures the feed shows the dynamic image
-    const embedUrl = `https://tesseract-base.vercel.app/api/share/frame?fid=${userState.fid}`;
+    // Use score as cache buster. It changes only when user plays, perfect for caching + updating.
+    const embedUrl = `https://tesseract-base.vercel.app/api/share/frame?fid=${userState.fid}&score=${userState.score}`;
 
     try {
         await sdk.actions.composeCast({
