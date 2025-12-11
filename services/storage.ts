@@ -26,7 +26,10 @@ export const getTimeUntilNextClick = (lastClickDate: string | null): string => {
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 };
 
-export const canClickCube = (lastClickDate: string | null): boolean => {
+export const canClickCube = (lastClickDate: string | null, fid?: number): boolean => {
+  // Restriction: FID > 1600000 cannot play
+  if (fid && fid > 1600000) return false;
+
   if (!lastClickDate) return true;
   
   const lastClick = new Date(lastClickDate);

@@ -122,7 +122,7 @@ const App: React.FC = () => {
 
   // Update derived state when userState changes
   useEffect(() => {
-    setCanClick(canClickCube(userState.lastClickDate));
+    setCanClick(canClickCube(userState.lastClickDate, userState.fid));
     setClickPower(getClickPower(userState.streak, userState.neynarScore, userState.teamScore || 0));
   }, [userState]);
 
