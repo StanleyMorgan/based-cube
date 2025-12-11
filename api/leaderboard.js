@@ -8,7 +8,7 @@ export default async function handler(request, response) {
   try {
     // Rank logic: Score higher OR (Score equal AND Updated earlier) OR (Score equal AND Updated equal AND FID lower)
     const result = await pool.sql`
-      SELECT fid, username, score, pfp_url, 
+      SELECT fid, username, score, pfp_url, streak, neynar_score,
       (
         SELECT COUNT(*) + 1 
         FROM users u2 
@@ -27,7 +27,9 @@ export default async function handler(request, response) {
       score: row.score,
       rank: parseInt(row.rank),
       pfpUrl: row.pfp_url,
-      fid: row.fid
+      fid: row.fid,
+      streak: row.streak,
+      neynarScore: row.neynar_score
     }));
 
     return response.status(200).json(entries);

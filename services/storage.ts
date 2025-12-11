@@ -111,7 +111,9 @@ export const api = {
       score: entry.score,
       rank: entry.rank,
       pfpUrl: entry.pfpUrl,
-      isCurrentUser: entry.fid == currentFid
+      isCurrentUser: entry.fid == currentFid,
+      streak: entry.streak || 0,
+      neynarScore: entry.neynarScore || 0
     }));
   }
 };

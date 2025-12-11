@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { LeaderboardEntry, UserState } from '../types';
 import { api } from '../services/storage';
-import { Trophy, Medal, User } from 'lucide-react';
+import { Trophy, Medal, User, Loader2 } from 'lucide-react';
+import PlayerStatsModal from './modals/PlayerStatsModal';
 
 interface LeaderboardProps {
   currentUser: UserState;
@@ -10,6 +11,7 @@ interface LeaderboardProps {
 const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedPlayer, setSelectedPlayer] = useState<LeaderboardEntry | null>(null);
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
@@ -35,18 +37,19 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
 
       {loading ? (
           <div className="flex justify-center py-10">
-              <div className="animate-spin w-6 h-6 border-2 border-sky-500 border-t-transparent rounded-full"></div>
+              <Loader2 className="animate-spin w-8 h-8 text-sky-500" />
           </div>
       ) : (
         <div className="space-y-3">
             {data.map((entry) => (
-            <div
+            <button
                 key={entry.id}
-                className={`flex items-center p-4 rounded-xl border ${
+                onClick={() => setSelectedPlayer(entry)}
+                className={`w-full flex items-center p-4 rounded-xl border text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
                 entry.isCurrentUser
-                    ? 'bg-sky-900/30 border-sky-500/50'
-                    : 'bg-slate-800/40 border-slate-700/50'
-                } backdrop-blur-sm transition-transform hover:scale-[1.01]`}
+                    ? 'bg-sky-900/30 border-sky-500/50 shadow-[0_0_15px_rgba(14,165,233,0.15)]'
+                    : 'bg-slate-800/40 border-slate-700/50 hover:bg-slate-800/60'
+                } backdrop-blur-sm`}
             >
                 <div className="flex-shrink-0 w-8 text-center font-bold text-lg">
                 {entry.rank === 1 && <Medal className="w-6 h-6 text-yellow-400 mx-auto" />}
@@ -57,30 +60,40 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
 
                 <div className="ml-3 flex-shrink-0">
                 {entry.pfpUrl ? (
-                    <img src={entry.pfpUrl} alt={entry.username} className="w-8 h-8 rounded-full border border-slate-600" />
+                    <img src={entry.pfpUrl} alt={entry.username} className="w-10 h-10 rounded-full border border-slate-600" />
                 ) : (
-                    <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center border border-slate-600">
-                        <User size={16} className="text-slate-400" />
+                    <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center border border-slate-600">
+                        <User size={20} className="text-slate-400" />
                     </div>
                 )}
                 </div>
 
-                <div className="ml-3 flex-grow">
-                <div className="font-semibold text-slate-100 flex items-center gap-2">
-                    {entry.username}
-                    {entry.isCurrentUser && (
-                    <span className="text-[10px] bg-sky-500 text-white px-1.5 py-0.5 rounded uppercase font-bold tracking-wide">YOU</span>
-                    )}
-                </div>
+                <div className="ml-3 flex-grow min-w-0">
+                    <div className="font-semibold text-slate-100 flex items-center gap-2 truncate">
+                        {entry.username}
+                        {entry.isCurrentUser && (
+                        <span className="text-[10px] bg-sky-500 text-white px-1.5 py-0.5 rounded uppercase font-bold tracking-wide flex-shrink-0">YOU</span>
+                        )}
+                    </div>
+                    {/* Tiny stats preview */}
+                    <div className="text-[10px] text-slate-400 flex gap-2">
+                         <span>Streak: {entry.streak}</span>
+                    </div>
                 </div>
 
-                <div className="text-right font-mono font-bold text-emerald-400">
-                {entry.score.toLocaleString()}
+                <div className="text-right font-mono font-bold text-emerald-400 flex-shrink-0 pl-2">
+                    {entry.score.toLocaleString()}
                 </div>
-            </div>
+            </button>
             ))}
         </div>
       )}
+
+      {/* Player Details Modal */}
+      <PlayerStatsModal 
+        player={selectedPlayer} 
+        onClose={() => setSelectedPlayer(null)} 
+      />
     </div>
   );
 };

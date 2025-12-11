@@ -18,6 +18,8 @@ export interface LeaderboardEntry {
   rank: number;
   isCurrentUser?: boolean;
   pfpUrl?: string;
+  streak: number;
+  neynarScore: number;
 }
 
 export enum Tab {
