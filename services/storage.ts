@@ -46,7 +46,7 @@ export const getClickPower = (streak: number, neynarScore: number = 0, teamScore
 // --- API CLIENT ---
 
 export const api = {
-  syncUser: async (fid: number, username: string, pfpUrl?: string, primaryAddress?: string, referrerFid?: number): Promise<UserState & { rank: number }> => {
+  syncUser: async (fid: number, username: string, pfpUrl?: string, primaryAddress?: string, referrerFid?: number): Promise<UserState> => {
     const res = await fetch('/api/user', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -72,7 +72,7 @@ export const api = {
     };
   },
 
-  performClick: async (fid: number): Promise<UserState & { rank: number }> => {
+  performClick: async (fid: number): Promise<UserState> => {
     const res = await fetch('/api/click', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
