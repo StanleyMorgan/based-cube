@@ -11,7 +11,6 @@ export interface UserState {
   referrerFid?: number;
   referrerAddress?: string;
   teamScore?: number;
-  rank: number;
 }
 
 export interface LeaderboardEntry {

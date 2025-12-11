@@ -27,8 +27,7 @@ const App: React.FC = () => {
     username: 'Loading...',
     lastClickDate: null,
     neynarScore: 0,
-    teamScore: 0,
-    rank: 0
+    teamScore: 0
   });
   
   const [canClick, setCanClick] = useState(false);
@@ -353,6 +352,7 @@ const App: React.FC = () => {
             >
               <Leaderboard 
                 currentUser={userState} 
+                currentRank={rank}
                 onPlayerSelect={setSelectedPlayer} 
               />
             </motion.div>
