@@ -74,7 +74,7 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose }) 
                             </div>
 
                             {/* Team */}
-                            <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex justify-between items-center opacity-75">
+                            <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex justify-between items-center">
                                 <div className="flex items-center gap-3 text-indigo-400">
                                     <Users size={22} className="fill-indigo-400/20" />
                                     <span className="font-bold text-base">Team</span>
@@ -83,7 +83,7 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose }) 
                             </div>
 
                             {/* Bonus */}
-                            <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex justify-between items-center opacity-50">
+                            <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex justify-between items-center">
                                 <div className="flex items-center gap-3 text-yellow-400">
                                     <Star size={22} className="fill-yellow-400/20" />
                                     <span className="font-bold text-base">Bonus</span>
