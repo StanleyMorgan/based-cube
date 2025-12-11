@@ -75,10 +75,6 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
                         <span className="text-[10px] bg-sky-500 text-white px-1.5 py-0.5 rounded uppercase font-bold tracking-wide flex-shrink-0">YOU</span>
                         )}
                     </div>
-                    {/* Tiny stats preview */}
-                    <div className="text-[10px] text-slate-400 flex gap-2">
-                         <span>Streak: {entry.streak}</span>
-                    </div>
                 </div>
 
                 <div className="text-right font-mono font-bold text-emerald-400 flex-shrink-0 pl-2">

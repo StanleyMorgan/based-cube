@@ -51,7 +51,6 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose }) 
                                 </div>
                             </div>
                             <h2 className="text-xl font-bold text-white">{player.username}</h2>
-                            <span className="text-slate-400 text-sm font-mono">{player.score.toLocaleString()} Score</span>
                         </div>
 
                         <div className="space-y-4">
@@ -59,10 +58,7 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose }) 
                             <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex justify-between items-center">
                                 <div className="flex items-center gap-3 text-sky-400">
                                     <Zap size={22} className="fill-sky-400/20" />
-                                    <div className="flex flex-col">
-                                        <span className="font-bold text-base leading-none">Neynar</span>
-                                        <span className="text-[10px] text-slate-500 uppercase tracking-wider">Base Power</span>
-                                    </div>
+                                    <span className="font-bold text-base">Neynar</span>
                                 </div>
                                 <span className="text-xl font-black text-white">+{neynarPower}</span>
                             </div>
@@ -71,10 +67,7 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose }) 
                             <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex justify-between items-center">
                                 <div className="flex items-center gap-3 text-orange-400">
                                     <Flame size={22} className="fill-orange-400/20" />
-                                    <div className="flex flex-col">
-                                        <span className="font-bold text-base leading-none">Streak</span>
-                                        <span className="text-[10px] text-slate-500 uppercase tracking-wider">{player.streak} Days</span>
-                                    </div>
+                                    <span className="font-bold text-base">Streak</span>
                                 </div>
                                 <span className="text-xl font-black text-white">+{streakPower}</span>
                             </div>
