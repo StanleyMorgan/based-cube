@@ -54,12 +54,13 @@ export default async function handler(request, response) {
     }
 
     // Calculate Team Bonus
-    // Logic: +1 if has referrer, +2 if referred others
-    const referralResult = await pool.sql`SELECT COUNT(*) as count FROM users WHERE referrer_fid = ${fid}`;
-    const referralCount = parseInt(referralResult.rows[0].count);
+    // Optimization: We don't need COUNT(*), we just need to know if at least ONE exists.
+    // Using LIMIT 1 is much faster for users with many referrals.
+    const referralResult = await pool.sql`SELECT 1 FROM users WHERE referrer_fid = ${fid} LIMIT 1`;
+    const hasReferrals = referralResult.rows.length > 0;
     
     const invitedBySomeone = user.referrer_fid ? 1 : 0;
-    const invitedOthers = referralCount > 0 ? 2 : 0;
+    const invitedOthers = hasReferrals ? 2 : 0;
     const teamBonus = invitedBySomeone + invitedOthers;
 
     // Calculate Power

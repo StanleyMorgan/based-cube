@@ -107,7 +107,7 @@ export default async function handler(request, response) {
 
       const user = upsertResult.rows[0];
 
-      // 4. Calculate Rank and Team Score in separate queries
+      // 4. Calculate Rank and Team Score
       const statsResult = await pool.sql`
         SELECT 
           (
@@ -118,20 +118,18 @@ export default async function handler(request, response) {
                OR (score = ${user.score} AND updated_at = ${user.updated_at} AND fid < ${user.fid})
           ) as rank,
           (
-            SELECT COUNT(*) 
-            FROM users 
-            WHERE referrer_fid = ${user.fid}
-          ) as referral_count
+            CASE WHEN EXISTS (SELECT 1 FROM users WHERE referrer_fid = ${user.fid}) THEN 1 ELSE 0 END
+          ) as has_referrals
       `;
 
       const rank = parseInt(statsResult.rows[0].rank);
-      const referralCount = parseInt(statsResult.rows[0].referral_count);
+      const hasReferrals = parseInt(statsResult.rows[0].has_referrals) === 1;
 
       // Team Score Logic
       // +1 if user has a referrer_fid
-      // +2 if user has referred others (referral_count > 0)
+      // +2 if user has referred others (has_referrals is true)
       const invitedBySomeone = user.referrer_fid ? 1 : 0;
-      const invitedOthers = referralCount > 0 ? 2 : 0;
+      const invitedOthers = hasReferrals ? 2 : 0;
       const teamScore = invitedBySomeone + invitedOthers;
 
       // 5. Look up Referrer Address
