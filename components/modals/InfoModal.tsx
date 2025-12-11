@@ -7,9 +7,10 @@ interface InfoModalProps {
     onClose: () => void;
     neynarPower: number;
     streakPower: number;
+    teamPower?: number;
 }
 
-const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, streakPower }) => {
+const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, streakPower, teamPower = 0 }) => {
     return (
         <AnimatePresence>
             {isOpen && (
@@ -56,7 +57,7 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, str
                                     <Users size={22} className="fill-indigo-400/20" />
                                     <span className="font-bold text-lg">Team</span>
                                 </div>
-                                <span className="text-2xl font-black text-white">+0</span>
+                                <span className="text-2xl font-black text-white">+{teamPower}</span>
                             </div>
 
                             {/* Bonus */}

@@ -1,3 +1,4 @@
+
 export interface UserState {
   score: number;
   lastClickDate: string | null; // ISO Date string YYYY-MM-DD
@@ -9,6 +10,7 @@ export interface UserState {
   primaryAddress?: string;
   referrerFid?: number;
   referrerAddress?: string;
+  teamScore?: number;
 }
 
 export interface LeaderboardEntry {
@@ -20,6 +22,7 @@ export interface LeaderboardEntry {
   pfpUrl?: string;
   streak: number;
   neynarScore: number;
+  teamScore?: number;
 }
 
 export enum Tab {

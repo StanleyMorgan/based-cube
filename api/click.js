@@ -24,54 +24,55 @@ export default async function handler(request, response) {
     const now = new Date();
     
     // Check 24 hours cooldown
-    // Note: Database column last_click_date must be TIMESTAMP for this to work precisely
     if (user.last_click_date) {
         const lastClick = new Date(user.last_click_date);
         const diff = now.getTime() - lastClick.getTime();
-        // 24 hours cooldown
         const cooldown = 24 * 60 * 60 * 1000; 
         
-        // Allow a small buffer (e.g. 5 seconds) to prevent edge case sync issues
         if (diff < (cooldown - 5000)) {
            return response.status(400).json({ error: 'Cooldown active' });
         }
     }
 
     // Calculate Streak
-    // Streak logic: If last click was within (24h to 48h) window, increment. 
-    // If > 48h, reset.
     let newStreak = 1;
     
     if (user.last_click_date) {
         const lastClick = new Date(user.last_click_date);
         const diff = now.getTime() - lastClick.getTime();
         
-        // 24h window start, 48h window end
         const windowStart = 24 * 60 * 60 * 1000;
         const windowEnd = 48 * 60 * 60 * 1000;
         
         if (diff >= windowStart && diff < windowEnd) {
-            // Maintained streak
             newStreak = user.streak + 1;
         } else if (diff >= windowEnd) {
-            // Missed a day (window)
             newStreak = 1;
         } else {
-             // Should not happen due to cooldown check, but if forced, keep streak
              newStreak = user.streak;
         }
     }
+
+    // Calculate Team Bonus
+    // Logic: +1 if has referrer, +2 if referred others
+    const referralResult = await pool.sql`SELECT COUNT(*) as count FROM users WHERE referrer_fid = ${fid}`;
+    const referralCount = parseInt(referralResult.rows[0].count);
+    
+    const invitedBySomeone = user.referrer_fid ? 1 : 0;
+    const invitedOthers = referralCount > 0 ? 2 : 0;
+    const teamBonus = invitedBySomeone + invitedOthers;
 
     // Calculate Power
     const neynarScore = user.neynar_score || 0;
     const basePower = Math.floor(100 * neynarScore);
     const streakBonus = Math.min(newStreak, 30);
-    const clickPower = basePower + streakBonus;
+    
+    // Total Power
+    const clickPower = basePower + streakBonus + teamBonus;
     
     const newScore = user.score + clickPower;
 
-    // 2. Update DB (Split into Write and Read to fix Rank calculation bug)
-    // IMPORTANT: last_click_date is set to CURRENT_TIMESTAMP to capture exact time
+    // 2. Update DB
     const updateResult = await pool.sql`
       UPDATE users 
       SET 
@@ -85,7 +86,7 @@ export default async function handler(request, response) {
 
     const updatedUser = updateResult.rows[0];
 
-    // 3. Calculate Rank in a separate query
+    // 3. Calculate Rank
     const rankResult = await pool.sql`
       SELECT COUNT(*) + 1 as rank
       FROM users
@@ -96,7 +97,8 @@ export default async function handler(request, response) {
 
     return response.status(200).json({
       ...updatedUser,
-      rank: parseInt(rankResult.rows[0].rank)
+      rank: parseInt(rankResult.rows[0].rank),
+      teamScore: teamBonus
     });
 
   } catch (error) {

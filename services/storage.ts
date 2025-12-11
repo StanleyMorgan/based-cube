@@ -36,13 +36,11 @@ export const canClickCube = (lastClickDate: string | null): boolean => {
   return (now.getTime() - lastClick.getTime()) >= cooldown;
 };
 
-export const getClickPower = (streak: number, neynarScore: number = 0): number => {
-  // Logic: 100 * Neynar Score + Streak (max 30)
-  // neynarScore is typically 0.0 to 1.0 (e.g. 0.95)
-  // If neynarScore is not available (0), base power is 0.
+export const getClickPower = (streak: number, neynarScore: number = 0, teamScore: number = 0): number => {
+  // Logic: 100 * Neynar Score + Streak (max 30) + Team Score (0-3)
   const basePower = Math.floor(100 * neynarScore);
   const streakBonus = Math.min(streak, 30);
-  return basePower + streakBonus;
+  return basePower + streakBonus + teamScore;
 };
 
 // --- API CLIENT ---
@@ -69,7 +67,8 @@ export const api = {
       neynarScore: data.neynar_score || 0,
       primaryAddress: data.primary_address,
       referrerFid: data.referrer_fid ? parseInt(data.referrer_fid) : undefined,
-      referrerAddress: data.referrerAddress
+      referrerAddress: data.referrerAddress,
+      teamScore: data.teamScore || 0
     };
   },
 
@@ -95,7 +94,8 @@ export const api = {
       pfpUrl: data.pfp_url,
       rank: parseInt(data.rank),
       neynarScore: data.neynar_score || 0,
-      primaryAddress: data.primary_address
+      primaryAddress: data.primary_address,
+      teamScore: data.teamScore || 0
     };
   },
 
@@ -113,7 +113,8 @@ export const api = {
       pfpUrl: entry.pfpUrl,
       isCurrentUser: entry.fid == currentFid,
       streak: entry.streak || 0,
-      neynarScore: entry.neynarScore || 0
+      neynarScore: entry.neynarScore || 0,
+      teamScore: entry.teamScore || 0
     }));
   }
 };

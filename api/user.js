@@ -10,8 +10,7 @@ export default async function handler(request, response) {
       const { fid } = request.query;
       if (!fid) return response.status(400).json({ error: 'FID is required' });
 
-      // Get user and their current rank
-      // For GET requests, the subquery approach is generally safe, but ensuring exact logic match
+      // Get user, rank, and team score logic
       const result = await pool.sql`
         SELECT *, 
         (
@@ -20,7 +19,11 @@ export default async function handler(request, response) {
           WHERE u2.score > u1.score 
              OR (u2.score = u1.score AND u2.updated_at < u1.updated_at)
              OR (u2.score = u1.score AND u2.updated_at = u1.updated_at AND u2.fid < u1.fid)
-        ) as rank
+        ) as rank,
+        (
+             (CASE WHEN referrer_fid IS NOT NULL THEN 1 ELSE 0 END) +
+             (CASE WHEN EXISTS (SELECT 1 FROM users u_inv WHERE u_inv.referrer_fid = u1.fid) THEN 2 ELSE 0 END)
+        ) as team_score
         FROM users u1 
         WHERE fid = ${fid};
       `;
@@ -28,8 +31,12 @@ export default async function handler(request, response) {
       if (result.rows.length === 0) {
         return response.status(404).json({ error: 'User not found' });
       }
-
-      return response.status(200).json(result.rows[0]);
+      
+      const user = result.rows[0];
+      return response.status(200).json({
+        ...user,
+        teamScore: parseInt(user.team_score)
+      });
     }
 
     if (request.method === 'POST') {
@@ -80,10 +87,7 @@ export default async function handler(request, response) {
         }
       }
 
-      // 3. Upsert user (Split into Write and Read to fix Rank calculation bug)
-      // We use COALESCE for primary_address to ensure we don't overwrite an existing address with NULL
-      // if the client sends a sync request without the address (e.g. before wallet connect).
-      
+      // 3. Upsert user
       const referrerValue = referrerFid ? referrerFid : null;
 
       const upsertResult = await pool.sql`
@@ -103,14 +107,32 @@ export default async function handler(request, response) {
 
       const user = upsertResult.rows[0];
 
-      // 4. Calculate Rank in a separate query to ensure consistency
-      const rankResult = await pool.sql`
-        SELECT COUNT(*) + 1 as rank
-        FROM users
-        WHERE score > ${user.score} 
-           OR (score = ${user.score} AND updated_at < ${user.updated_at})
-           OR (score = ${user.score} AND updated_at = ${user.updated_at} AND fid < ${user.fid})
+      // 4. Calculate Rank and Team Score in separate queries
+      const statsResult = await pool.sql`
+        SELECT 
+          (
+            SELECT COUNT(*) + 1
+            FROM users
+            WHERE score > ${user.score} 
+               OR (score = ${user.score} AND updated_at < ${user.updated_at})
+               OR (score = ${user.score} AND updated_at = ${user.updated_at} AND fid < ${user.fid})
+          ) as rank,
+          (
+            SELECT COUNT(*) 
+            FROM users 
+            WHERE referrer_fid = ${user.fid}
+          ) as referral_count
       `;
+
+      const rank = parseInt(statsResult.rows[0].rank);
+      const referralCount = parseInt(statsResult.rows[0].referral_count);
+
+      // Team Score Logic
+      // +1 if user has a referrer_fid
+      // +2 if user has referred others (referral_count > 0)
+      const invitedBySomeone = user.referrer_fid ? 1 : 0;
+      const invitedOthers = referralCount > 0 ? 2 : 0;
+      const teamScore = invitedBySomeone + invitedOthers;
 
       // 5. Look up Referrer Address
       let referrerAddress = null;
@@ -125,7 +147,8 @@ export default async function handler(request, response) {
 
       return response.status(200).json({
         ...user,
-        rank: parseInt(rankResult.rows[0].rank),
+        rank,
+        teamScore,
         referrerAddress
       });
     }

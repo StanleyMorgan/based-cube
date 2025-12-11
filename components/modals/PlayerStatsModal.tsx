@@ -14,7 +14,7 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose }) 
     // Calculate power stats based on raw data
     const neynarPower = Math.floor(100 * (player.neynarScore || 0));
     const streakPower = Math.min(player.streak, 30);
-    const teamPower = 0; // Hardcoded +0 for now
+    const teamPower = player.teamScore || 0;
 
     return (
         <AnimatePresence>

@@ -26,7 +26,8 @@ const App: React.FC = () => {
     streak: 0,
     username: 'Loading...',
     lastClickDate: null,
-    neynarScore: 0
+    neynarScore: 0,
+    teamScore: 0
   });
   
   const [canClick, setCanClick] = useState(false);
@@ -122,7 +123,7 @@ const App: React.FC = () => {
   // Update derived state when userState changes
   useEffect(() => {
     setCanClick(canClickCube(userState.lastClickDate));
-    setClickPower(getClickPower(userState.streak, userState.neynarScore));
+    setClickPower(getClickPower(userState.streak, userState.neynarScore, userState.teamScore || 0));
   }, [userState]);
 
   const handleCubeClick = async () => {
@@ -165,7 +166,7 @@ const App: React.FC = () => {
         // 2. Call API to update Score in DB
         const newState = await api.performClick(userState.fid);
         
-        // Calculate actual points earned (Server Logic: Neynar * 100 + NEW Streak)
+        // Calculate actual points earned
         const earnedPoints = newState.score - oldScore;
         
         // 3. Fetch Leaderboard to show visualization (Snippet)
@@ -255,6 +256,7 @@ const App: React.FC = () => {
 
   const neynarPowerCalc = Math.floor(100 * (userState.neynarScore || 0));
   const streakPowerCalc = Math.min(userState.streak, 30);
+  const teamPowerCalc = userState.teamScore || 0;
 
   if (isLoading) {
       return (
@@ -369,6 +371,7 @@ const App: React.FC = () => {
           onClose={() => setShowInfo(false)}
           neynarPower={neynarPowerCalc}
           streakPower={streakPowerCalc}
+          teamPower={teamPowerCalc}
       />
       
       <PlayerStatsModal 
