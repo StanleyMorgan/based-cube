@@ -8,6 +8,7 @@ import Leaderboard from './components/Leaderboard';
 import Navigation from './components/Navigation';
 import Stats from './components/Stats';
 import InfoModal from './components/modals/InfoModal';
+import PlayerStatsModal from './components/modals/PlayerStatsModal';
 import SuccessModal, { SuccessModalData } from './components/modals/SuccessModal';
 import { Info, Wallet, Loader2 } from 'lucide-react';
 
@@ -38,6 +39,7 @@ const App: React.FC = () => {
 
   // Animation & Modal States
   const [showReward, setShowReward] = useState(false);
+  const [selectedPlayer, setSelectedPlayer] = useState<LeaderboardEntry | null>(null);
   
   const [successModal, setSuccessModal] = useState<SuccessModalData | null>(null);
 
@@ -346,7 +348,10 @@ const App: React.FC = () => {
               exit={{ opacity: 0, x: -20 }}
               className="flex-grow h-full overflow-hidden"
             >
-              <Leaderboard currentUser={userState} />
+              <Leaderboard 
+                currentUser={userState} 
+                onPlayerSelect={setSelectedPlayer} 
+              />
             </motion.div>
           )}
         </AnimatePresence>
@@ -365,9 +370,16 @@ const App: React.FC = () => {
           neynarPower={neynarPowerCalc}
           streakPower={streakPowerCalc}
       />
+      
+      <PlayerStatsModal 
+        player={selectedPlayer} 
+        onClose={() => setSelectedPlayer(null)} 
+      />
 
-      {/* Navigation */}
-      <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
+      {/* Navigation - Hidden when Player Stats Modal is open to prevent overlap */}
+      {!selectedPlayer && (
+        <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
+      )}
     </div>
   );
 };

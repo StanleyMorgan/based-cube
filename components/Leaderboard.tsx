@@ -2,16 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { LeaderboardEntry, UserState } from '../types';
 import { api } from '../services/storage';
 import { Trophy, Medal, User, Loader2 } from 'lucide-react';
-import PlayerStatsModal from './modals/PlayerStatsModal';
 
 interface LeaderboardProps {
   currentUser: UserState;
+  onPlayerSelect: (player: LeaderboardEntry) => void;
 }
 
-const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
+const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, onPlayerSelect }) => {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPlayer, setSelectedPlayer] = useState<LeaderboardEntry | null>(null);
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
@@ -44,7 +43,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
             {data.map((entry) => (
             <button
                 key={entry.id}
-                onClick={() => setSelectedPlayer(entry)}
+                onClick={() => onPlayerSelect(entry)}
                 className={`w-full flex items-center p-4 rounded-xl border text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
                 entry.isCurrentUser
                     ? 'bg-sky-900/30 border-sky-500/50 shadow-[0_0_15px_rgba(14,165,233,0.15)]'
@@ -84,12 +83,6 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
             ))}
         </div>
       )}
-
-      {/* Player Details Modal */}
-      <PlayerStatsModal 
-        player={selectedPlayer} 
-        onClose={() => setSelectedPlayer(null)} 
-      />
     </div>
   );
 };
