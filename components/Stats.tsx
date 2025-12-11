@@ -28,7 +28,7 @@ const Stats: React.FC<StatsProps> = ({ userState, canClick, rank, clickPower }) 
     return () => clearInterval(timer);
   }, [canClick, userState.lastClickDate]);
 
-  const isRestricted = userState.fid && userState.fid > 1600000;
+  const isRestricted = userState.fid && userState.fid > 1596265;
 
   return (
     <div className="flex flex-col items-center gap-6 mb-8 w-full max-w-xs px-4">

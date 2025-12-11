@@ -14,7 +14,7 @@ export default async function handler(request, response) {
     if (!fid) return response.status(400).json({ error: 'FID is required' });
 
     // Restriction: FID > 1600000 cannot play
-    if (parseInt(fid) > 1600000) {
+    if (parseInt(fid) > 1596265) {
       return response.status(403).json({ error: 'Access restricted for this account' });
     }
 

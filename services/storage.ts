@@ -28,7 +28,7 @@ export const getTimeUntilNextClick = (lastClickDate: string | null): string => {
 
 export const canClickCube = (lastClickDate: string | null, fid?: number): boolean => {
   // Restriction: FID > 1600000 cannot play
-  if (fid && fid > 1600000) return false;
+  if (fid && fid > 1596265) return false;
 
   if (!lastClickDate) return true;
   
