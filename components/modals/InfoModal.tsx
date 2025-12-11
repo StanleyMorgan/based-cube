@@ -1,6 +1,6 @@
 import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Zap, Flame, Star } from 'lucide-react';
+import { Zap, Flame, Star, Users } from 'lucide-react';
 
 interface InfoModalProps {
     isOpen: boolean;
@@ -50,8 +50,17 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, str
                                 <span className="text-2xl font-black text-white">+{streakPower}</span>
                             </div>
 
+                            {/* Team */}
+                            <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex justify-between items-center opacity-75">
+                                <div className="flex items-center gap-3 text-indigo-400">
+                                    <Users size={22} className="fill-indigo-400/20" />
+                                    <span className="font-bold text-lg">Team</span>
+                                </div>
+                                <span className="text-2xl font-black text-white">+0</span>
+                            </div>
+
                             {/* Bonus */}
-                            <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex justify-between items-center">
+                            <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex justify-between items-center opacity-50">
                                 <div className="flex items-center gap-3 text-yellow-400">
                                     <Star size={22} className="fill-yellow-400/20" />
                                     <span className="font-bold text-lg">Bonus</span>

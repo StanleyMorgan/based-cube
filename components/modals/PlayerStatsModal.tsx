@@ -1,6 +1,6 @@
 import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Zap, Flame, Star, User } from 'lucide-react';
+import { Zap, Flame, Star, User, Users } from 'lucide-react';
 import { LeaderboardEntry } from '../../types';
 
 interface PlayerStatsModalProps {
@@ -14,6 +14,7 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose }) 
     // Calculate power stats based on raw data
     const neynarPower = Math.floor(100 * (player.neynarScore || 0));
     const streakPower = Math.min(player.streak, 30);
+    const teamPower = 0; // Hardcoded +0 for now
 
     return (
         <AnimatePresence>
@@ -72,7 +73,16 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose }) 
                                 <span className="text-xl font-black text-white">+{streakPower}</span>
                             </div>
 
-                            {/* Bonus - Placeholder for now */}
+                            {/* Team */}
+                            <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex justify-between items-center opacity-75">
+                                <div className="flex items-center gap-3 text-indigo-400">
+                                    <Users size={22} className="fill-indigo-400/20" />
+                                    <span className="font-bold text-base">Team</span>
+                                </div>
+                                <span className="text-xl font-black text-white">+{teamPower}</span>
+                            </div>
+
+                            {/* Bonus */}
                             <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex justify-between items-center opacity-50">
                                 <div className="flex items-center gap-3 text-yellow-400">
                                     <Star size={22} className="fill-yellow-400/20" />
