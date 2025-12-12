@@ -88,7 +88,12 @@ export default async function handler(request, response) {
       }
 
       // 3. Upsert user
-      const referrerValue = referrerFid ? referrerFid : null;
+      let referrerValue = referrerFid ? referrerFid : null;
+
+      // Prevent self-referral
+      if (referrerValue && String(referrerValue) === String(fid)) {
+        referrerValue = null;
+      }
 
       const upsertResult = await pool.sql`
         INSERT INTO users (fid, username, pfp_url, score, streak, neynar_score, neynar_last_updated, primary_address, referrer_fid)
@@ -100,7 +105,8 @@ export default async function handler(request, response) {
           neynar_score = EXCLUDED.neynar_score,
           neynar_last_updated = EXCLUDED.neynar_last_updated,
           primary_address = COALESCE(EXCLUDED.primary_address, users.primary_address),
-          referrer_fid = COALESCE(EXCLUDED.referrer_fid, users.referrer_fid),
+          -- Critical Fix: Prioritize existing referrer_fid in DB over new value
+          referrer_fid = COALESCE(users.referrer_fid, EXCLUDED.referrer_fid),
           updated_at = CURRENT_TIMESTAMP
         RETURNING *;
       `;
