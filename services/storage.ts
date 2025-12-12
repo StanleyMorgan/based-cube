@@ -119,5 +119,24 @@ export const api = {
       neynarScore: entry.neynarScore || 0,
       teamScore: entry.teamScore || 0
     }));
+  },
+
+  getCompletedTasks: async (fid: number): Promise<string[]> => {
+    const res = await fetch(`/api/tasks?fid=${fid}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.completedIds || [];
+  },
+
+  claimTask: async (fid: number, taskId: string): Promise<{ success: boolean; newScore?: number; error?: string }> => {
+    const res = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fid, taskId }),
+    });
+    
+    const data = await res.json();
+    if (!res.ok) return { success: false, error: data.error };
+    return { success: true, newScore: data.newScore };
   }
 };
