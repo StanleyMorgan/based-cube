@@ -2,12 +2,11 @@ import React from 'react';
 import { ClipboardList, CheckCircle2, Zap } from 'lucide-react';
 
 const Tasks = () => {
-  // Placeholder data
+  // Placeholder data with updated rewards
   const tasks = [
-    { id: 1, title: 'Connect Wallet', reward: 100, completed: true },
-    { id: 2, title: 'Follow /tesseract', reward: 500, completed: false },
-    { id: 3, title: 'Like & Recast', reward: 200, completed: false },
-    { id: 4, title: 'Invite a Friend', reward: 1000, completed: false },
+    { id: 2, title: 'Follow /tesseract', reward: 10 },
+    { id: 3, title: 'Like & Recast', reward: 10 },
+    { id: 4, title: 'Invite a Friend', reward: 10 },
   ];
 
   return (
@@ -21,14 +20,10 @@ const Tasks = () => {
         {tasks.map((task) => (
           <div
             key={task.id}
-            className={`w-full flex items-center p-4 rounded-xl border transition-all duration-200 ${
-              task.completed
-                ? 'bg-slate-800/20 border-slate-700/30 opacity-60'
-                : 'bg-slate-800/40 border-slate-700/50 hover:bg-slate-800/60'
-            } backdrop-blur-sm`}
+            className="w-full flex items-center p-4 rounded-xl border transition-all duration-200 bg-slate-800/40 border-slate-700/50 backdrop-blur-sm opacity-80"
           >
-            <div className={`p-2 rounded-full mr-3 ${task.completed ? 'bg-emerald-500/10 text-emerald-500' : 'bg-slate-700 text-slate-400'}`}>
-                {task.completed ? <CheckCircle2 size={20} /> : <ClipboardList size={20} />}
+            <div className="p-2 rounded-full mr-3 bg-slate-700 text-slate-400">
+                <ClipboardList size={20} />
             </div>
 
             <div className="flex-grow min-w-0">
@@ -44,14 +39,10 @@ const Tasks = () => {
             </div>
 
             <button 
-                disabled={task.completed}
-                className={`ml-3 px-4 py-1.5 rounded-lg text-sm font-bold transition-colors ${
-                    task.completed 
-                    ? 'bg-transparent text-emerald-500 cursor-default'
-                    : 'bg-purple-600 text-white hover:bg-purple-500 shadow-lg shadow-purple-900/30'
-                }`}
+                disabled={true}
+                className="ml-3 px-4 py-1.5 rounded-lg text-sm font-bold transition-colors bg-slate-700/50 text-slate-500 cursor-not-allowed border border-slate-600/30"
             >
-                {task.completed ? 'Done' : 'Start'}
+                Start
             </button>
           </div>
         ))}
