@@ -97,11 +97,11 @@ export default async function handler(request, response) {
 
       const upsertResult = await pool.sql`
         INSERT INTO users (fid, username, pfp_url, score, streak, neynar_score, neynar_last_updated, primary_address, referrer_fid)
-        VALUES (${fid}, ${username}, ${pfpUrl}, 0, 0, ${neynarScore}, ${neynarLastUpdated}, ${primaryAddress || null}, ${referrerValue})
+        VALUES (${fid}, ${username}, ${pfpUrl || null}, 0, 0, ${neynarScore}, ${neynarLastUpdated}, ${primaryAddress || null}, ${referrerValue})
         ON CONFLICT (fid) 
         DO UPDATE SET 
           username = EXCLUDED.username,
-          pfp_url = EXCLUDED.pfp_url,
+          pfp_url = COALESCE(EXCLUDED.pfp_url, users.pfp_url),
           neynar_score = EXCLUDED.neynar_score,
           neynar_last_updated = EXCLUDED.neynar_last_updated,
           primary_address = COALESCE(EXCLUDED.primary_address, users.primary_address),
