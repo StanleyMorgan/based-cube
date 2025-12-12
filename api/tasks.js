@@ -89,6 +89,23 @@ export default async function handler(request, response) {
             RETURNING score;
           `;
 
+          // Log History
+          await pool.sql`
+            CREATE TABLE IF NOT EXISTS score_history (
+                id SERIAL PRIMARY KEY,
+                fid INTEGER NOT NULL,
+                amount INTEGER NOT NULL,
+                reason VARCHAR(255) NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW()
+            );
+          `;
+          
+          const historyReason = `task:${taskId}`;
+          await pool.sql`
+             INSERT INTO score_history (fid, amount, reason)
+             VALUES (${fid}, ${reward}, ${historyReason})
+          `;
+
           return response.status(200).json({ 
             success: true, 
             newScore: updateResult.rows[0].score 

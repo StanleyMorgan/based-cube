@@ -90,9 +90,26 @@ export default async function handler(request, response) {
       RETURNING *;
     `;
 
+    // 3. Log History
+    // Ensure table exists (best effort, ideally handled in migrations or history api)
+    await pool.sql`
+      CREATE TABLE IF NOT EXISTS score_history (
+        id SERIAL PRIMARY KEY,
+        fid INTEGER NOT NULL,
+        amount INTEGER NOT NULL,
+        reason VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `;
+
+    await pool.sql`
+      INSERT INTO score_history (fid, amount, reason)
+      VALUES (${fid}, ${clickPower}, 'daily_click')
+    `;
+
     const updatedUser = updateResult.rows[0];
 
-    // 3. Calculate Rank
+    // 4. Calculate Rank
     const rankResult = await pool.sql`
       SELECT COUNT(*) + 1 as rank
       FROM users
