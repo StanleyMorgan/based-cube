@@ -102,8 +102,8 @@ export const api = {
     };
   },
 
-  getLeaderboard: async (currentFid?: number): Promise<LeaderboardEntry[]> => {
-    const res = await fetch('/api/leaderboard');
+  getLeaderboard: async (currentFid?: number, page: number = 1): Promise<LeaderboardEntry[]> => {
+    const res = await fetch(`/api/leaderboard?page=${page}&limit=20`);
     if (!res.ok) return [];
     
     const data: any[] = await res.json();

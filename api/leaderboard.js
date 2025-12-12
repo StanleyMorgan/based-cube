@@ -6,6 +6,10 @@ export default async function handler(request, response) {
   });
 
   try {
+    const { page = 1, limit = 20 } = request.query;
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    const limitVal = parseInt(limit);
+
     // Rank logic: Score higher OR (Score equal AND Updated earlier) OR (Score equal AND Updated equal AND FID lower)
     const result = await pool.sql`
       SELECT fid, username, score, pfp_url, streak, neynar_score, referrer_fid,
@@ -21,7 +25,7 @@ export default async function handler(request, response) {
       ) as has_referrals
       FROM users u1
       ORDER BY score DESC, updated_at ASC, fid ASC
-      LIMIT 50;
+      LIMIT ${limitVal} OFFSET ${offset};
     `;
     
     const entries = result.rows.map(row => {
