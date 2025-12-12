@@ -5,6 +5,7 @@ import { api, canClickCube, getClickPower } from './services/storage';
 import { Tab, UserState, LeaderboardEntry } from './types';
 import Cube from './components/Cube';
 import Leaderboard from './components/Leaderboard';
+import Tasks from './components/Tasks';
 import Navigation from './components/Navigation';
 import Stats from './components/Stats';
 import InfoModal from './components/modals/InfoModal';
@@ -342,7 +343,7 @@ const App: React.FC = () => {
               </div>
               
             </motion.div>
-          ) : (
+          ) : activeTab === Tab.LEADERBOARD ? (
             <motion.div
               key="leaderboard"
               initial={{ opacity: 0, x: 20 }}
@@ -355,6 +356,16 @@ const App: React.FC = () => {
                 currentRank={rank}
                 onPlayerSelect={setSelectedPlayer} 
               />
+            </motion.div>
+          ) : (
+             <motion.div
+              key="tasks"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="flex-grow h-full overflow-hidden"
+            >
+              <Tasks />
             </motion.div>
           )}
         </AnimatePresence>

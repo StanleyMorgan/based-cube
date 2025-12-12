@@ -28,4 +28,5 @@ export interface LeaderboardEntry {
 export enum Tab {
   GAME = 'GAME',
   LEADERBOARD = 'LEADERBOARD',
+  TASKS = 'TASKS',
 }
