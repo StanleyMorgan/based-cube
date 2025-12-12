@@ -124,7 +124,7 @@ const Tasks = () => {
 
       if (status === 'claimed') {
           return (
-            <button disabled className="px-4 py-1.5 rounded-lg text-sm font-bold bg-transparent text-emerald-500 cursor-default border border-transparent flex items-center gap-1">
+            <button disabled className="px-3 py-1.5 rounded-lg text-sm font-bold bg-transparent text-emerald-500 cursor-default border border-transparent flex items-center gap-1 whitespace-nowrap">
                 <Check size={16} /> Done
             </button>
           );
@@ -135,7 +135,7 @@ const Tasks = () => {
             <button 
                 onClick={() => handleClaim(taskId)}
                 disabled={isProcessing}
-                className="px-6 py-2 rounded-lg text-sm font-bold bg-emerald-600 text-white hover:bg-emerald-500 shadow-lg shadow-emerald-900/30 flex items-center gap-2 animate-pulse"
+                className="px-4 py-2 rounded-lg text-sm font-bold bg-emerald-600 text-white hover:bg-emerald-500 shadow-lg shadow-emerald-900/30 flex items-center gap-2 animate-pulse whitespace-nowrap"
             >
                 {isProcessing ? <Loader2 size={16} className="animate-spin" /> : 'Claim'}
             </button>
@@ -147,7 +147,7 @@ const Tasks = () => {
             <button 
                 onClick={() => handleVerify(taskId)}
                 disabled={isProcessing}
-                className="px-6 py-2 rounded-lg text-sm font-bold bg-amber-600 text-white hover:bg-amber-500 shadow-lg shadow-amber-900/30 flex items-center gap-2"
+                className="px-4 py-2 rounded-lg text-sm font-bold bg-amber-600 text-white hover:bg-amber-500 shadow-lg shadow-amber-900/30 flex items-center gap-2 whitespace-nowrap"
             >
                 {isProcessing ? <Loader2 size={16} className="animate-spin" /> : 'Verify'}
             </button>
@@ -158,7 +158,7 @@ const Tasks = () => {
       return (
         <button 
             onClick={() => handleStart(taskId)}
-            className="px-6 py-2 rounded-lg text-sm font-bold bg-purple-600 text-white hover:bg-purple-500 shadow-lg shadow-purple-900/30 flex items-center gap-2"
+            className="px-4 py-2 rounded-lg text-sm font-bold bg-purple-600 text-white hover:bg-purple-500 shadow-lg shadow-purple-900/30 flex items-center gap-2 whitespace-nowrap"
         >
             Start <ArrowRight size={16} />
         </button>
@@ -183,13 +183,13 @@ const Tasks = () => {
       <div className="space-y-4">
         
         {/* Task 1: Follow */}
-        <div className={`w-full flex flex-col p-4 rounded-xl border transition-all duration-200 backdrop-blur-sm ${taskStates['follow_stmorgan'] === 'claimed' ? 'bg-slate-800/20 border-slate-700/30 opacity-60' : 'bg-slate-800/40 border-slate-700/50'}`}>
-            <div className="flex items-center w-full">
-                <div className={`p-2 rounded-full mr-3 ${taskStates['follow_stmorgan'] === 'claimed' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-slate-700 text-slate-400'}`}>
+        <div className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-200 backdrop-blur-sm ${taskStates['follow_stmorgan'] === 'claimed' ? 'bg-slate-800/20 border-slate-700/30 opacity-60' : 'bg-slate-800/40 border-slate-700/50'}`}>
+            <div className="flex items-center flex-grow min-w-0 mr-4">
+                <div className={`flex-shrink-0 p-2 rounded-full mr-3 ${taskStates['follow_stmorgan'] === 'claimed' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-slate-700 text-slate-400'}`}>
                     {taskStates['follow_stmorgan'] === 'claimed' ? <CheckCircle2 size={20} /> : <ClipboardList size={20} />}
                 </div>
 
-                <div className="flex-grow min-w-0">
+                <div className="min-w-0">
                     <div className="font-semibold text-slate-100 truncate">Follow @stmorgan</div>
                     <div className="flex items-center gap-1 text-xs text-slate-400 mt-0.5">
                         <span className="text-yellow-400 font-bold flex items-center gap-0.5">
@@ -200,19 +200,19 @@ const Tasks = () => {
                 </div>
             </div>
 
-            <div className="mt-3 flex justify-end">
+            <div className="flex-shrink-0">
                 {renderButton('follow_stmorgan')}
             </div>
         </div>
 
         {/* Task 2: Invite */}
-        <div className={`w-full flex flex-col p-4 rounded-xl border transition-all duration-200 backdrop-blur-sm ${taskStates['invite_friend'] === 'claimed' ? 'bg-slate-800/20 border-slate-700/30 opacity-60' : 'bg-slate-800/40 border-slate-700/50'}`}>
-            <div className="flex items-center w-full">
-                <div className={`p-2 rounded-full mr-3 ${taskStates['invite_friend'] === 'claimed' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-slate-700 text-slate-400'}`}>
+        <div className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-200 backdrop-blur-sm ${taskStates['invite_friend'] === 'claimed' ? 'bg-slate-800/20 border-slate-700/30 opacity-60' : 'bg-slate-800/40 border-slate-700/50'}`}>
+            <div className="flex items-center flex-grow min-w-0 mr-4">
+                <div className={`flex-shrink-0 p-2 rounded-full mr-3 ${taskStates['invite_friend'] === 'claimed' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-slate-700 text-slate-400'}`}>
                     {taskStates['invite_friend'] === 'claimed' ? <CheckCircle2 size={20} /> : <ClipboardList size={20} />}
                 </div>
 
-                <div className="flex-grow min-w-0">
+                <div className="min-w-0">
                     <div className="font-semibold text-slate-100 truncate">Invite a Friend</div>
                     <div className="flex items-center gap-1 text-xs text-slate-400 mt-0.5">
                         <span className="text-yellow-400 font-bold flex items-center gap-0.5">
@@ -223,7 +223,7 @@ const Tasks = () => {
                 </div>
             </div>
 
-             <div className="mt-3 flex justify-end">
+             <div className="flex-shrink-0">
                 {renderButton('invite_friend')}
             </div>
         </div>
