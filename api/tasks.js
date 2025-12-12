@@ -19,7 +19,6 @@ export default async function handler(request, response) {
     `;
 
     const { fid } = request.query; 
-    // For POST, fid is in body usually, but let's handle both for safety or strictness below
     
     if (request.method === 'GET') {
       if (!fid) return response.status(400).json({ error: 'FID is required' });
@@ -33,52 +32,68 @@ export default async function handler(request, response) {
     }
 
     if (request.method === 'POST') {
-      const { fid, taskId } = request.body;
+      // action can be 'verify' or 'claim'
+      const { fid, taskId, action } = request.body;
       if (!fid || !taskId) return response.status(400).json({ error: 'Missing data' });
 
-      // Verification Logic
-      if (taskId === 'invite_friend') {
-        // Check if user has referred anyone
-        const refCheck = await pool.sql`
-            SELECT 1 FROM users WHERE referrer_fid = ${fid} LIMIT 1
-        `;
-        if (refCheck.rowCount === 0) {
-            return response.status(400).json({ error: 'No referrals found. Invite a friend first!' });
+      // -- Verification Helper --
+      const checkVerification = async () => {
+        if (taskId === 'invite_friend') {
+             // Check if user has referred anyone
+             const refCheck = await pool.sql`
+                 SELECT 1 FROM users WHERE referrer_fid = ${fid} LIMIT 1
+             `;
+             return refCheck.rowCount > 0;
         }
+        if (taskId === 'follow_stmorgan') {
+            // Implicit trust for now as we rely on client action for following (or need expensive API call)
+            // You can add Neynar API check here if you have the key
+            return true; 
+        }
+        return false;
+      };
+
+      // 1. Handle Verify Action (Does not claim, just checks)
+      if (action === 'verify') {
+          const isVerified = await checkVerification();
+          return response.status(200).json({ verified: isVerified });
       }
 
-      // If taskId is 'follow_stmorgan', we implicitly trust the client/SDK interaction 
-      // for this iteration, as strict server-side follow checks require an indexer API key.
-
-      // Transaction: Insert Task + Update User Score
-      // We do this in two steps because Vercel Postgres doesn't support BEGIN/COMMIT blocks easily in single template literals without a client checkout,
-      // but we can rely on constraints for safety.
-
-      // 1. Insert Task (Will fail if already exists due to UNIQUE constraint)
-      try {
-        await pool.sql`
-            INSERT INTO user_tasks (fid, task_id) VALUES (${fid}, ${taskId})
-        `;
-      } catch (e) {
-          if (e.code === '23505') { // Unique violation
-              return response.status(400).json({ error: 'Task already completed' });
+      // 2. Handle Claim Action (Default if action is missing for backward compat)
+      if (!action || action === 'claim') {
+          
+          // Re-verify before claiming to be safe
+          const isVerified = await checkVerification();
+          if (!isVerified) {
+              return response.status(400).json({ error: 'Task requirements not met' });
           }
-          throw e;
+
+          // Transaction: Insert Task + Update User Score
+          try {
+            await pool.sql`
+                INSERT INTO user_tasks (fid, task_id) VALUES (${fid}, ${taskId})
+            `;
+          } catch (e) {
+              if (e.code === '23505') { // Unique violation
+                  return response.status(400).json({ error: 'Task already completed' });
+              }
+              throw e;
+          }
+
+          // Add Reward (10 points)
+          const reward = 10;
+          const updateResult = await pool.sql`
+            UPDATE users 
+            SET score = score + ${reward}, updated_at = CURRENT_TIMESTAMP 
+            WHERE fid = ${fid}
+            RETURNING score;
+          `;
+
+          return response.status(200).json({ 
+            success: true, 
+            newScore: updateResult.rows[0].score 
+          });
       }
-
-      // 2. Add Reward (10 points)
-      const reward = 10;
-      const updateResult = await pool.sql`
-        UPDATE users 
-        SET score = score + ${reward}, updated_at = CURRENT_TIMESTAMP 
-        WHERE fid = ${fid}
-        RETURNING score;
-      `;
-
-      return response.status(200).json({ 
-        success: true, 
-        newScore: updateResult.rows[0].score 
-      });
     }
 
     return response.status(405).json({ error: 'Method not allowed' });

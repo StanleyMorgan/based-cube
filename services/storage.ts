@@ -128,11 +128,21 @@ export const api = {
     return data.completedIds || [];
   },
 
+  verifyTask: async (fid: number, taskId: string): Promise<boolean> => {
+    const res = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fid, taskId, action: 'verify' }),
+    });
+    const data = await res.json();
+    return data.verified === true;
+  },
+
   claimTask: async (fid: number, taskId: string): Promise<{ success: boolean; newScore?: number; error?: string }> => {
     const res = await fetch('/api/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fid, taskId }),
+        body: JSON.stringify({ fid, taskId, action: 'claim' }),
     });
     
     const data = await res.json();
