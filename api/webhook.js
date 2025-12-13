@@ -10,7 +10,9 @@ export default async function handler(request, response) {
   }
 
   try {
-    // 1. Ensure table exists for storing tokens
+    console.log("Webhook received!"); // Лог для проверки, что Warpcast видит URL
+
+    // 1. Ensure table exists
     await pool.sql`
       CREATE TABLE IF NOT EXISTS notification_tokens (
         fid INTEGER PRIMARY KEY,
@@ -20,39 +22,35 @@ export default async function handler(request, response) {
       );
     `;
 
-    const payload = request.body;
+    const body = request.body;
     
-    // In a production environment, you MUST verify the signature header 
-    // "x-farcaster-signature" to ensure the request comes from Farcaster.
-    // For this implementation, we focus on the logic.
+    // Log raw body for debugging (be careful with PII in prod)
+    // console.log("Raw body:", JSON.stringify(body));
 
-    const { event, notificationDetails } = payload;
-    
-    // We need to decode the payload to get the FID (it's inside the signed payload)
-    // However, the webhook body structure from Farcaster is usually:
-    // { header: "...", payload: "...", signature: "..." }
-    // We need to decode the base64 payload part to get the FID and event type.
-    
+    if (!body || !body.payload) {
+        console.error("Missing payload in body");
+        return response.status(400).json({ error: 'Invalid body' });
+    }
+
+    // Decode Payload
     let decodedPayload;
     try {
-        const payloadBuffer = Buffer.from(payload.payload, 'base64url');
+        const payloadBuffer = Buffer.from(body.payload, 'base64url');
         decodedPayload = JSON.parse(payloadBuffer.toString());
+        console.log("Decoded Event:", decodedPayload.event, "FID:", decodedPayload.fid);
     } catch (e) {
-        // If it's already JSON (some dev tools send raw JSON), handle gracefully or fail
-        // Assuming standard signed message format here:
-        console.error("Failed to decode webhook payload", e);
+        console.error("Failed to decode payload", e);
         return response.status(400).json({ error: 'Invalid payload format' });
     }
 
-    const fid = decodedPayload.fid;
-    const eventType = decodedPayload.event; // miniapp_added, notifications_enabled, etc.
+    const { fid, event } = decodedPayload;
 
     if (!fid) {
-        return response.status(400).json({ error: 'FID not found in payload' });
+        return response.status(400).json({ error: 'FID not found' });
     }
 
     // Handle Events
-    if (eventType === 'miniapp_added' || eventType === 'notifications_enabled') {
+    if (event === 'miniapp_added' || event === 'notifications_enabled') {
         if (decodedPayload.notificationDetails) {
             const { token, url } = decodedPayload.notificationDetails;
             
@@ -65,19 +63,21 @@ export default async function handler(request, response) {
                     url = EXCLUDED.url,
                     updated_at = NOW();
             `;
-            console.log(`Notification token stored for FID ${fid}`);
+            console.log(`✅ Token stored for FID ${fid}`);
+        } else {
+            console.log(`⚠️ Event ${event} received but no notificationDetails found.`);
         }
-    } else if (eventType === 'miniapp_removed' || eventType === 'notifications_disabled') {
+    } else if (event === 'miniapp_removed' || event === 'notifications_disabled') {
         await pool.sql`
             DELETE FROM notification_tokens WHERE fid = ${fid};
         `;
-        console.log(`Notification token removed for FID ${fid}`);
+        console.log(`🗑️ Token removed for FID ${fid}`);
     }
 
     return response.status(200).json({ success: true });
 
   } catch (error) {
-    console.error("Webhook error:", error);
+    console.error("Server Error in Webhook:", error);
     return response.status(500).json({ error: error.message });
   }
 }
