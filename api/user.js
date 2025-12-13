@@ -6,6 +6,21 @@ export default async function handler(request, response) {
   });
 
   try {
+    // Helper to calculate effective streak based on time
+    const getEffectiveStreak = (user) => {
+        if (!user.last_click_date) return user.streak;
+        
+        const lastClick = new Date(user.last_click_date);
+        const now = new Date();
+        const diff = now.getTime() - lastClick.getTime();
+        const windowEnd = 48 * 60 * 60 * 1000; // 48 hours
+        
+        if (diff >= windowEnd) {
+            return 0;
+        }
+        return user.streak;
+    };
+
     if (request.method === 'GET') {
       const { fid } = request.query;
       if (!fid) return response.status(400).json({ error: 'FID is required' });
@@ -33,8 +48,11 @@ export default async function handler(request, response) {
       }
       
       const user = result.rows[0];
+      const effectiveStreak = getEffectiveStreak(user);
+
       return response.status(200).json({
         ...user,
+        streak: effectiveStreak,
         teamScore: parseInt(user.team_score)
       });
     }
@@ -148,9 +166,12 @@ export default async function handler(request, response) {
               referrerAddress = referrerRes.rows[0].primary_address;
           }
       }
+      
+      const effectiveStreak = getEffectiveStreak(user);
 
       return response.status(200).json({
         ...user,
+        streak: effectiveStreak,
         rank,
         teamScore,
         referrerAddress

@@ -12,7 +12,7 @@ export default async function handler(request, response) {
 
     // Rank logic: Score higher OR (Score equal AND Updated earlier) OR (Score equal AND Updated equal AND FID lower)
     const result = await pool.sql`
-      SELECT fid, username, score, pfp_url, streak, neynar_score, referrer_fid,
+      SELECT fid, username, score, pfp_url, streak, last_click_date, neynar_score, referrer_fid,
       (
         SELECT COUNT(*) + 1 
         FROM users u2 
@@ -28,11 +28,27 @@ export default async function handler(request, response) {
       LIMIT ${limitVal} OFFSET ${offset};
     `;
     
+    const now = new Date();
+    const windowEnd = 48 * 60 * 60 * 1000; // 48 hours
+
     const entries = result.rows.map(row => {
         // Team Score logic: +1 if has referrer, +2 if has referrals
         const invitedBySomeone = row.referrer_fid ? 1 : 0;
         const invitedOthers = row.has_referrals ? 2 : 0;
         const teamScore = invitedBySomeone + invitedOthers;
+
+        // Effective Streak Logic (Visual only)
+        let effectiveStreak = row.streak;
+        if (row.last_click_date) {
+            const lastClick = new Date(row.last_click_date);
+            const diff = now.getTime() - lastClick.getTime();
+            if (diff >= windowEnd) {
+                effectiveStreak = 0;
+            }
+        } else {
+             // If no last_click_date but has streak (edge case), reset to 0
+             if (effectiveStreak > 0) effectiveStreak = 0;
+        }
 
         return {
             id: row.fid.toString(),
@@ -41,7 +57,7 @@ export default async function handler(request, response) {
             rank: parseInt(row.rank),
             pfpUrl: row.pfp_url,
             fid: row.fid,
-            streak: row.streak,
+            streak: effectiveStreak,
             neynarScore: row.neynar_score,
             teamScore: teamScore
         };
