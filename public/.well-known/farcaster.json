@@ -14,6 +14,7 @@
     "splashImageUrl": "https://raw.githubusercontent.com/StanleyMorgan/graphics/main/app/tesseract-base/logo.png",
     "splashBackgroundColor": "#0f172a",
     "subtitle": "Daily Social Clicker",
+    "webhookUrl": "https://tesseract-base.vercel.app/api/webhook",
     "screenshotUrls": [
       "https://raw.githubusercontent.com/StanleyMorgan/graphics/main/app/tesseract-base/embed.png"
     ],
