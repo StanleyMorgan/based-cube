@@ -23,7 +23,7 @@ const App: React.FC = () => {
   
   // Theme State: 'default' or 'holiday'
   // Change this value to switch theme programmatically
-  const [theme] = useState<'default' | 'holiday'>('holiday');
+  const [theme] = useState<'default' | 'holiday'>('default');
   
   // Initial state with defaults
   const [userState, setUserState] = useState<UserState>({
