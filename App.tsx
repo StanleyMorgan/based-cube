@@ -21,6 +21,10 @@ import { GMLoggerABI, CONTRACT_ADDRESS } from './src/abi';
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>(Tab.GAME);
   
+  // Theme State: 'default' or 'holiday'
+  // Change this value to switch theme programmatically
+  const [theme] = useState<'default' | 'holiday'>('holiday');
+  
   // Initial state with defaults
   const [userState, setUserState] = useState<UserState>({
     score: 0,
@@ -272,8 +276,8 @@ const App: React.FC = () => {
       
       {/* Background Ambient Light */}
       <div className="fixed top-0 left-0 w-full h-full pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-sky-500/10 rounded-full blur-[100px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-500/10 rounded-full blur-[100px]" />
+        <div className={`absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full blur-[100px] transition-colors duration-1000 ${theme === 'holiday' ? 'bg-red-500/10' : 'bg-sky-500/10'}`} />
+        <div className={`absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full blur-[100px] transition-colors duration-1000 ${theme === 'holiday' ? 'bg-emerald-500/10' : 'bg-emerald-500/10'}`} />
       </div>
 
       {/* Header */}
@@ -287,6 +291,7 @@ const App: React.FC = () => {
                     <Wallet size={20} />
                 </button>
             )}
+            
             <button 
                 onClick={() => setShowInfo(true)}
                 className="p-2 rounded-full bg-slate-800/50 text-slate-400 hover:text-white transition-colors border border-slate-700/50"
@@ -323,7 +328,7 @@ const App: React.FC = () => {
                     </div>
                 )}
                 
-                <Cube canClick={canClick} onClick={handleCubeClick} />
+                <Cube canClick={canClick} onClick={handleCubeClick} theme={theme} />
                 
                 {/* Floating Reward Animation (Score) */}
                 <AnimatePresence>
