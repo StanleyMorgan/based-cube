@@ -6,6 +6,11 @@ export default async function handler(request, response) {
   });
 
   try {
+    // Ensure the column exists (Idempotent)
+    await pool.sql`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS neynar_power_change INTEGER DEFAULT 0;
+    `;
+
     // Helper to calculate effective streak based on time
     const getEffectiveStreak = (user) => {
         if (!user.last_click_date) return user.streak;
@@ -70,14 +75,14 @@ export default async function handler(request, response) {
       if (user.referral_data && Array.isArray(user.referral_data)) {
           teamMembers.push(...user.referral_data);
       }
-      // Slice to max 3 just in case
       const finalTeamMembers = teamMembers.slice(0, 3);
 
       return response.status(200).json({
         ...user,
         streak: effectiveStreak,
         teamScore: parseInt(user.team_score),
-        teamMembers: finalTeamMembers
+        teamMembers: finalTeamMembers,
+        neynarPowerChange: user.neynar_power_change || 0
       });
     }
 
@@ -87,7 +92,7 @@ export default async function handler(request, response) {
 
       // 1. Check existing user data...
       const existingUserRes = await pool.sql`
-        SELECT neynar_score, neynar_last_updated, referrer_fid
+        SELECT neynar_score, neynar_last_updated, referrer_fid, neynar_power_change
         FROM users 
         WHERE fid = ${fid}
       `;
@@ -96,6 +101,7 @@ export default async function handler(request, response) {
       
       let neynarScore = existingUser?.neynar_score || 0;
       let neynarLastUpdated = existingUser?.neynar_last_updated || null;
+      let neynarPowerChange = existingUser?.neynar_power_change || 0;
 
       const now = new Date();
       const todayStr = now.toISOString().split('T')[0];
@@ -119,7 +125,15 @@ export default async function handler(request, response) {
             if (neynarRes.ok) {
                 const data = await neynarRes.json();
                 if (data.users && data.users.length > 0) {
-                    neynarScore = data.users[0]?.experimental?.neynar_user_score || 0;
+                    const newScore = data.users[0]?.experimental?.neynar_user_score || 0;
+                    
+                    // Calculate change in Power (Neynar Score * 100)
+                    const oldPower = Math.floor((existingUser?.neynar_score || 0) * 100);
+                    const newPower = Math.floor(newScore * 100);
+                    
+                    neynarPowerChange = newPower - oldPower;
+                    
+                    neynarScore = newScore;
                     neynarLastUpdated = new Date().toISOString(); 
                 }
             }
@@ -135,14 +149,15 @@ export default async function handler(request, response) {
       }
 
       const upsertResult = await pool.sql`
-        INSERT INTO users (fid, username, pfp_url, score, streak, neynar_score, neynar_last_updated, primary_address, referrer_fid)
-        VALUES (${fid}, ${username}, ${pfpUrl || null}, 0, 0, ${neynarScore}, ${neynarLastUpdated}, ${primaryAddress || null}, ${referrerValue})
+        INSERT INTO users (fid, username, pfp_url, score, streak, neynar_score, neynar_last_updated, primary_address, referrer_fid, neynar_power_change)
+        VALUES (${fid}, ${username}, ${pfpUrl || null}, 0, 0, ${neynarScore}, ${neynarLastUpdated}, ${primaryAddress || null}, ${referrerValue}, ${neynarPowerChange})
         ON CONFLICT (fid) 
         DO UPDATE SET 
           username = EXCLUDED.username,
           pfp_url = COALESCE(EXCLUDED.pfp_url, users.pfp_url),
           neynar_score = EXCLUDED.neynar_score,
           neynar_last_updated = EXCLUDED.neynar_last_updated,
+          neynar_power_change = EXCLUDED.neynar_power_change,
           primary_address = COALESCE(EXCLUDED.primary_address, users.primary_address),
           referrer_fid = COALESCE(users.referrer_fid, EXCLUDED.referrer_fid),
           updated_at = CURRENT_TIMESTAMP
@@ -213,7 +228,8 @@ export default async function handler(request, response) {
         rank,
         teamScore,
         referrerAddress,
-        teamMembers: finalTeamMembers
+        teamMembers: finalTeamMembers,
+        neynarPowerChange: user.neynar_power_change || 0
       });
     }
 

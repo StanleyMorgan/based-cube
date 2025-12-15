@@ -425,6 +425,7 @@ const App: React.FC = () => {
           isOpen={showInfo}
           onClose={() => setShowInfo(false)}
           neynarPower={neynarPowerCalc}
+          neynarPowerChange={userState.neynarPowerChange}
           streakPower={streakPowerCalc}
           teamPower={teamPowerCalc}
           teamMembers={userState.teamMembers}

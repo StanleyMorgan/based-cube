@@ -68,6 +68,7 @@ export const api = {
       pfpUrl: data.pfp_url,
       rank: parseInt(data.rank),
       neynarScore: data.neynar_score || 0,
+      neynarPowerChange: data.neynarPowerChange || 0,
       primaryAddress: data.primary_address,
       referrerFid: data.referrer_fid ? parseInt(data.referrer_fid) : undefined,
       referrerAddress: data.referrerAddress,
@@ -98,9 +99,9 @@ export const api = {
       pfpUrl: data.pfp_url,
       rank: parseInt(data.rank),
       neynarScore: data.neynar_score || 0,
+      neynarPowerChange: data.neynarPowerChange || 0,
       primaryAddress: data.primary_address,
       teamScore: data.teamScore || 0
-      // Note: teamMembers might be missing from click response, rely on syncUser/leaderboard for display
     };
   },
 

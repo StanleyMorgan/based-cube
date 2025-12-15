@@ -7,12 +7,13 @@ interface InfoModalProps {
     isOpen: boolean;
     onClose: () => void;
     neynarPower: number;
+    neynarPowerChange?: number;
     streakPower: number;
     teamPower?: number;
     teamMembers?: TeamMember[];
 }
 
-const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, streakPower, teamPower = 0, teamMembers = [] }) => {
+const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, neynarPowerChange = 0, streakPower, teamPower = 0, teamMembers = [] }) => {
     return (
         <AnimatePresence>
             {isOpen && (
@@ -43,7 +44,14 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, str
                                     <div className="p-2 rounded-full bg-sky-500/10">
                                         <Zap size={20} className="fill-sky-400/20" />
                                     </div>
-                                    <span className="font-bold text-base">Neynar</span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-bold text-base">Neynar</span>
+                                        {neynarPowerChange !== 0 && (
+                                            <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${neynarPowerChange > 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
+                                                {neynarPowerChange > 0 ? '+' : ''}{neynarPowerChange}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                                 <span className="text-lg font-black text-white">+{neynarPower}</span>
                             </div>

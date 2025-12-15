@@ -12,6 +12,7 @@ export interface UserState {
   fid?: number;
   pfpUrl?: string;
   neynarScore?: number;
+  neynarPowerChange?: number; // Difference from previous sync
   primaryAddress?: string;
   referrerFid?: number;
   referrerAddress?: string;
