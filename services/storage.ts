@@ -41,7 +41,8 @@ export const canClickCube = (lastClickDate: string | null, fid?: number): boolea
 
 export const getClickPower = (streak: number, neynarScore: number = 0, teamScore: number = 0): number => {
   // Logic: 100 * Neynar Score + Streak (max 30) + Team Score (0-3)
-  const basePower = Math.floor(100 * neynarScore);
+  // Use Math.round to handle floating point precision (e.g. 0.57 * 100 = 56.999...)
+  const basePower = Math.round(100 * neynarScore);
   const streakBonus = Math.min(streak, 30);
   return basePower + streakBonus + teamScore;
 };

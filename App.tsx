@@ -288,7 +288,8 @@ const App: React.FC = () => {
     setActiveTab(newTab);
   };
 
-  const neynarPowerCalc = Math.floor(100 * (userState.neynarScore || 0));
+  // Use Math.round to handle floating point precision
+  const neynarPowerCalc = Math.round(100 * (userState.neynarScore || 0));
   const streakPowerCalc = Math.min(userState.streak, 30);
   const teamPowerCalc = userState.teamScore || 0;
 

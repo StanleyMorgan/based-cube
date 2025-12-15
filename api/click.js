@@ -70,7 +70,8 @@ export default async function handler(request, response) {
 
     // Calculate Power
     const neynarScore = user.neynar_score || 0;
-    const basePower = Math.floor(100 * neynarScore);
+    // Use Math.round to handle precision (0.57 * 100 = 57)
+    const basePower = Math.round(100 * neynarScore);
     const streakBonus = Math.min(newStreak, 30);
     
     // Total Power

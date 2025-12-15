@@ -128,8 +128,9 @@ export default async function handler(request, response) {
                     const newScore = data.users[0]?.experimental?.neynar_user_score || 0;
                     
                     // Calculate change in Power (Neynar Score * 100)
-                    const oldPower = Math.floor((existingUser?.neynar_score || 0) * 100);
-                    const newPower = Math.floor(newScore * 100);
+                    // Use Math.round to handle precision errors (0.57 * 100 = 57)
+                    const oldPower = Math.round((existingUser?.neynar_score || 0) * 100);
+                    const newPower = Math.round(newScore * 100);
                     
                     neynarPowerChange = newPower - oldPower;
                     

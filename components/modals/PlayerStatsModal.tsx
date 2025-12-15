@@ -29,7 +29,8 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose, on
     if (!player) return null;
 
     // Calculate power stats based on raw data
-    const neynarPower = Math.floor(100 * (player.neynarScore || 0));
+    // Use Math.round to handle precision (0.57 * 100 = 57)
+    const neynarPower = Math.round(100 * (player.neynarScore || 0));
     const neynarPowerChange = player.neynarPowerChange || 0;
     const streakPower = Math.min(player.streak, 30);
     const teamPower = player.teamScore || 0;
