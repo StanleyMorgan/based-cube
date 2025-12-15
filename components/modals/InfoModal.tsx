@@ -29,45 +29,56 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, str
                         className="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-3xl p-6 shadow-2xl relative z-10"
                     >
                         <div className="text-center mb-6">
-                            <h2 className="text-2xl font-bold text-white">Power</h2>
+                            <h2 className="text-2xl font-bold text-white">Power Breakdown</h2>
                         </div>
 
-                        <div className="space-y-4">
+                        {/* Consolidated Stats Block */}
+                        <div className="bg-slate-800/50 border border-slate-700/50 rounded-3xl overflow-hidden divide-y divide-slate-700/50">
+                            
                             {/* Neynar */}
-                            <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex justify-between items-center">
+                            <div className="p-4 flex justify-between items-center hover:bg-slate-800/30 transition-colors">
                                 <div className="flex items-center gap-3 text-sky-400">
-                                    <Zap size={22} className="fill-sky-400/20" />
-                                    <span className="font-bold text-lg">Neynar</span>
+                                    <div className="p-2 rounded-full bg-sky-500/10">
+                                        <Zap size={20} className="fill-sky-400/20" />
+                                    </div>
+                                    <span className="font-bold text-base">Neynar</span>
                                 </div>
-                                <span className="text-2xl font-black text-white">+{neynarPower}</span>
+                                <span className="text-lg font-black text-white">+{neynarPower}</span>
                             </div>
 
                             {/* Streak */}
-                            <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex justify-between items-center">
+                            <div className="p-4 flex justify-between items-center hover:bg-slate-800/30 transition-colors">
                                 <div className="flex items-center gap-3 text-orange-400">
-                                    <Flame size={22} className="fill-orange-400/20" />
-                                    <span className="font-bold text-lg">Streak</span>
+                                    <div className="p-2 rounded-full bg-orange-500/10">
+                                        <Flame size={20} className="fill-orange-400/20" />
+                                    </div>
+                                    <span className="font-bold text-base">Streak</span>
                                 </div>
-                                <span className="text-2xl font-black text-white">+{streakPower}</span>
+                                <span className="text-lg font-black text-white">+{streakPower}</span>
                             </div>
 
                             {/* Team */}
-                            <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex justify-between items-center">
+                            <div className="p-4 flex justify-between items-center hover:bg-slate-800/30 transition-colors">
                                 <div className="flex items-center gap-3 text-indigo-400">
-                                    <Users size={22} className="fill-indigo-400/20" />
-                                    <span className="font-bold text-lg">Team</span>
+                                    <div className="p-2 rounded-full bg-indigo-500/10">
+                                        <Users size={20} className="fill-indigo-400/20" />
+                                    </div>
+                                    <span className="font-bold text-base">Team</span>
                                 </div>
-                                <span className="text-2xl font-black text-white">+{teamPower}</span>
+                                <span className="text-lg font-black text-white">+{teamPower}</span>
                             </div>
 
                             {/* Bonus */}
-                            <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex justify-between items-center">
+                            <div className="p-4 flex justify-between items-center hover:bg-slate-800/30 transition-colors">
                                 <div className="flex items-center gap-3 text-yellow-400">
-                                    <Star size={22} className="fill-yellow-400/20" />
-                                    <span className="font-bold text-lg">Bonus</span>
+                                    <div className="p-2 rounded-full bg-yellow-500/10">
+                                        <Star size={20} className="fill-yellow-400/20" />
+                                    </div>
+                                    <span className="font-bold text-base">Bonus</span>
                                 </div>
-                                <span className="text-2xl font-black text-white">+0</span>
+                                <span className="text-lg font-black text-white">+0</span>
                             </div>
+
                         </div>
                     </motion.div>
                 </div>
