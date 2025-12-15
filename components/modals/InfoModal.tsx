@@ -29,7 +29,7 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, str
                         className="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-3xl p-6 shadow-2xl relative z-10"
                     >
                         <div className="text-center mb-6">
-                            <h2 className="text-2xl font-bold text-white">Power Breakdown</h2>
+                            <h2 className="text-2xl font-bold text-white">Power</h2>
                         </div>
 
                         {/* Consolidated Stats Block */}

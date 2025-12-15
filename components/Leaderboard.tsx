@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { LeaderboardEntry, UserState } from '../types';
 import { api } from '../services/storage';
-import { Trophy, Medal, User, Loader2 } from 'lucide-react';
+import { Trophy, Medal, User, Loader2, Flame } from 'lucide-react';
 
 interface LeaderboardProps {
   currentUser: UserState;
@@ -165,7 +165,10 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, onP
                     </div>
                 </div>
 
-                <div className="text-right font-mono font-bold text-emerald-400 flex-shrink-0 pl-2">
+                <div className="text-right font-mono font-bold text-emerald-400 flex-shrink-0 pl-2 flex items-center justify-end gap-1.5">
+                    {entry.streak > 6 && (
+                        <Flame size={14} className="text-orange-500 fill-orange-500" />
+                    )}
                     {entry.score.toLocaleString()}
                 </div>
             </button>
