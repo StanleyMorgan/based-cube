@@ -120,6 +120,7 @@ export const api = {
       isCurrentUser: entry.fid == currentFid,
       streak: entry.streak || 0,
       neynarScore: entry.neynarScore || 0,
+      neynarPowerChange: entry.neynarPowerChange || 0,
       teamScore: entry.teamScore || 0,
       teamMembers: entry.teamMembers || []
     }));
@@ -139,6 +140,7 @@ export const api = {
       isCurrentUser: false, // In modal context typically not current user, or doesn't matter
       streak: data.streak,
       neynarScore: data.neynar_score || 0,
+      neynarPowerChange: data.neynarPowerChange || 0,
       teamScore: data.teamScore || 0,
       teamMembers: data.teamMembers || []
     };

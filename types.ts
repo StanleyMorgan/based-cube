@@ -29,6 +29,7 @@ export interface LeaderboardEntry {
   pfpUrl?: string;
   streak: number;
   neynarScore: number;
+  neynarPowerChange?: number;
   teamScore?: number;
   teamMembers?: TeamMember[]; // List of team members
 }

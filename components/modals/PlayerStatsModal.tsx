@@ -30,6 +30,7 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose, on
 
     // Calculate power stats based on raw data
     const neynarPower = Math.floor(100 * (player.neynarScore || 0));
+    const neynarPowerChange = player.neynarPowerChange || 0;
     const streakPower = Math.min(player.streak, 30);
     const teamPower = player.teamScore || 0;
     const teamMembers = player.teamMembers || [];
@@ -76,13 +77,24 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose, on
                         <div className="bg-slate-800/50 border border-slate-700/50 rounded-3xl overflow-hidden divide-y divide-slate-700/50">
                             
                             {/* Neynar */}
-                            <div className="p-4 flex justify-between items-center hover:bg-slate-800/30 transition-colors">
+                            <div className="p-4 flex justify-between items-center relative hover:bg-slate-800/30 transition-colors">
+                                {/* Left: Label */}
                                 <div className="flex items-center gap-3 text-sky-400">
                                     <div className="p-2 rounded-full bg-sky-500/10">
                                         <Zap size={20} className="fill-sky-400/20" />
                                     </div>
                                     <span className="font-bold text-base">Neynar</span>
                                 </div>
+
+                                {/* Center (60%): Change Indicator */}
+                                {neynarPowerChange !== 0 && (
+                                    <div className={`absolute left-[60%] -translate-x-1/2 flex items-center gap-0.5 font-bold text-base ${neynarPowerChange > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                        <span>{neynarPowerChange > 0 ? '▴' : '▾'}</span>
+                                        <span>{Math.abs(neynarPowerChange)}</span>
+                                    </div>
+                                )}
+
+                                {/* Right: Score */}
                                 <span className="text-lg font-black text-white">+{neynarPower}</span>
                             </div>
 
@@ -98,7 +110,7 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose, on
                             </div>
 
                             {/* Team */}
-                            <div className="p-4 flex items-center hover:bg-slate-800/30 transition-colors">
+                            <div className="p-4 flex justify-between items-center relative hover:bg-slate-800/30 transition-colors">
                                 {/* Left: Label */}
                                 <div className="flex-1 flex items-center gap-3 text-indigo-400">
                                     <div className="p-2 rounded-full bg-indigo-500/10">
@@ -107,8 +119,8 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose, on
                                     <span className="font-bold text-base">Team</span>
                                 </div>
 
-                                {/* Center: Avatars */}
-                                <div className="flex justify-center -space-x-2">
+                                {/* Center (60%): Avatars */}
+                                <div className="absolute left-[60%] -translate-x-1/2 flex justify-center -space-x-2">
                                     {teamMembers && teamMembers.length > 0 ? (
                                         teamMembers.map((member, i) => (
                                             <button 
