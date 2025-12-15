@@ -40,10 +40,6 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>(Tab.GAME);
   const [direction, setDirection] = useState(0);
   
-  // Theme State: 'default' or 'holiday'
-  // Change this value to switch theme programmatically
-  const [theme] = useState<'default' | 'holiday'>('default');
-  
   // Initial state with defaults
   const [userState, setUserState] = useState<UserState>({
     score: 0,
@@ -308,8 +304,8 @@ const App: React.FC = () => {
       
       {/* Background Ambient Light */}
       <div className="fixed top-0 left-0 w-full h-full pointer-events-none">
-        <div className={`absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full blur-[100px] transition-colors duration-1000 ${theme === 'holiday' ? 'bg-red-500/10' : 'bg-sky-500/10'}`} />
-        <div className={`absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full blur-[100px] transition-colors duration-1000 ${theme === 'holiday' ? 'bg-emerald-500/10' : 'bg-emerald-500/10'}`} />
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full blur-[100px] transition-colors duration-1000 bg-sky-500/10" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full blur-[100px] transition-colors duration-1000 bg-emerald-500/10" />
       </div>
 
       {/* Header */}
@@ -363,7 +359,7 @@ const App: React.FC = () => {
                     </div>
                 )}
                 
-                <Cube canClick={canClick} onClick={handleCubeClick} theme={theme} />
+                <Cube canClick={canClick} onClick={handleCubeClick} />
                 
                 {/* Floating Reward Animation (Score) */}
                 <AnimatePresence>
