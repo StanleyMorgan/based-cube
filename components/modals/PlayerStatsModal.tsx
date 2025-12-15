@@ -1,21 +1,28 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Zap, Flame, Star, User, Users } from 'lucide-react';
+import { Zap, Flame, Star, User, Users, Loader2 } from 'lucide-react';
 import { LeaderboardEntry } from '../../types';
-import { sdk } from '@farcaster/miniapp-sdk';
+import { api } from '../../services/storage';
 
 interface PlayerStatsModalProps {
     player: LeaderboardEntry | null;
     onClose: () => void;
+    onSelectPlayer: (player: LeaderboardEntry) => void;
 }
 
-const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose }) => {
+const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose, onSelectPlayer }) => {
+    const [loadingFid, setLoadingFid] = useState<number | null>(null);
     
     const handleProfileClick = async (fid: number) => {
+        setLoadingFid(fid);
         try {
-            await sdk.actions.viewProfile({ fid });
+            // Fetch the clicked player's stats to show their card
+            const playerData = await api.getUserProfile(fid);
+            onSelectPlayer(playerData);
         } catch (e) {
-            console.warn("Failed to view profile", e);
+            console.warn("Failed to load user profile", e);
+        } finally {
+            setLoadingFid(null);
         }
     };
 
@@ -107,9 +114,14 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose }) 
                                             <button 
                                                 key={i} 
                                                 onClick={() => handleProfileClick(member.fid)}
-                                                className="w-6 h-6 rounded-full border border-slate-800 overflow-hidden bg-slate-700 hover:scale-110 transition-transform cursor-pointer relative z-0 hover:z-10"
+                                                disabled={loadingFid !== null}
+                                                className="w-6 h-6 rounded-full border border-slate-800 overflow-hidden bg-slate-700 hover:scale-110 transition-transform cursor-pointer relative z-0 hover:z-10 disabled:opacity-50"
                                             >
-                                                {member.pfpUrl ? (
+                                                {loadingFid === member.fid ? (
+                                                    <div className="w-full h-full flex items-center justify-center bg-slate-800">
+                                                        <Loader2 size={12} className="animate-spin text-white" />
+                                                    </div>
+                                                ) : member.pfpUrl ? (
                                                     <img src={member.pfpUrl} alt="Team" className="w-full h-full object-cover" />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center">

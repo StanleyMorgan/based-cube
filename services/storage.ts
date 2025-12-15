@@ -124,6 +124,25 @@ export const api = {
     }));
   },
 
+  getUserProfile: async (fid: number): Promise<LeaderboardEntry> => {
+    const res = await fetch(`/api/user?fid=${fid}`);
+    if (!res.ok) throw new Error('Failed to fetch user');
+    const data = await res.json();
+    
+    return {
+      id: data.fid.toString(),
+      username: data.username,
+      score: data.score,
+      rank: data.rank,
+      pfpUrl: data.pfp_url,
+      isCurrentUser: false, // In modal context typically not current user, or doesn't matter
+      streak: data.streak,
+      neynarScore: data.neynar_score || 0,
+      teamScore: data.teamScore || 0,
+      teamMembers: data.teamMembers || []
+    };
+  },
+
   getCompletedTasks: async (fid: number): Promise<string[]> => {
     const res = await fetch(`/api/tasks?fid=${fid}`);
     if (!res.ok) return [];

@@ -2,7 +2,6 @@ import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Zap, Flame, Star, Users, User } from 'lucide-react';
 import { TeamMember } from '../../types';
-import { sdk } from '@farcaster/miniapp-sdk';
 
 interface InfoModalProps {
     isOpen: boolean;
@@ -14,15 +13,6 @@ interface InfoModalProps {
 }
 
 const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, streakPower, teamPower = 0, teamMembers = [] }) => {
-
-    const handleProfileClick = async (fid: number) => {
-        try {
-            await sdk.actions.viewProfile({ fid });
-        } catch (e) {
-            console.warn("Failed to view profile", e);
-        }
-    };
-
     return (
         <AnimatePresence>
             {isOpen && (
@@ -83,10 +73,9 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, str
                                 <div className="flex justify-center -space-x-2">
                                     {teamMembers && teamMembers.length > 0 ? (
                                         teamMembers.map((member, i) => (
-                                            <button 
+                                            <div 
                                                 key={i} 
-                                                onClick={() => handleProfileClick(member.fid)}
-                                                className="w-6 h-6 rounded-full border border-slate-800 overflow-hidden bg-slate-700 hover:scale-110 transition-transform cursor-pointer relative z-0 hover:z-10"
+                                                className="w-6 h-6 rounded-full border border-slate-800 overflow-hidden bg-slate-700 relative z-0"
                                             >
                                                 {member.pfpUrl ? (
                                                     <img src={member.pfpUrl} alt="Team" className="w-full h-full object-cover" />
@@ -95,7 +84,7 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, str
                                                         <User size={12} className="text-slate-400" />
                                                     </div>
                                                 )}
-                                            </button>
+                                            </div>
                                         ))
                                     ) : (
                                         <div className="w-6 h-6"></div> // Spacer if empty

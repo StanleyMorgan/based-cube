@@ -432,7 +432,8 @@ const App: React.FC = () => {
       
       <PlayerStatsModal 
         player={selectedPlayer} 
-        onClose={() => setSelectedPlayer(null)} 
+        onClose={() => setSelectedPlayer(null)}
+        onSelectPlayer={setSelectedPlayer} 
       />
 
       {/* Navigation - Hidden when Player Stats Modal is open to prevent overlap */}
