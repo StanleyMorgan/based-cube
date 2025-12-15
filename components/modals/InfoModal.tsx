@@ -1,6 +1,8 @@
 import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Zap, Flame, Star, Users, User } from 'lucide-react';
+import { TeamMember } from '../../types';
+import { sdk } from '@farcaster/miniapp-sdk';
 
 interface InfoModalProps {
     isOpen: boolean;
@@ -8,10 +10,19 @@ interface InfoModalProps {
     neynarPower: number;
     streakPower: number;
     teamPower?: number;
-    teamMembers?: string[];
+    teamMembers?: TeamMember[];
 }
 
 const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, streakPower, teamPower = 0, teamMembers = [] }) => {
+
+    const handleProfileClick = async (fid: number) => {
+        try {
+            await sdk.actions.viewProfile({ fid });
+        } catch (e) {
+            console.warn("Failed to view profile", e);
+        }
+    };
+
     return (
         <AnimatePresence>
             {isOpen && (
@@ -59,29 +70,40 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, str
                             </div>
 
                             {/* Team */}
-                            <div className="p-4 flex justify-between items-center hover:bg-slate-800/30 transition-colors">
-                                <div className="flex items-center gap-3 text-indigo-400">
+                            <div className="p-4 flex items-center hover:bg-slate-800/30 transition-colors">
+                                {/* Left: Label */}
+                                <div className="flex-1 flex items-center gap-3 text-indigo-400">
                                     <div className="p-2 rounded-full bg-indigo-500/10">
                                         <Users size={20} className="fill-indigo-400/20" />
                                     </div>
                                     <span className="font-bold text-base">Team</span>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    {teamMembers && teamMembers.length > 0 && (
-                                        <div className="flex -space-x-2">
-                                            {teamMembers.map((url, i) => (
-                                                <div key={i} className="w-6 h-6 rounded-full border border-slate-800 overflow-hidden bg-slate-700">
-                                                    {url ? (
-                                                        <img src={url} alt="Team" className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center">
-                                                            <User size={12} className="text-slate-400" />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ))}
-                                        </div>
+
+                                {/* Center: Avatars */}
+                                <div className="flex justify-center -space-x-2">
+                                    {teamMembers && teamMembers.length > 0 ? (
+                                        teamMembers.map((member, i) => (
+                                            <button 
+                                                key={i} 
+                                                onClick={() => handleProfileClick(member.fid)}
+                                                className="w-6 h-6 rounded-full border border-slate-800 overflow-hidden bg-slate-700 hover:scale-110 transition-transform cursor-pointer relative z-0 hover:z-10"
+                                            >
+                                                {member.pfpUrl ? (
+                                                    <img src={member.pfpUrl} alt="Team" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center">
+                                                        <User size={12} className="text-slate-400" />
+                                                    </div>
+                                                )}
+                                            </button>
+                                        ))
+                                    ) : (
+                                        <div className="w-6 h-6"></div> // Spacer if empty
                                     )}
+                                </div>
+
+                                {/* Right: Score */}
+                                <div className="flex-1 text-right">
                                     <span className="text-lg font-black text-white">+{teamPower}</span>
                                 </div>
                             </div>

@@ -25,9 +25,7 @@ export default async function handler(request, response) {
       const { fid } = request.query;
       if (!fid) return response.status(400).json({ error: 'FID is required' });
 
-      // Get user, rank, and team score logic + Team Avatars
-      // 1. referrer_pfp: PFP of the person who invited this user
-      // 2. referral_pfps: PFPs of top 3 people this user invited (by Neynar score)
+      // Get user, rank, and team score logic + Team Avatars (as JSON objects)
       const result = await pool.sql`
         SELECT *, 
         (
@@ -42,18 +40,19 @@ export default async function handler(request, response) {
              (CASE WHEN EXISTS (SELECT 1 FROM users u_inv WHERE u_inv.referrer_fid = u1.fid) THEN 2 ELSE 0 END)
         ) as team_score,
         (
-            SELECT pfp_url FROM users u_ref WHERE u_ref.fid = u1.referrer_fid
-        ) as referrer_pfp,
+            SELECT json_build_object('fid', fid, 'pfpUrl', pfp_url) 
+            FROM users u_ref WHERE u_ref.fid = u1.referrer_fid
+        ) as referrer_data,
         (
-            SELECT ARRAY_AGG(pfp_url) 
+            SELECT json_agg(json_build_object('fid', fid, 'pfpUrl', pfp_url)) 
             FROM (
-                SELECT pfp_url 
+                SELECT fid, pfp_url 
                 FROM users u_sub 
                 WHERE u_sub.referrer_fid = u1.fid 
                 ORDER BY u_sub.neynar_score DESC 
                 LIMIT 3
             ) sub
-        ) as referral_pfps
+        ) as referral_data
         FROM users u1 
         WHERE fid = ${fid};
       `;
@@ -67,9 +66,9 @@ export default async function handler(request, response) {
 
       // Construct team members array: [referrer, ...referrals] (max 3 total)
       const teamMembers = [];
-      if (user.referrer_pfp) teamMembers.push(user.referrer_pfp);
-      if (user.referral_pfps && Array.isArray(user.referral_pfps)) {
-          teamMembers.push(...user.referral_pfps);
+      if (user.referrer_data) teamMembers.push(user.referrer_data);
+      if (user.referral_data && Array.isArray(user.referral_data)) {
+          teamMembers.push(...user.referral_data);
       }
       // Slice to max 3 just in case
       const finalTeamMembers = teamMembers.slice(0, 3);
@@ -86,7 +85,7 @@ export default async function handler(request, response) {
       const { fid, username, pfpUrl, primaryAddress, referrerFid } = request.body;
       if (!fid) return response.status(400).json({ error: 'FID is required' });
 
-      // 1. Check existing user data to determine if we need to fetch Neynar Score
+      // 1. Check existing user data...
       const existingUserRes = await pool.sql`
         SELECT neynar_score, neynar_last_updated, referrer_fid
         FROM users 
@@ -98,7 +97,6 @@ export default async function handler(request, response) {
       let neynarScore = existingUser?.neynar_score || 0;
       let neynarLastUpdated = existingUser?.neynar_last_updated || null;
 
-      // Determine if we should fetch (if never fetched OR fetched on a previous day)
       const now = new Date();
       const todayStr = now.toISOString().split('T')[0];
       
@@ -109,7 +107,7 @@ export default async function handler(request, response) {
 
       const shouldFetch = !lastUpdateStr || lastUpdateStr !== todayStr;
 
-      // 2. Fetch Neynar Score if needed
+      // 2. Fetch Neynar Score if needed...
       if (shouldFetch && process.env.NEYNAR_API_KEY) {
         try {
             const neynarRes = await fetch(`https://api.neynar.com/v2/farcaster/user/bulk?fids=${fid}`, {
@@ -122,7 +120,7 @@ export default async function handler(request, response) {
                 const data = await neynarRes.json();
                 if (data.users && data.users.length > 0) {
                     neynarScore = data.users[0]?.experimental?.neynar_user_score || 0;
-                    neynarLastUpdated = new Date().toISOString(); // Update timestamp
+                    neynarLastUpdated = new Date().toISOString(); 
                 }
             }
         } catch (e) {
@@ -132,8 +130,6 @@ export default async function handler(request, response) {
 
       // 3. Upsert user
       let referrerValue = referrerFid ? referrerFid : null;
-
-      // Prevent self-referral
       if (referrerValue && String(referrerValue) === String(fid)) {
         referrerValue = null;
       }
@@ -148,7 +144,6 @@ export default async function handler(request, response) {
           neynar_score = EXCLUDED.neynar_score,
           neynar_last_updated = EXCLUDED.neynar_last_updated,
           primary_address = COALESCE(EXCLUDED.primary_address, users.primary_address),
-          -- Critical Fix: Prioritize existing referrer_fid in DB over new value
           referrer_fid = COALESCE(users.referrer_fid, EXCLUDED.referrer_fid),
           updated_at = CURRENT_TIMESTAMP
         RETURNING *;
@@ -156,7 +151,7 @@ export default async function handler(request, response) {
 
       const user = upsertResult.rows[0];
 
-      // 4. Calculate Rank, Team Score AND Team Members
+      // 4. Calculate Rank, Team Score AND Team Members (JSON objects)
       const statsResult = await pool.sql`
         SELECT 
           (
@@ -170,38 +165,36 @@ export default async function handler(request, response) {
             CASE WHEN EXISTS (SELECT 1 FROM users WHERE referrer_fid = ${user.fid}) THEN 1 ELSE 0 END
           ) as has_referrals,
           (
-            SELECT pfp_url FROM users u_ref WHERE u_ref.fid = ${user.referrer_fid}
-          ) as referrer_pfp,
+            SELECT json_build_object('fid', fid, 'pfpUrl', pfp_url) 
+            FROM users u_ref WHERE u_ref.fid = ${user.referrer_fid}
+          ) as referrer_data,
           (
-            SELECT ARRAY_AGG(pfp_url) 
+            SELECT json_agg(json_build_object('fid', fid, 'pfpUrl', pfp_url)) 
             FROM (
-                SELECT pfp_url 
+                SELECT fid, pfp_url 
                 FROM users u_sub 
                 WHERE u_sub.referrer_fid = ${user.fid} 
                 ORDER BY u_sub.neynar_score DESC 
                 LIMIT 3
             ) sub
-          ) as referral_pfps
+          ) as referral_data
       `;
 
       const stats = statsResult.rows[0];
       const rank = parseInt(stats.rank);
       const hasReferrals = parseInt(stats.has_referrals) === 1;
 
-      // Team Score Logic
       const invitedBySomeone = user.referrer_fid ? 1 : 0;
       const invitedOthers = hasReferrals ? 2 : 0;
       const teamScore = invitedBySomeone + invitedOthers;
 
-      // Team Members Logic
       const teamMembers = [];
-      if (stats.referrer_pfp) teamMembers.push(stats.referrer_pfp);
-      if (stats.referral_pfps && Array.isArray(stats.referral_pfps)) {
-          teamMembers.push(...stats.referral_pfps);
+      if (stats.referrer_data) teamMembers.push(stats.referrer_data);
+      if (stats.referral_data && Array.isArray(stats.referral_data)) {
+          teamMembers.push(...stats.referral_data);
       }
       const finalTeamMembers = teamMembers.slice(0, 3);
 
-      // 5. Look up Referrer Address
       let referrerAddress = null;
       if (user.referrer_fid) {
           const referrerRes = await pool.sql`

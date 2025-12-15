@@ -1,4 +1,4 @@
-import { LeaderboardEntry, UserState } from '../types';
+import { LeaderboardEntry, UserState, TeamMember } from '../types';
 
 // Helper for date calculations on frontend
 export const getTodayString = (): string => {
@@ -100,9 +100,7 @@ export const api = {
       neynarScore: data.neynar_score || 0,
       primaryAddress: data.primary_address,
       teamScore: data.teamScore || 0
-      // Click endpoint returns user record, but standard team members fetch is likely cached or handled by sync, 
-      // however if new referrals happened they wont show until refresh. 
-      // For simplicity we assume performing a click doesnt change team members immediately for the modal view.
+      // Note: teamMembers might be missing from click response, rely on syncUser/leaderboard for display
     };
   },
 

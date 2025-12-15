@@ -11,7 +11,7 @@ export default async function handler(request, response) {
     const limitVal = parseInt(limit);
 
     // Rank logic: Score higher OR (Score equal AND Updated earlier) OR (Score equal AND Updated equal AND FID lower)
-    // Plus fetch Team Avatar URLs
+    // Plus fetch Team Avatar URLs as JSON objects
     const result = await pool.sql`
       SELECT u1.fid, u1.username, u1.score, u1.pfp_url, u1.streak, u1.last_click_date, u1.neynar_score, u1.referrer_fid,
       (
@@ -25,18 +25,19 @@ export default async function handler(request, response) {
          CASE WHEN EXISTS (SELECT 1 FROM users ref WHERE ref.referrer_fid = u1.fid) THEN 1 ELSE 0 END
       ) as has_referrals,
       (
-        SELECT pfp_url FROM users u_ref WHERE u_ref.fid = u1.referrer_fid
-      ) as referrer_pfp,
+        SELECT json_build_object('fid', fid, 'pfpUrl', pfp_url) 
+        FROM users u_ref WHERE u_ref.fid = u1.referrer_fid
+      ) as referrer_data,
       (
-        SELECT ARRAY_AGG(pfp_url) 
+        SELECT json_agg(json_build_object('fid', fid, 'pfpUrl', pfp_url)) 
         FROM (
-            SELECT pfp_url 
+            SELECT fid, pfp_url 
             FROM users u_sub 
             WHERE u_sub.referrer_fid = u1.fid 
             ORDER BY u_sub.neynar_score DESC 
             LIMIT 3
         ) sub
-      ) as referral_pfps
+      ) as referral_data
       FROM users u1
       ORDER BY score DESC, updated_at ASC, fid ASC
       LIMIT ${limitVal} OFFSET ${offset};
@@ -60,15 +61,14 @@ export default async function handler(request, response) {
                 effectiveStreak = 0;
             }
         } else {
-             // If no last_click_date but has streak (edge case), reset to 0
              if (effectiveStreak > 0) effectiveStreak = 0;
         }
 
         // Team Members logic
         const teamMembers = [];
-        if (row.referrer_pfp) teamMembers.push(row.referrer_pfp);
-        if (row.referral_pfps && Array.isArray(row.referral_pfps)) {
-            teamMembers.push(...row.referral_pfps);
+        if (row.referrer_data) teamMembers.push(row.referrer_data);
+        if (row.referral_data && Array.isArray(row.referral_data)) {
+            teamMembers.push(...row.referral_data);
         }
         const finalTeamMembers = teamMembers.slice(0, 3);
 

@@ -1,4 +1,9 @@
 
+export interface TeamMember {
+  fid: number;
+  pfpUrl?: string;
+}
+
 export interface UserState {
   score: number;
   lastClickDate: string | null; // ISO Date string YYYY-MM-DD
@@ -11,7 +16,7 @@ export interface UserState {
   referrerFid?: number;
   referrerAddress?: string;
   teamScore?: number;
-  teamMembers?: string[]; // URLs of team avatars (referrer + referrals)
+  teamMembers?: TeamMember[]; // List of team members
 }
 
 export interface LeaderboardEntry {
@@ -24,7 +29,7 @@ export interface LeaderboardEntry {
   streak: number;
   neynarScore: number;
   teamScore?: number;
-  teamMembers?: string[]; // URLs of team avatars
+  teamMembers?: TeamMember[]; // List of team members
 }
 
 export enum Tab {
