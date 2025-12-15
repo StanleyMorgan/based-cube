@@ -167,7 +167,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, onP
 
                 <div className="text-right font-mono font-bold text-emerald-400 flex-shrink-0 pl-2 flex items-center justify-end gap-1.5">
                     {entry.streak > 6 && (
-                        <Flame size={14} className="text-orange-500 fill-orange-500" />
+                        <Flame size={14} className="text-orange-500 fill-orange-500 animate-pulse" />
                     )}
                     {entry.score.toLocaleString()}
                 </div>
