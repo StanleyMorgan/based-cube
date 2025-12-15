@@ -54,42 +54,53 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose }) 
                             <h2 className="text-xl font-bold text-white">{player.username}</h2>
                         </div>
 
-                        <div className="space-y-4">
+                        {/* Consolidated Stats Block */}
+                        <div className="bg-slate-800/50 border border-slate-700/50 rounded-3xl overflow-hidden divide-y divide-slate-700/50">
+                            
                             {/* Neynar */}
-                            <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex justify-between items-center">
+                            <div className="p-4 flex justify-between items-center hover:bg-slate-800/30 transition-colors">
                                 <div className="flex items-center gap-3 text-sky-400">
-                                    <Zap size={22} className="fill-sky-400/20" />
+                                    <div className="p-2 rounded-full bg-sky-500/10">
+                                        <Zap size={20} className="fill-sky-400/20" />
+                                    </div>
                                     <span className="font-bold text-base">Neynar</span>
                                 </div>
-                                <span className="text-xl font-black text-white">+{neynarPower}</span>
+                                <span className="text-lg font-black text-white">+{neynarPower}</span>
                             </div>
 
                             {/* Streak */}
-                            <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex justify-between items-center">
+                            <div className="p-4 flex justify-between items-center hover:bg-slate-800/30 transition-colors">
                                 <div className="flex items-center gap-3 text-orange-400">
-                                    <Flame size={22} className="fill-orange-400/20" />
+                                    <div className="p-2 rounded-full bg-orange-500/10">
+                                        <Flame size={20} className="fill-orange-400/20" />
+                                    </div>
                                     <span className="font-bold text-base">Streak</span>
                                 </div>
-                                <span className="text-xl font-black text-white">+{streakPower}</span>
+                                <span className="text-lg font-black text-white">+{streakPower}</span>
                             </div>
 
                             {/* Team */}
-                            <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex justify-between items-center">
+                            <div className="p-4 flex justify-between items-center hover:bg-slate-800/30 transition-colors">
                                 <div className="flex items-center gap-3 text-indigo-400">
-                                    <Users size={22} className="fill-indigo-400/20" />
+                                    <div className="p-2 rounded-full bg-indigo-500/10">
+                                        <Users size={20} className="fill-indigo-400/20" />
+                                    </div>
                                     <span className="font-bold text-base">Team</span>
                                 </div>
-                                <span className="text-xl font-black text-white">+{teamPower}</span>
+                                <span className="text-lg font-black text-white">+{teamPower}</span>
                             </div>
 
                             {/* Bonus */}
-                            <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex justify-between items-center">
+                            <div className="p-4 flex justify-between items-center hover:bg-slate-800/30 transition-colors">
                                 <div className="flex items-center gap-3 text-yellow-400">
-                                    <Star size={22} className="fill-yellow-400/20" />
+                                    <div className="p-2 rounded-full bg-yellow-500/10">
+                                        <Star size={20} className="fill-yellow-400/20" />
+                                    </div>
                                     <span className="font-bold text-base">Bonus</span>
                                 </div>
-                                <span className="text-xl font-black text-white">+0</span>
+                                <span className="text-lg font-black text-white">+0</span>
                             </div>
+
                         </div>
                     </motion.div>
                 </div>
