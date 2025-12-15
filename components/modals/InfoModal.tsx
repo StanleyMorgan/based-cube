@@ -1,6 +1,6 @@
 import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Zap, Flame, Star, Users } from 'lucide-react';
+import { Zap, Flame, Star, Users, User } from 'lucide-react';
 
 interface InfoModalProps {
     isOpen: boolean;
@@ -8,9 +8,10 @@ interface InfoModalProps {
     neynarPower: number;
     streakPower: number;
     teamPower?: number;
+    teamMembers?: string[];
 }
 
-const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, streakPower, teamPower = 0 }) => {
+const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, streakPower, teamPower = 0, teamMembers = [] }) => {
     return (
         <AnimatePresence>
             {isOpen && (
@@ -65,7 +66,24 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, str
                                     </div>
                                     <span className="font-bold text-base">Team</span>
                                 </div>
-                                <span className="text-lg font-black text-white">+{teamPower}</span>
+                                <div className="flex items-center gap-3">
+                                    {teamMembers && teamMembers.length > 0 && (
+                                        <div className="flex -space-x-2">
+                                            {teamMembers.map((url, i) => (
+                                                <div key={i} className="w-6 h-6 rounded-full border border-slate-800 overflow-hidden bg-slate-700">
+                                                    {url ? (
+                                                        <img src={url} alt="Team" className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center">
+                                                            <User size={12} className="text-slate-400" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                    <span className="text-lg font-black text-white">+{teamPower}</span>
+                                </div>
                             </div>
 
                             {/* Bonus */}

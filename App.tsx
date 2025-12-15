@@ -47,7 +47,8 @@ const App: React.FC = () => {
     username: 'Loading...',
     lastClickDate: null,
     neynarScore: 0,
-    teamScore: 0
+    teamScore: 0,
+    teamMembers: []
   });
   
   const [canClick, setCanClick] = useState(false);
@@ -426,6 +427,7 @@ const App: React.FC = () => {
           neynarPower={neynarPowerCalc}
           streakPower={streakPowerCalc}
           teamPower={teamPowerCalc}
+          teamMembers={userState.teamMembers}
       />
       
       <PlayerStatsModal 

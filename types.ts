@@ -11,6 +11,7 @@ export interface UserState {
   referrerFid?: number;
   referrerAddress?: string;
   teamScore?: number;
+  teamMembers?: string[]; // URLs of team avatars (referrer + referrals)
 }
 
 export interface LeaderboardEntry {
@@ -23,6 +24,7 @@ export interface LeaderboardEntry {
   streak: number;
   neynarScore: number;
   teamScore?: number;
+  teamMembers?: string[]; // URLs of team avatars
 }
 
 export enum Tab {

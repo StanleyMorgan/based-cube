@@ -25,7 +25,9 @@ export default async function handler(request, response) {
       const { fid } = request.query;
       if (!fid) return response.status(400).json({ error: 'FID is required' });
 
-      // Get user, rank, and team score logic
+      // Get user, rank, and team score logic + Team Avatars
+      // 1. referrer_pfp: PFP of the person who invited this user
+      // 2. referral_pfps: PFPs of top 3 people this user invited (by Neynar score)
       const result = await pool.sql`
         SELECT *, 
         (
@@ -38,7 +40,20 @@ export default async function handler(request, response) {
         (
              (CASE WHEN referrer_fid IS NOT NULL THEN 1 ELSE 0 END) +
              (CASE WHEN EXISTS (SELECT 1 FROM users u_inv WHERE u_inv.referrer_fid = u1.fid) THEN 2 ELSE 0 END)
-        ) as team_score
+        ) as team_score,
+        (
+            SELECT pfp_url FROM users u_ref WHERE u_ref.fid = u1.referrer_fid
+        ) as referrer_pfp,
+        (
+            SELECT ARRAY_AGG(pfp_url) 
+            FROM (
+                SELECT pfp_url 
+                FROM users u_sub 
+                WHERE u_sub.referrer_fid = u1.fid 
+                ORDER BY u_sub.neynar_score DESC 
+                LIMIT 3
+            ) sub
+        ) as referral_pfps
         FROM users u1 
         WHERE fid = ${fid};
       `;
@@ -50,10 +65,20 @@ export default async function handler(request, response) {
       const user = result.rows[0];
       const effectiveStreak = getEffectiveStreak(user);
 
+      // Construct team members array: [referrer, ...referrals] (max 3 total)
+      const teamMembers = [];
+      if (user.referrer_pfp) teamMembers.push(user.referrer_pfp);
+      if (user.referral_pfps && Array.isArray(user.referral_pfps)) {
+          teamMembers.push(...user.referral_pfps);
+      }
+      // Slice to max 3 just in case
+      const finalTeamMembers = teamMembers.slice(0, 3);
+
       return response.status(200).json({
         ...user,
         streak: effectiveStreak,
-        teamScore: parseInt(user.team_score)
+        teamScore: parseInt(user.team_score),
+        teamMembers: finalTeamMembers
       });
     }
 
@@ -131,7 +156,7 @@ export default async function handler(request, response) {
 
       const user = upsertResult.rows[0];
 
-      // 4. Calculate Rank and Team Score
+      // 4. Calculate Rank, Team Score AND Team Members
       const statsResult = await pool.sql`
         SELECT 
           (
@@ -143,18 +168,38 @@ export default async function handler(request, response) {
           ) as rank,
           (
             CASE WHEN EXISTS (SELECT 1 FROM users WHERE referrer_fid = ${user.fid}) THEN 1 ELSE 0 END
-          ) as has_referrals
+          ) as has_referrals,
+          (
+            SELECT pfp_url FROM users u_ref WHERE u_ref.fid = ${user.referrer_fid}
+          ) as referrer_pfp,
+          (
+            SELECT ARRAY_AGG(pfp_url) 
+            FROM (
+                SELECT pfp_url 
+                FROM users u_sub 
+                WHERE u_sub.referrer_fid = ${user.fid} 
+                ORDER BY u_sub.neynar_score DESC 
+                LIMIT 3
+            ) sub
+          ) as referral_pfps
       `;
 
-      const rank = parseInt(statsResult.rows[0].rank);
-      const hasReferrals = parseInt(statsResult.rows[0].has_referrals) === 1;
+      const stats = statsResult.rows[0];
+      const rank = parseInt(stats.rank);
+      const hasReferrals = parseInt(stats.has_referrals) === 1;
 
       // Team Score Logic
-      // +1 if user has a referrer_fid
-      // +2 if user has referred others (has_referrals is true)
       const invitedBySomeone = user.referrer_fid ? 1 : 0;
       const invitedOthers = hasReferrals ? 2 : 0;
       const teamScore = invitedBySomeone + invitedOthers;
+
+      // Team Members Logic
+      const teamMembers = [];
+      if (stats.referrer_pfp) teamMembers.push(stats.referrer_pfp);
+      if (stats.referral_pfps && Array.isArray(stats.referral_pfps)) {
+          teamMembers.push(...stats.referral_pfps);
+      }
+      const finalTeamMembers = teamMembers.slice(0, 3);
 
       // 5. Look up Referrer Address
       let referrerAddress = null;
@@ -174,7 +219,8 @@ export default async function handler(request, response) {
         streak: effectiveStreak,
         rank,
         teamScore,
-        referrerAddress
+        referrerAddress,
+        teamMembers: finalTeamMembers
       });
     }
 

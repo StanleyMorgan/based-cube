@@ -11,8 +11,9 @@ export default async function handler(request, response) {
     const limitVal = parseInt(limit);
 
     // Rank logic: Score higher OR (Score equal AND Updated earlier) OR (Score equal AND Updated equal AND FID lower)
+    // Plus fetch Team Avatar URLs
     const result = await pool.sql`
-      SELECT fid, username, score, pfp_url, streak, last_click_date, neynar_score, referrer_fid,
+      SELECT u1.fid, u1.username, u1.score, u1.pfp_url, u1.streak, u1.last_click_date, u1.neynar_score, u1.referrer_fid,
       (
         SELECT COUNT(*) + 1 
         FROM users u2 
@@ -22,7 +23,20 @@ export default async function handler(request, response) {
       ) as rank,
       (
          CASE WHEN EXISTS (SELECT 1 FROM users ref WHERE ref.referrer_fid = u1.fid) THEN 1 ELSE 0 END
-      ) as has_referrals
+      ) as has_referrals,
+      (
+        SELECT pfp_url FROM users u_ref WHERE u_ref.fid = u1.referrer_fid
+      ) as referrer_pfp,
+      (
+        SELECT ARRAY_AGG(pfp_url) 
+        FROM (
+            SELECT pfp_url 
+            FROM users u_sub 
+            WHERE u_sub.referrer_fid = u1.fid 
+            ORDER BY u_sub.neynar_score DESC 
+            LIMIT 3
+        ) sub
+      ) as referral_pfps
       FROM users u1
       ORDER BY score DESC, updated_at ASC, fid ASC
       LIMIT ${limitVal} OFFSET ${offset};
@@ -50,6 +64,14 @@ export default async function handler(request, response) {
              if (effectiveStreak > 0) effectiveStreak = 0;
         }
 
+        // Team Members logic
+        const teamMembers = [];
+        if (row.referrer_pfp) teamMembers.push(row.referrer_pfp);
+        if (row.referral_pfps && Array.isArray(row.referral_pfps)) {
+            teamMembers.push(...row.referral_pfps);
+        }
+        const finalTeamMembers = teamMembers.slice(0, 3);
+
         return {
             id: row.fid.toString(),
             username: row.username,
@@ -59,7 +81,8 @@ export default async function handler(request, response) {
             fid: row.fid,
             streak: effectiveStreak,
             neynarScore: row.neynar_score,
-            teamScore: teamScore
+            teamScore: teamScore,
+            teamMembers: finalTeamMembers
         };
     });
 

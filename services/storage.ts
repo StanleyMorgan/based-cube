@@ -71,7 +71,8 @@ export const api = {
       primaryAddress: data.primary_address,
       referrerFid: data.referrer_fid ? parseInt(data.referrer_fid) : undefined,
       referrerAddress: data.referrerAddress,
-      teamScore: data.teamScore || 0
+      teamScore: data.teamScore || 0,
+      teamMembers: data.teamMembers || []
     };
   },
 
@@ -99,6 +100,9 @@ export const api = {
       neynarScore: data.neynar_score || 0,
       primaryAddress: data.primary_address,
       teamScore: data.teamScore || 0
+      // Click endpoint returns user record, but standard team members fetch is likely cached or handled by sync, 
+      // however if new referrals happened they wont show until refresh. 
+      // For simplicity we assume performing a click doesnt change team members immediately for the modal view.
     };
   },
 
@@ -117,7 +121,8 @@ export const api = {
       isCurrentUser: entry.fid == currentFid,
       streak: entry.streak || 0,
       neynarScore: entry.neynarScore || 0,
-      teamScore: entry.teamScore || 0
+      teamScore: entry.teamScore || 0,
+      teamMembers: entry.teamMembers || []
     }));
   },
 

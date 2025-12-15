@@ -15,6 +15,7 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose }) 
     const neynarPower = Math.floor(100 * (player.neynarScore || 0));
     const streakPower = Math.min(player.streak, 30);
     const teamPower = player.teamScore || 0;
+    const teamMembers = player.teamMembers || [];
 
     return (
         <AnimatePresence>
@@ -87,7 +88,24 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose }) 
                                     </div>
                                     <span className="font-bold text-base">Team</span>
                                 </div>
-                                <span className="text-lg font-black text-white">+{teamPower}</span>
+                                <div className="flex items-center gap-3">
+                                    {teamMembers && teamMembers.length > 0 && (
+                                        <div className="flex -space-x-2">
+                                            {teamMembers.map((url, i) => (
+                                                <div key={i} className="w-6 h-6 rounded-full border border-slate-800 overflow-hidden bg-slate-700">
+                                                    {url ? (
+                                                        <img src={url} alt="Team" className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center">
+                                                            <User size={12} className="text-slate-400" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                    <span className="text-lg font-black text-white">+{teamPower}</span>
+                                </div>
                             </div>
 
                             {/* Bonus */}
