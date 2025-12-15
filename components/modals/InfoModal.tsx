@@ -1,6 +1,6 @@
 import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Zap, Flame, Star, Users, User } from 'lucide-react';
+import { Zap, Flame, Star, Users, User, ArrowUp, ArrowDown } from 'lucide-react';
 import { TeamMember } from '../../types';
 
 interface InfoModalProps {
@@ -47,9 +47,14 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, ney
                                     <div className="flex items-center gap-2">
                                         <span className="font-bold text-base">Neynar</span>
                                         {neynarPowerChange !== 0 && (
-                                            <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${neynarPowerChange > 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
-                                                {neynarPowerChange > 0 ? '+' : ''}{neynarPowerChange}
-                                            </span>
+                                            <div className={`flex items-center gap-0.5 text-xs font-bold ${neynarPowerChange > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                {neynarPowerChange > 0 ? (
+                                                    <ArrowUp size={12} strokeWidth={3} />
+                                                ) : (
+                                                    <ArrowDown size={12} strokeWidth={3} />
+                                                )}
+                                                <span>{Math.abs(neynarPowerChange)}</span>
+                                            </div>
                                         )}
                                     </div>
                                 </div>
