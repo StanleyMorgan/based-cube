@@ -18,8 +18,27 @@ import { useAccount, useConnect, useWriteContract, useReadContract } from 'wagmi
 import { base } from 'wagmi/chains';
 import { GMLoggerABI, CONTRACT_ADDRESS } from './src/abi';
 
+// Animation variants for sliding tabs
+const slideVariants = {
+  enter: (direction: number) => ({
+    x: direction > 0 ? 50 : -50,
+    opacity: 0,
+  }),
+  center: {
+    zIndex: 1,
+    x: 0,
+    opacity: 1,
+  },
+  exit: (direction: number) => ({
+    zIndex: 0,
+    x: direction < 0 ? 50 : -50,
+    opacity: 0,
+  }),
+};
+
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>(Tab.GAME);
+  const [direction, setDirection] = useState(0);
   
   // Theme State: 'default' or 'holiday'
   // Change this value to switch theme programmatically
@@ -259,6 +278,19 @@ const App: React.FC = () => {
     }
   };
 
+  const handleTabChange = (newTab: Tab) => {
+    if (newTab === activeTab) return;
+    
+    // Determine direction
+    // Game = 0, Leaderboard = 1, Tasks = 2
+    const tabOrder = [Tab.GAME, Tab.LEADERBOARD, Tab.TASKS];
+    const oldIndex = tabOrder.indexOf(activeTab);
+    const newIndex = tabOrder.indexOf(newTab);
+    
+    setDirection(newIndex > oldIndex ? 1 : -1);
+    setActiveTab(newTab);
+  };
+
   const neynarPowerCalc = Math.floor(100 * (userState.neynarScore || 0));
   const streakPowerCalc = Math.min(userState.streak, 30);
   const teamPowerCalc = userState.teamScore || 0;
@@ -303,13 +335,16 @@ const App: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="flex-grow relative z-10 flex flex-col overflow-hidden">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" custom={direction}>
           {activeTab === Tab.GAME ? (
             <motion.div
               key="game"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.2, ease: "easeInOut" }}
               className="flex-grow flex flex-col items-center justify-center pb-24 overflow-y-auto"
             >
               <Stats 
@@ -351,9 +386,12 @@ const App: React.FC = () => {
           ) : activeTab === Tab.LEADERBOARD ? (
             <motion.div
               key="leaderboard"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.2, ease: "easeInOut" }}
               className="flex-grow h-full overflow-hidden"
             >
               <Leaderboard 
@@ -365,9 +403,12 @@ const App: React.FC = () => {
           ) : (
              <motion.div
               key="tasks"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.2, ease: "easeInOut" }}
               className="flex-grow h-full overflow-hidden"
             >
               <Tasks />
@@ -398,7 +439,7 @@ const App: React.FC = () => {
 
       {/* Navigation - Hidden when Player Stats Modal is open to prevent overlap */}
       {!selectedPlayer && (
-        <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
+        <Navigation activeTab={activeTab} onTabChange={handleTabChange} />
       )}
     </div>
   );
