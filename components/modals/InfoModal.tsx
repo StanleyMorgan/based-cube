@@ -1,6 +1,6 @@
 import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Zap, Flame, Star, Users, User, ArrowUp, ArrowDown } from 'lucide-react';
+import { Zap, Flame, Star, Users, User } from 'lucide-react';
 import { TeamMember } from '../../types';
 
 interface InfoModalProps {
@@ -39,25 +39,24 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, ney
                         <div className="bg-slate-800/50 border border-slate-700/50 rounded-3xl overflow-hidden divide-y divide-slate-700/50">
                             
                             {/* Neynar */}
-                            <div className="p-4 flex justify-between items-center hover:bg-slate-800/30 transition-colors">
+                            <div className="p-4 flex justify-between items-center relative hover:bg-slate-800/30 transition-colors">
+                                {/* Left: Label */}
                                 <div className="flex items-center gap-3 text-sky-400">
                                     <div className="p-2 rounded-full bg-sky-500/10">
                                         <Zap size={20} className="fill-sky-400/20" />
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-bold text-base">Neynar</span>
-                                        {neynarPowerChange !== 0 && (
-                                            <div className={`flex items-center gap-0.5 text-xs font-bold ${neynarPowerChange > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                                                {neynarPowerChange > 0 ? (
-                                                    <ArrowUp size={12} strokeWidth={3} />
-                                                ) : (
-                                                    <ArrowDown size={12} strokeWidth={3} />
-                                                )}
-                                                <span>{Math.abs(neynarPowerChange)}</span>
-                                            </div>
-                                        )}
-                                    </div>
+                                    <span className="font-bold text-base">Neynar</span>
                                 </div>
+
+                                {/* Center (60%): Change Indicator */}
+                                {neynarPowerChange !== 0 && (
+                                    <div className={`absolute left-[60%] -translate-x-1/2 flex items-center gap-0.5 font-bold text-base ${neynarPowerChange > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                        <span>{neynarPowerChange > 0 ? '▴' : '▾'}</span>
+                                        <span>{Math.abs(neynarPowerChange)}</span>
+                                    </div>
+                                )}
+
+                                {/* Right: Score */}
                                 <span className="text-lg font-black text-white">+{neynarPower}</span>
                             </div>
 
@@ -73,17 +72,17 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, ney
                             </div>
 
                             {/* Team */}
-                            <div className="p-4 flex items-center hover:bg-slate-800/30 transition-colors">
+                            <div className="p-4 flex justify-between items-center relative hover:bg-slate-800/30 transition-colors">
                                 {/* Left: Label */}
-                                <div className="flex-1 flex items-center gap-3 text-indigo-400">
+                                <div className="flex items-center gap-3 text-indigo-400">
                                     <div className="p-2 rounded-full bg-indigo-500/10">
                                         <Users size={20} className="fill-indigo-400/20" />
                                     </div>
                                     <span className="font-bold text-base">Team</span>
                                 </div>
 
-                                {/* Center: Avatars */}
-                                <div className="flex justify-center -space-x-2">
+                                {/* Center (60%): Avatars */}
+                                <div className="absolute left-[60%] -translate-x-1/2 flex justify-center -space-x-2">
                                     {teamMembers && teamMembers.length > 0 ? (
                                         teamMembers.map((member, i) => (
                                             <div 
@@ -105,9 +104,7 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, ney
                                 </div>
 
                                 {/* Right: Score */}
-                                <div className="flex-1 text-right">
-                                    <span className="text-lg font-black text-white">+{teamPower}</span>
-                                </div>
+                                <span className="text-lg font-black text-white">+{teamPower}</span>
                             </div>
 
                             {/* Bonus */}
