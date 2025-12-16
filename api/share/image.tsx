@@ -5,23 +5,17 @@ export const config = {
   runtime: 'edge', 
 };
 
-// Font loader
-const fontUrl = 'https://cdn.jsdelivr.net/gh/StanleyMorgan/graphics@main/fonts/Inter-Bold.ttf';
-const interBold = fetch(fontUrl).then(
-  (res) => res.arrayBuffer()
-);
-
 export default async function handler(req: Request) {
   try {
-    const { searchParams } = new URL(req.url);
-    const fid = searchParams.get('fid');
+    const url = new URL(req.url);
+    const fid = url.searchParams.get('fid');
+    const origin = url.origin; // Получаем текущий домен (например, https://tesseract-base.vercel.app или http://localhost:3000)
 
     if (!fid) {
       return new Response('FID is required', { status: 400 });
     }
 
     // Connect to DB to get user stats
-    // Note: Edge functions have limits on DB connections, but @vercel/postgres works over HTTP
     const pool = createPool({
       connectionString: process.env.cube_POSTGRES_URL,
     });
@@ -50,10 +44,11 @@ export default async function handler(req: Request) {
     const rank = `#${user.rank}`;
     const pfpUrl = user.pfp_url;
 
-    const fontData = await interBold;
+    // Загружаем шрифт локально с того же ориджина
+    const fontData = await fetch(new URL('/Inter-Bold.ttf', origin)).then((res) => res.arrayBuffer());
 
-    // Background Image
-    const bgImage = 'https://cdn.jsdelivr.net/gh/StanleyMorgan/graphics@main/app/tesseract-base/background.png';
+    // Используем локальное фоновое изображение
+    const bgImage = `${origin}/background.png`;
 
     return new ImageResponse(
       (
@@ -135,7 +130,6 @@ export default async function handler(req: Request) {
           },
         ],
         headers: {
-            // Changed from stale-while-revalidate to immutable to prevent CPU usage on repeated views
             'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable',
         },
       },

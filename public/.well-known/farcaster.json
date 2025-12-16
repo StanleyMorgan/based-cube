@@ -7,24 +7,24 @@
   "miniapp": {
     "version": "1",
     "name": "Tesseract",
-    "iconUrl": "https://raw.githubusercontent.com/StanleyMorgan/graphics/main/app/tesseract-base/logo.png",
+    "iconUrl": "https://tesseract-base.vercel.app/logo.png",
     "homeUrl": "https://tesseract-base.vercel.app/",
     "description": "Use Your Superpower",
     "buttonTitle": "Play Tesseract",
-    "splashImageUrl": "https://raw.githubusercontent.com/StanleyMorgan/graphics/main/app/tesseract-base/logo.png",
+    "splashImageUrl": "https://tesseract-base.vercel.app/logo.png",
     "splashBackgroundColor": "#0f172a",
     "subtitle": "Daily Social Clicker",
     "webhookUrl": "https://tesseract-base.vercel.app/api/webhook",
     "screenshotUrls": [
-      "https://raw.githubusercontent.com/StanleyMorgan/graphics/main/app/tesseract-base/embed.png"
+      "https://tesseract-base.vercel.app/embed.png"
     ],
     "primaryCategory": "social",
     "tags": ["game", "social", "daily"],
-    "heroImageUrl": "https://raw.githubusercontent.com/StanleyMorgan/graphics/main/app/tesseract-base/embed.png",
+    "heroImageUrl": "https://tesseract-base.vercel.app/embed.png",
     "tagline": "Use Your Superpower!",
     "ogTitle": "Tesseract",
     "ogDescription": "Tesseract Social Game on Base.",
-    "ogImageUrl": "https://raw.githubusercontent.com/StanleyMorgan/graphics/main/app/tesseract-base/embed.png"
+    "ogImageUrl": "https://tesseract-base.vercel.app/embed.png"
   },
   "baseBuilder": {
     "ownerAddress": "0x4dBc9249D183B226260a96F13Fcc6B38A4c01C99"

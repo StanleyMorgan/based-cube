@@ -13,7 +13,6 @@ export default async function handler(req: Request) {
     const origin = host ? `https://${host}` : 'https://tesseract-base.vercel.app';
 
     // Image URL points to our generator
-    // Pass the score if it exists to bust cache on image level uniquely per score update
     let imageUrl = `${origin}/api/share/image?fid=${fid}`;
     if (score) {
         imageUrl += `&score=${score}`;
@@ -25,6 +24,9 @@ export default async function handler(req: Request) {
         appUrl += `?ref=${fid}`;
     }
 
+    // Использование локального логотипа
+    const logoUrl = `${origin}/logo.png`;
+
     // MiniApp embed metadata
     const miniAppEmbed = {
       version: '1',
@@ -35,7 +37,7 @@ export default async function handler(req: Request) {
           type: 'launch_miniapp',
           name: 'Tesseract',
           url: appUrl,
-          splashImageUrl: 'https://raw.githubusercontent.com/StanleyMorgan/graphics/main/app/tesseract-base/logo.png',
+          splashImageUrl: logoUrl,
           splashBackgroundColor: '#0f172a',
         },
       },
