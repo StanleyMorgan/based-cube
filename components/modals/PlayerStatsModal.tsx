@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Zap, Flame, Star, User, Users, Loader2 } from 'lucide-react';
 import { LeaderboardEntry } from '../../types';
 import { api } from '../../services/storage';
+import { sdk } from '@farcaster/miniapp-sdk';
 
 interface PlayerStatsModalProps {
     player: LeaderboardEntry | null;
@@ -23,6 +24,15 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose, on
             console.warn("Failed to load user profile", e);
         } finally {
             setLoadingFid(null);
+        }
+    };
+
+    const handleMainAvatarClick = () => {
+        if (!player) return;
+        // player.id is the FID string in our LeaderboardEntry type
+        const fid = parseInt(player.id);
+        if (!isNaN(fid)) {
+            sdk.actions.viewProfile({ fid });
         }
     };
 
@@ -55,7 +65,10 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose, on
                     >
                         {/* Player Header */}
                         <div className="flex flex-col items-center mb-6">
-                            <div className="relative mb-3">
+                            <button 
+                                onClick={handleMainAvatarClick}
+                                className="relative mb-3 transition-transform hover:scale-105 active:scale-95"
+                            >
                                 {player.pfpUrl ? (
                                     <img 
                                         src={player.pfpUrl} 
@@ -70,7 +83,7 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose, on
                                 <div className="absolute -bottom-2 -right-2 bg-slate-800 text-white text-xs font-bold px-2 py-1 rounded-full border border-slate-600">
                                     #{player.rank}
                                 </div>
-                            </div>
+                            </button>
                             <h2 className="text-xl font-bold text-white">{player.username}</h2>
                         </div>
 
