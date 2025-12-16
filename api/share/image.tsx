@@ -45,7 +45,8 @@ export default async function handler(req: Request) {
     const pfpUrl = user.pfp_url;
 
     // Загружаем шрифт локально с того же ориджина
-    const fontData = await fetch(new URL('/Inter-Bold.ttf', origin)).then((res) => res.arrayBuffer());
+    // Добавляем { cache: 'force-cache' }, чтобы Edge Function кэшировала сам файл шрифта
+    const fontData = await fetch(new URL('/Inter-Bold.ttf', origin), { cache: 'force-cache' }).then((res) => res.arrayBuffer());
 
     // Используем локальное фоновое изображение
     const bgImage = `${origin}/background.png`;
