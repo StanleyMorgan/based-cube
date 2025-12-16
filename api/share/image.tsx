@@ -6,7 +6,7 @@ export const config = {
 };
 
 // Font loader
-const fontUrl = 'https://raw.githubusercontent.com/StanleyMorgan/graphics/refs/heads/main/fonts/Inter-Bold.ttf';
+const fontUrl = 'https://cdn.jsdelivr.net/gh/StanleyMorgan/graphics@main/fonts/Inter-Bold.ttf';
 const interBold = fetch(fontUrl).then(
   (res) => res.arrayBuffer()
 );
@@ -53,7 +53,7 @@ export default async function handler(req: Request) {
     const fontData = await interBold;
 
     // Background Image
-    const bgImage = 'https://raw.githubusercontent.com/StanleyMorgan/graphics/main/app/tesseract-base/background.png';
+    const bgImage = 'https://cdn.jsdelivr.net/gh/StanleyMorgan/graphics@main/app/tesseract-base/background.png';
 
     return new ImageResponse(
       (
