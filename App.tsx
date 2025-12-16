@@ -261,8 +261,8 @@ const App: React.FC = () => {
 
     const text = `I collected +${successModal.points} Power on Tesseract! 🧊\n${rankText}\nUse your Neynar Superpower:`;
     
-    // Use score as cache buster. It changes only when user plays, perfect for caching + updating.
-    const embedUrl = `https://tesseract-base.vercel.app/api/share/frame?fid=${userState.fid}&score=${userState.score}`;
+    // Use a clean URL without score to improve caching efficiency
+    const embedUrl = `https://tesseract-base.vercel.app/api/share/frame?fid=${userState.fid}`;
 
     try {
         await sdk.actions.composeCast({
