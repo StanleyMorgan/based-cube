@@ -261,13 +261,8 @@ const App: React.FC = () => {
 
     const text = `I collected +${successModal.points} Power on Tesseract! 🧊\n${rankText}\nUse your Neynar Superpower:`;
     
-    // Pass params to avoid DB call in image generation
-    // We encode components to ensure URL validity
-    const pfpParam = userState.pfpUrl ? `&pfp=${encodeURIComponent(userState.pfpUrl)}` : '';
-    const usernameParam = `&u=${encodeURIComponent(userState.username)}`;
-    const rankParam = `&r=${successModal.newRank}`; 
-
-    const embedUrl = `https://tesseract-base.vercel.app/api/share/frame?fid=${userState.fid}&score=${userState.score}${rankParam}${usernameParam}${pfpParam}`;
+    // Use score as cache buster. It changes only when user plays, perfect for caching + updating.
+    const embedUrl = `https://tesseract-base.vercel.app/api/share/frame?fid=${userState.fid}&score=${userState.score}`;
 
     try {
         await sdk.actions.composeCast({
