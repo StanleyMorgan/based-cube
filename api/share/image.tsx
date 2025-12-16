@@ -16,39 +16,58 @@ export default async function handler(req: Request) {
     const { searchParams } = new URL(req.url);
     const fid = searchParams.get('fid');
 
-    if (!fid) {
-      return new Response('FID is required', { status: 400 });
+    // Try to get data from params to skip DB
+    const paramScore = searchParams.get('score');
+    const paramUsername = searchParams.get('u');
+    const paramRank = searchParams.get('r');
+    const paramPfp = searchParams.get('pfp');
+
+    let username = 'Player';
+    let score = '0';
+    let rank = '#?';
+    let pfpUrl = null;
+
+    // OPTIMIZATION: If we have data in URL, skip DB call (Massive speedup + No DB Limit hit)
+    // This is the "Fast Path" we decided on.
+    if (paramScore && paramUsername && paramRank) {
+        username = paramUsername;
+        score = parseInt(paramScore).toLocaleString();
+        rank = `#${paramRank}`;
+        pfpUrl = paramPfp;
+    } else {
+        // FALLBACK: Query DB (Slow, CPU intensive)
+        // Only happens if link is old or modified to remove params
+        if (!fid) {
+          return new Response('FID is required', { status: 400 });
+        }
+
+        const pool = createPool({
+          connectionString: process.env.cube_POSTGRES_URL,
+        });
+
+        const result = await pool.sql`
+            SELECT username, score, pfp_url, 
+            (
+              SELECT COUNT(*) + 1 
+              FROM users u2 
+              WHERE u2.score > u1.score 
+                 OR (u2.score = u1.score AND u2.updated_at < u1.updated_at)
+                 OR (u2.score = u1.score AND u2.updated_at = u1.updated_at AND u2.fid < u1.fid)
+            ) as rank
+            FROM users u1 
+            WHERE fid = ${fid};
+        `;
+
+        if (result.rows.length === 0) {
+           return new Response('User not found', { status: 404 });
+        }
+
+        const user = result.rows[0];
+        username = user.username || 'Player';
+        score = user.score.toLocaleString();
+        rank = `#${user.rank}`;
+        pfpUrl = user.pfp_url;
     }
-
-    // Connect to DB to get user stats
-    // Note: Edge functions have limits on DB connections, but @vercel/postgres works over HTTP
-    const pool = createPool({
-      connectionString: process.env.cube_POSTGRES_URL,
-    });
-
-    // Get user and rank
-    const result = await pool.sql`
-        SELECT username, score, pfp_url, 
-        (
-          SELECT COUNT(*) + 1 
-          FROM users u2 
-          WHERE u2.score > u1.score 
-             OR (u2.score = u1.score AND u2.updated_at < u1.updated_at)
-             OR (u2.score = u1.score AND u2.updated_at = u1.updated_at AND u2.fid < u1.fid)
-        ) as rank
-        FROM users u1 
-        WHERE fid = ${fid};
-    `;
-
-    if (result.rows.length === 0) {
-       return new Response('User not found', { status: 404 });
-    }
-
-    const user = result.rows[0];
-    const username = user.username || 'Player';
-    const score = user.score.toLocaleString();
-    const rank = `#${user.rank}`;
-    const pfpUrl = user.pfp_url;
 
     const fontData = await interBold;
 
@@ -135,7 +154,7 @@ export default async function handler(req: Request) {
           },
         ],
         headers: {
-            // Changed from stale-while-revalidate to immutable to prevent CPU usage on repeated views
+            // Keep immutable cache for subsequent hits
             'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable',
         },
       },

@@ -8,16 +8,23 @@ export default async function handler(req: Request) {
     const fid = url.searchParams.get('fid');
     const score = url.searchParams.get('score');
 
+    // New params from App.tsx
+    const username = url.searchParams.get('u');
+    const rank = url.searchParams.get('r');
+    const pfp = url.searchParams.get('pfp');
+
     // Define the origin
     const host = req.headers.get('host');
     const origin = host ? `https://${host}` : 'https://tesseract-base.vercel.app';
 
     // Image URL points to our generator
-    // Pass the score if it exists to bust cache on image level uniquely per score update
     let imageUrl = `${origin}/api/share/image?fid=${fid}`;
-    if (score) {
-        imageUrl += `&score=${score}`;
-    }
+    
+    // Append parameters for Fast Path image generation
+    if (score) imageUrl += `&score=${score}`;
+    if (username) imageUrl += `&u=${encodeURIComponent(username)}`;
+    if (rank) imageUrl += `&r=${rank}`;
+    if (pfp) imageUrl += `&pfp=${encodeURIComponent(pfp)}`;
     
     // App Launch URL (with referral)
     let appUrl = `${origin}/`;
