@@ -135,7 +135,8 @@ export default async function handler(req: Request) {
           },
         ],
         headers: {
-            'Cache-Control': 'public, max-age=86400, stale-while-revalidate=3600',
+            // Changed from stale-while-revalidate to immutable to prevent CPU usage on repeated views
+            'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable',
         },
       },
     );
