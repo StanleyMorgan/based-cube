@@ -50,7 +50,8 @@ const App: React.FC = () => {
     neynarScore: 0,
     teamScore: 0,
     teamMembers: [],
-    contractAddress: undefined
+    contractAddress: undefined,
+    version: 1
   });
   
   const [canClick, setCanClick] = useState(false);
@@ -72,11 +73,11 @@ const App: React.FC = () => {
   const { connect, connectors } = useConnect();
   const { writeContractAsync, isPending: isTxPending } = useWriteContract();
   
-  // Read Fee from contract
-  const { data: gmFee } = useReadContract({
+  // Read Fee from contract (gmFee for V1, chargeFee for V2)
+  const { data: contractFee } = useReadContract({
     address: userState.contractAddress as `0x${string}`,
     abi: GMLoggerABI,
-    functionName: 'gmFee',
+    functionName: userState.version === 2 ? 'chargeFee' : 'gmFee',
   });
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -167,8 +168,8 @@ const App: React.FC = () => {
     setIsProcessing(true);
 
     try {
-        // 1. Execute On-Chain GM
-        const fee = gmFee ? BigInt(gmFee) : BigInt(0);
+        // 1. Execute On-Chain GM/Charge
+        const fee = contractFee ? BigInt(contractFee) : BigInt(0);
         
         // Use referrer address from backend if available, otherwise zero address
         const referrer = userState.referrerAddress || "0x0000000000000000000000000000000000000000";
@@ -176,7 +177,7 @@ const App: React.FC = () => {
         await writeContractAsync({
             address: userState.contractAddress as `0x${string}`,
             abi: GMLoggerABI,
-            functionName: 'GM',
+            functionName: userState.version === 2 ? 'Charge' : 'GM',
             args: [referrer as `0x${string}`],
             value: fee,
             account: address,

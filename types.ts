@@ -19,6 +19,7 @@ export interface UserState {
   teamScore?: number;
   teamMembers?: TeamMember[]; // List of team members
   contractAddress?: string; // Dynamic contract address from DB
+  version?: number; // Contract version (1 or 2)
 }
 
 export interface LeaderboardEntry {

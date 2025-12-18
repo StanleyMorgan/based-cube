@@ -76,7 +76,8 @@ export const api = {
       referrerAddress: data.referrerAddress,
       teamScore: data.teamScore || 0,
       teamMembers: data.teamMembers || [],
-      contractAddress: data.contractAddress
+      contractAddress: data.contractAddress,
+      version: data.version
     };
   },
 
@@ -105,7 +106,8 @@ export const api = {
       neynarPowerChange: data.neynarPowerChange || 0,
       primaryAddress: data.primary_address,
       teamScore: data.teamScore || 0,
-      contractAddress: data.contractAddress
+      contractAddress: data.contractAddress,
+      version: data.version
     };
   },
 
