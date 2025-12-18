@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { sdk } from '@farcaster/miniapp-sdk';
@@ -16,7 +17,7 @@ import { Info, Wallet, Loader2 } from 'lucide-react';
 // Wagmi & Contract imports
 import { useAccount, useConnect, useWriteContract, useReadContract } from 'wagmi';
 import { base } from 'wagmi/chains';
-import { GMLoggerABI, CONTRACT_ADDRESS } from './src/abi';
+import { GMLoggerABI } from './src/abi';
 
 // Animation variants for sliding tabs
 const slideVariants = {
@@ -48,7 +49,8 @@ const App: React.FC = () => {
     lastClickDate: null,
     neynarScore: 0,
     teamScore: 0,
-    teamMembers: []
+    teamMembers: [],
+    contractAddress: undefined
   });
   
   const [canClick, setCanClick] = useState(false);
@@ -72,7 +74,7 @@ const App: React.FC = () => {
   
   // Read Fee from contract
   const { data: gmFee } = useReadContract({
-    address: CONTRACT_ADDRESS,
+    address: userState.contractAddress as `0x${string}`,
     abi: GMLoggerABI,
     functionName: 'gmFee',
   });
@@ -148,7 +150,7 @@ const App: React.FC = () => {
   }, [userState]);
 
   const handleCubeClick = async () => {
-    if (!canClick || !userState.fid) return;
+    if (!canClick || !userState.fid || !userState.contractAddress) return;
     if (isProcessing || isTxPending) return;
 
     // Check Wallet Connection
@@ -172,7 +174,7 @@ const App: React.FC = () => {
         const referrer = userState.referrerAddress || "0x0000000000000000000000000000000000000000";
 
         await writeContractAsync({
-            address: CONTRACT_ADDRESS,
+            address: userState.contractAddress as `0x${string}`,
             abi: GMLoggerABI,
             functionName: 'GM',
             args: [referrer as `0x${string}`],

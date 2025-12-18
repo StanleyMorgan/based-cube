@@ -18,6 +18,7 @@ export interface UserState {
   referrerAddress?: string;
   teamScore?: number;
   teamMembers?: TeamMember[]; // List of team members
+  contractAddress?: string; // Dynamic contract address from DB
 }
 
 export interface LeaderboardEntry {

@@ -1,3 +1,4 @@
+
 import { createPool } from '@vercel/postgres';
 
 export default async function handler(request, response) {
@@ -10,6 +11,10 @@ export default async function handler(request, response) {
     await pool.sql`
       ALTER TABLE users ADD COLUMN IF NOT EXISTS neynar_power_change INTEGER DEFAULT 0;
     `;
+
+    // Fetch dynamic contract address from the DB
+    const contractRes = await pool.sql`SELECT contract_address FROM contracts WHERE version = 1 LIMIT 1`;
+    const activeContractAddress = contractRes.rows[0]?.contract_address || null;
 
     // Helper to calculate effective streak based on time
     const getEffectiveStreak = (user) => {
@@ -82,7 +87,8 @@ export default async function handler(request, response) {
         streak: effectiveStreak,
         teamScore: parseInt(user.team_score),
         teamMembers: finalTeamMembers,
-        neynarPowerChange: user.neynar_power_change || 0
+        neynarPowerChange: user.neynar_power_change || 0,
+        contractAddress: activeContractAddress
       });
     }
 
@@ -230,7 +236,8 @@ export default async function handler(request, response) {
         teamScore,
         referrerAddress,
         teamMembers: finalTeamMembers,
-        neynarPowerChange: user.neynar_power_change || 0
+        neynarPowerChange: user.neynar_power_change || 0,
+        contractAddress: activeContractAddress
       });
     }
 

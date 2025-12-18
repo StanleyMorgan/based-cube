@@ -1,3 +1,4 @@
+
 export const GMLoggerABI = [
   {
     inputs: [
@@ -16,5 +17,3 @@ export const GMLoggerABI = [
     type: "function"
   }
 ] as const;
-
-export const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS as `0x${string}`;

@@ -1,3 +1,4 @@
+
 import { LeaderboardEntry, UserState, TeamMember } from '../types';
 
 // Helper for date calculations on frontend
@@ -74,7 +75,8 @@ export const api = {
       referrerFid: data.referrer_fid ? parseInt(data.referrer_fid) : undefined,
       referrerAddress: data.referrerAddress,
       teamScore: data.teamScore || 0,
-      teamMembers: data.teamMembers || []
+      teamMembers: data.teamMembers || [],
+      contractAddress: data.contractAddress
     };
   },
 
@@ -149,6 +151,7 @@ export const api = {
 
   getCompletedTasks: async (fid: number): Promise<string[]> => {
     const res = await fetch(`/api/tasks?fid=${fid}`);
+    // Fix: Reference res.ok instead of non-existent 'ok'
     if (!res.ok) return [];
     const data = await res.json();
     return data.completedIds || [];
