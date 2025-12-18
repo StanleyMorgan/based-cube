@@ -11,10 +11,9 @@ export default async function handler(request, response) {
     await pool.sql`
       ALTER TABLE users ADD COLUMN IF NOT EXISTS neynar_power_change INTEGER DEFAULT 0;
     `;
-
-    // Fetch dynamic contract address from the DB
-    const contractRes = await pool.sql`SELECT contract_address FROM contracts WHERE version = 1 LIMIT 1`;
-    const activeContractAddress = contractRes.rows[0]?.contract_address || null;
+    await pool.sql`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS version INTEGER DEFAULT 1;
+    `;
 
     // Helper to calculate effective streak based on time
     const getEffectiveStreak = (user) => {
@@ -38,6 +37,7 @@ export default async function handler(request, response) {
       // Get user, rank, and team score logic + Team Avatars (as JSON objects)
       const result = await pool.sql`
         SELECT *, 
+        (SELECT contract_address FROM contracts WHERE version = u1.version LIMIT 1) as contract_address,
         (
           SELECT COUNT(*) + 1 
           FROM users u2 
@@ -88,7 +88,7 @@ export default async function handler(request, response) {
         teamScore: parseInt(user.team_score),
         teamMembers: finalTeamMembers,
         neynarPowerChange: user.neynar_power_change || 0,
-        contractAddress: activeContractAddress
+        contractAddress: user.contract_address
       });
     }
 
@@ -168,7 +168,7 @@ export default async function handler(request, response) {
           primary_address = COALESCE(EXCLUDED.primary_address, users.primary_address),
           referrer_fid = COALESCE(users.referrer_fid, EXCLUDED.referrer_fid),
           updated_at = CURRENT_TIMESTAMP
-        RETURNING *;
+        RETURNING *, (SELECT contract_address FROM contracts WHERE version = users.version LIMIT 1) as contract_address;
       `;
 
       const user = upsertResult.rows[0];
@@ -237,7 +237,7 @@ export default async function handler(request, response) {
         referrerAddress,
         teamMembers: finalTeamMembers,
         neynarPowerChange: user.neynar_power_change || 0,
-        contractAddress: activeContractAddress
+        contractAddress: user.contract_address
       });
     }
 

@@ -104,7 +104,8 @@ export const api = {
       neynarScore: data.neynar_score || 0,
       neynarPowerChange: data.neynarPowerChange || 0,
       primaryAddress: data.primary_address,
-      teamScore: data.teamScore || 0
+      teamScore: data.teamScore || 0,
+      contractAddress: data.contractAddress
     };
   },
 

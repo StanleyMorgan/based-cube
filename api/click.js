@@ -1,3 +1,4 @@
+
 import { createPool } from '@vercel/postgres';
 
 export default async function handler(request, response) {
@@ -88,7 +89,7 @@ export default async function handler(request, response) {
         last_click_date = CURRENT_TIMESTAMP,
         updated_at = CURRENT_TIMESTAMP
       WHERE fid = ${fid}
-      RETURNING *;
+      RETURNING *, (SELECT contract_address FROM contracts WHERE version = users.version LIMIT 1) as contract_address;
     `;
 
     const updatedUser = updateResult.rows[0];
@@ -105,7 +106,8 @@ export default async function handler(request, response) {
     return response.status(200).json({
       ...updatedUser,
       rank: parseInt(rankResult.rows[0].rank),
-      teamScore: teamBonus
+      teamScore: teamBonus,
+      contractAddress: updatedUser.contract_address
     });
 
   } catch (error) {
