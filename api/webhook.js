@@ -1,3 +1,4 @@
+
 import { createPool } from '@vercel/postgres';
 
 export default async function handler(request, response) {
@@ -10,7 +11,7 @@ export default async function handler(request, response) {
   }
 
   try {
-    console.log("Webhook received!"); // Лог для проверки, что Warpcast видит URL
+    console.log("Webhook received!"); // Log to check that Warpcast sees the URL
 
     // 1. Ensure table exists
     await pool.sql`

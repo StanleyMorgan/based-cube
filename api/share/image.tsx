@@ -1,3 +1,4 @@
+
 import { ImageResponse } from '@vercel/og';
 import { createPool } from '@vercel/postgres';
 
@@ -9,7 +10,7 @@ export default async function handler(req: Request) {
   try {
     const url = new URL(req.url);
     const fid = url.searchParams.get('fid');
-    const origin = url.origin; // Получаем текущий домен (например, https://tesseract-base.vercel.app или http://localhost:3000)
+    const origin = url.origin; // Get the current domain (e.g., https://tesseract-base.vercel.app or http://localhost:3000)
 
     if (!fid) {
       return new Response('FID is required', { status: 400 });
@@ -44,11 +45,11 @@ export default async function handler(req: Request) {
     const rank = `#${user.rank}`;
     const pfpUrl = user.pfp_url;
 
-    // Загружаем шрифт локально с того же ориджина
-    // Добавляем { cache: 'force-cache' }, чтобы Edge Function кэшировала сам файл шрифта
+    // Load font locally from the same origin
+    // Add { cache: 'force-cache' } to ensure the Edge Function caches the font file
     const fontData = await fetch(new URL('/Inter-Bold.ttf', origin), { cache: 'force-cache' }).then((res) => res.arrayBuffer());
 
-    // Используем локальное фоновое изображение
+    // Use a local background image
     const bgImage = `${origin}/background.png`;
 
     return new ImageResponse(

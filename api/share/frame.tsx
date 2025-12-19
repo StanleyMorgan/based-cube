@@ -1,3 +1,4 @@
+
 export const config = {
   runtime: 'edge',
 };
@@ -20,7 +21,7 @@ export default async function handler(req: Request) {
         appUrl += `?ref=${fid}`;
     }
 
-    // Использование локального логотипа
+    // Using local logo
     const logoUrl = `${origin}/logo.png`;
 
     // MiniApp embed metadata

@@ -4,13 +4,13 @@ import { motion } from 'framer-motion';
 
 const Particle = () => {
   const { angle, distance, duration, delay, size, color } = useMemo(() => {
-    const colors = ['#f0f9ff', '#bae6fd', '#7dd3fc', '#38bdf8']; // От белого к ярко-голубому
+    const colors = ['#f0f9ff', '#bae6fd', '#7dd3fc', '#38bdf8']; // From white to bright sky blue
     return {
       angle: Math.random() * Math.PI * 2,
-      distance: 150 + Math.random() * 80,
-      duration: 0.8 + Math.random() * 1.2, // Быстрее притяжение
+      distance: 120 + Math.random() * 60, // Slightly reduced distance to stay within typical mini-app bounds
+      duration: 0.8 + Math.random() * 1.2, // Faster attraction
       delay: Math.random() * 4,
-      size: 2 + Math.random() * 3, // Чуть больше размер
+      size: 2 + Math.random() * 3, // Slightly larger size
       color: colors[Math.floor(Math.random() * colors.length)]
     };
   }, []);
@@ -37,23 +37,24 @@ const Particle = () => {
       style={{ 
         width: size, 
         height: size, 
-        left: '50%', 
-        top: '50%',
+        left: 0, 
+        top: 0,
         marginLeft: -size/2,
         marginTop: -size/2,
         backgroundColor: color,
-        boxShadow: `0 0 10px 2px ${color}`, // Мощное свечение
+        boxShadow: `0 0 10px 2px ${color}`, // Powerful glow
       }}
     />
   );
 };
 
 const AttractionParticles: React.FC = () => {
-  // Увеличиваем количество частиц для плотности эффекта
+  // Increase particle count for effect density
   const particles = useMemo(() => Array.from({ length: 45 }), []);
 
   return (
-    <div className="absolute inset-0 pointer-events-none overflow-visible">
+    /* Use a zero-size centered container to prevent triggering layout scrollbars */
+    <div className="absolute top-1/2 left-1/2 w-0 h-0 pointer-events-none overflow-visible">
       {particles.map((_, i) => (
         <Particle key={i} />
       ))}
