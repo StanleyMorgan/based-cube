@@ -65,6 +65,7 @@ export const api = {
       fid: parseInt(data.fid),
       username: data.username,
       score: data.score,
+      rewards: parseFloat(data.rewards || 0),
       streak: data.streak,
       lastClickDate: data.last_click_date,
       pfpUrl: data.pfp_url,
@@ -99,6 +100,7 @@ export const api = {
       fid: parseInt(data.fid),
       username: data.username,
       score: data.score,
+      rewards: parseFloat(data.rewards || 0),
       streak: data.streak,
       lastClickDate: data.last_click_date,
       pfpUrl: data.pfp_url,
@@ -123,6 +125,7 @@ export const api = {
       id: entry.id,
       username: entry.username,
       score: entry.score,
+      rewards: parseFloat(entry.rewards || 0),
       rank: entry.rank,
       pfpUrl: entry.pfpUrl,
       isCurrentUser: entry.fid == currentFid,
@@ -143,6 +146,7 @@ export const api = {
       id: data.fid.toString(),
       username: data.username,
       score: data.score,
+      rewards: parseFloat(data.rewards || 0),
       rank: data.rank,
       pfpUrl: data.pfp_url,
       isCurrentUser: false, // In modal context typically not current user, or doesn't matter
@@ -156,7 +160,6 @@ export const api = {
 
   getCompletedTasks: async (fid: number): Promise<string[]> => {
     const res = await fetch(`/api/tasks?fid=${fid}`);
-    // Fix: Reference res.ok instead of non-existent 'ok'
     if (!res.ok) return [];
     const data = await res.json();
     return data.completedIds || [];

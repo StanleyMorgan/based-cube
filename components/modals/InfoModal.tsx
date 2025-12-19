@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Zap, Flame, Star, Users, User } from 'lucide-react';
+import { Zap, Flame, Star, Users, User, Banknote } from 'lucide-react';
 import { TeamMember } from '../../types';
 
 interface InfoModalProps {
@@ -10,10 +11,11 @@ interface InfoModalProps {
     neynarPowerChange?: number;
     streakPower: number;
     teamPower?: number;
+    rewards?: number;
     teamMembers?: TeamMember[];
 }
 
-const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, neynarPowerChange = 0, streakPower, teamPower = 0, teamMembers = [] }) => {
+const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, neynarPowerChange = 0, streakPower, teamPower = 0, rewards = 0, teamMembers = [] }) => {
     return (
         <AnimatePresence>
             {isOpen && (
@@ -116,6 +118,17 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, ney
                                     <span className="font-bold text-base">Bonus</span>
                                 </div>
                                 <span className="text-lg font-black text-white">+0</span>
+                            </div>
+
+                            {/* Earned */}
+                            <div className="p-4 flex justify-between items-center hover:bg-slate-800/30 transition-colors">
+                                <div className="flex items-center gap-3 text-emerald-400">
+                                    <div className="p-2 rounded-full bg-emerald-500/10">
+                                        <Banknote size={20} className="fill-emerald-400/20" />
+                                    </div>
+                                    <span className="font-bold text-base">Earned</span>
+                                </div>
+                                <span className="text-lg font-black text-white">${rewards.toFixed(2)}</span>
                             </div>
 
                         </div>

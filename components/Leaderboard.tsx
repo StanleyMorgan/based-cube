@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { LeaderboardEntry, UserState } from '../types';
 import { api } from '../services/storage';
@@ -48,14 +49,13 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, onP
             } else if (currentRank > 0) { // If user has a rank
                 // User is not in this fetched list.
                 // If it's page 1, check if we should show them pinned at top
-                // Logic: If user rank is NOT in the top 20 (page 1), we pin them.
-                // But wait, if page 1 is rank 1-20, and user is 50, we pin.
                 
                 // Construct entry from currentUser state and prepend
                 const userEntry: LeaderboardEntry = {
                     id: currentUser.fid?.toString() || 'user',
                     username: currentUser.username,
                     score: currentUser.score,
+                    rewards: currentUser.rewards,
                     rank: currentRank,
                     pfpUrl: currentUser.pfpUrl,
                     isCurrentUser: true,

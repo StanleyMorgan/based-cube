@@ -17,6 +17,9 @@ export default async function handler(request, response) {
     await pool.sql`
       ALTER TABLE users ADD COLUMN IF NOT EXISTS stream_target BOOLEAN DEFAULT false;
     `;
+    await pool.sql`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS rewards NUMERIC(20,2) DEFAULT 0;
+    `;
 
     // Helper to calculate effective streak based on time
     const getEffectiveStreak = (user) => {
@@ -92,7 +95,8 @@ export default async function handler(request, response) {
         teamMembers: finalTeamMembers,
         neynarPowerChange: user.neynar_power_change || 0,
         contractAddress: user.contract_address,
-        stream_target: user.stream_target
+        stream_target: user.stream_target,
+        rewards: user.rewards || 0
       });
     }
 
@@ -102,7 +106,7 @@ export default async function handler(request, response) {
 
       // 1. Check existing user data...
       const existingUserRes = await pool.sql`
-        SELECT neynar_score, neynar_last_updated, referrer_fid, neynar_power_change, stream_target
+        SELECT neynar_score, neynar_last_updated, referrer_fid, neynar_power_change, stream_target, rewards
         FROM users 
         WHERE fid = ${fid}
       `;
@@ -160,8 +164,8 @@ export default async function handler(request, response) {
       }
 
       const upsertResult = await pool.sql`
-        INSERT INTO users (fid, username, pfp_url, score, streak, neynar_score, neynar_last_updated, primary_address, referrer_fid, neynar_power_change)
-        VALUES (${fid}, ${username}, ${pfpUrl || null}, 0, 0, ${neynarScore}, ${neynarLastUpdated}, ${primaryAddress || null}, ${referrerValue}, ${neynarPowerChange})
+        INSERT INTO users (fid, username, pfp_url, score, streak, neynar_score, neynar_last_updated, primary_address, referrer_fid, neynar_power_change, rewards)
+        VALUES (${fid}, ${username}, ${pfpUrl || null}, 0, 0, ${neynarScore}, ${neynarLastUpdated}, ${primaryAddress || null}, ${referrerValue}, ${neynarPowerChange}, 0)
         ON CONFLICT (fid) 
         DO UPDATE SET 
           username = EXCLUDED.username,
@@ -242,7 +246,8 @@ export default async function handler(request, response) {
         teamMembers: finalTeamMembers,
         neynarPowerChange: user.neynar_power_change || 0,
         contractAddress: user.contract_address,
-        stream_target: user.stream_target
+        stream_target: user.stream_target,
+        rewards: user.rewards || 0
       });
     }
 

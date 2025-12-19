@@ -107,7 +107,8 @@ export default async function handler(request, response) {
       ...updatedUser,
       rank: parseInt(rankResult.rows[0].rank),
       teamScore: teamBonus,
-      contractAddress: updatedUser.contract_address
+      contractAddress: updatedUser.contract_address,
+      rewards: updatedUser.rewards || 0
     });
 
   } catch (error) {

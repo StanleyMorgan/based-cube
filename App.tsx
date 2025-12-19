@@ -44,6 +44,7 @@ const App: React.FC = () => {
   // Initial state with defaults
   const [userState, setUserState] = useState<UserState>({
     score: 0,
+    rewards: 0,
     streak: 0,
     username: 'Loading...',
     lastClickDate: null,
@@ -433,6 +434,7 @@ const App: React.FC = () => {
           neynarPowerChange={userState.neynarPowerChange}
           streakPower={streakPowerCalc}
           teamPower={teamPowerCalc}
+          rewards={userState.rewards}
           teamMembers={userState.teamMembers}
       />
       
