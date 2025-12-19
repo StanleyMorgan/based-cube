@@ -14,6 +14,9 @@ export default async function handler(request, response) {
     await pool.sql`
       ALTER TABLE users ADD COLUMN IF NOT EXISTS version INTEGER DEFAULT 1;
     `;
+    await pool.sql`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS stream_target BOOLEAN DEFAULT false;
+    `;
 
     // Helper to calculate effective streak based on time
     const getEffectiveStreak = (user) => {
@@ -88,7 +91,8 @@ export default async function handler(request, response) {
         teamScore: parseInt(user.team_score),
         teamMembers: finalTeamMembers,
         neynarPowerChange: user.neynar_power_change || 0,
-        contractAddress: user.contract_address
+        contractAddress: user.contract_address,
+        stream_target: user.stream_target
       });
     }
 
@@ -98,7 +102,7 @@ export default async function handler(request, response) {
 
       // 1. Check existing user data...
       const existingUserRes = await pool.sql`
-        SELECT neynar_score, neynar_last_updated, referrer_fid, neynar_power_change
+        SELECT neynar_score, neynar_last_updated, referrer_fid, neynar_power_change, stream_target
         FROM users 
         WHERE fid = ${fid}
       `;
@@ -237,7 +241,8 @@ export default async function handler(request, response) {
         referrerAddress,
         teamMembers: finalTeamMembers,
         neynarPowerChange: user.neynar_power_change || 0,
-        contractAddress: user.contract_address
+        contractAddress: user.contract_address,
+        stream_target: user.stream_target
       });
     }
 

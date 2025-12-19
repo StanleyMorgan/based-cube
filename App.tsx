@@ -51,7 +51,8 @@ const App: React.FC = () => {
     teamScore: 0,
     teamMembers: [],
     contractAddress: undefined,
-    version: 1
+    version: 1,
+    streamTarget: false
   });
   
   const [canClick, setCanClick] = useState(false);
@@ -364,7 +365,7 @@ const App: React.FC = () => {
                     </div>
                 )}
                 
-                <Cube canClick={canClick} onClick={handleCubeClick} />
+                <Cube canClick={canClick} onClick={handleCubeClick} streamTarget={userState.streamTarget} />
                 
                 {/* Floating Reward Animation (Score) */}
                 <AnimatePresence>

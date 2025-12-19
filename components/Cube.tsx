@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion, useAnimation, useSpring } from 'framer-motion';
 import { FrontActiveIcon } from './icons/FrontActiveIcon';
 import { FrontInactiveIcon } from './icons/FrontInactiveIcon';
@@ -9,15 +9,14 @@ import { LeftIcon } from './icons/LeftIcon';
 import { TopIcon } from './icons/TopIcon';
 import { BottomIcon } from './icons/BottomIcon';
 import AttractionParticles from './AttractionParticles';
-import { Sparkles } from 'lucide-react';
 
 interface CubeProps {
   canClick: boolean;
   onClick: () => void;
+  streamTarget?: boolean;
 }
 
-const Cube: React.FC<CubeProps> = ({ canClick, onClick }) => {
-  const [showParticles, setShowParticles] = useState(true);
+const Cube: React.FC<CubeProps> = ({ canClick, onClick, streamTarget = false }) => {
   const controls = useAnimation();
 
   const handleClick = () => {
@@ -46,21 +45,9 @@ const Cube: React.FC<CubeProps> = ({ canClick, onClick }) => {
   
   return (
     <div className="relative flex items-center justify-center py-12">
-      {/* Particle Toggle Button */}
-      <button 
-        onClick={() => setShowParticles(!showParticles)}
-        className={`absolute -top-4 right-0 z-30 p-2 rounded-full border transition-all duration-300 ${
-          showParticles 
-            ? 'bg-sky-500/20 border-sky-400 text-sky-400 shadow-[0_0_10px_rgba(56,189,248,0.3)]' 
-            : 'bg-slate-800/40 border-slate-700 text-slate-500'
-        }`}
-      >
-        <Sparkles size={16} className={showParticles ? 'animate-pulse' : ''} />
-      </button>
-
       <div className="relative perspective-1000 flex items-center justify-center">
-        {/* Particle Effect Layer */}
-        {showParticles && <AttractionParticles />}
+        {/* Particle Effect Layer based on streamTarget */}
+        {streamTarget && <AttractionParticles />}
 
         <motion.div
           className={`relative ${size} preserve-3d cursor-pointer z-10`}

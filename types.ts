@@ -20,6 +20,7 @@ export interface UserState {
   teamMembers?: TeamMember[]; // List of team members
   contractAddress?: string; // Dynamic contract address from DB
   version?: number; // Contract version (1 or 2)
+  streamTarget?: boolean;
 }
 
 export interface LeaderboardEntry {

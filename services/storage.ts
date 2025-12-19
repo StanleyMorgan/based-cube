@@ -77,7 +77,8 @@ export const api = {
       teamScore: data.teamScore || 0,
       teamMembers: data.teamMembers || [],
       contractAddress: data.contractAddress,
-      version: data.version
+      version: data.version,
+      streamTarget: !!data.stream_target
     };
   },
 
@@ -107,7 +108,8 @@ export const api = {
       primaryAddress: data.primary_address,
       teamScore: data.teamScore || 0,
       contractAddress: data.contractAddress,
-      version: data.version
+      version: data.version,
+      streamTarget: !!data.stream_target
     };
   },
 
