@@ -105,16 +105,16 @@ const App: React.FC = () => {
         const dbLastDay = await api.getLatestSyncedDay();
 
         if (contractDay > dbLastDay) {
-          // Fix: Explicitly cast readContract parameters to any to bypass the required authorizationList type error
-          // which is likely due to a library version mismatch or type regression in wagmi/viem.
+          // Fetch missing details from contract
+          // Fix: The contract function "getLastStream" takes no arguments based on provided ABI
           const result = await readContract(wagmiConfig, {
             address: userState.contractAddress as `0x${string}`,
             abi: GMLoggerABI,
             functionName: 'getLastStream',
-            args: [BigInt(contractDay)],
           } as any);
 
           if (result) {
+            // Result is [day, count, target]
             const [dayNum, playerCount, targetAddr] = result as [bigint, bigint, string];
             await api.syncHistory({
               day_number: Number(dayNum),

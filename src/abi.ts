@@ -43,12 +43,12 @@ export const GMLoggerABI = [
     type: "function"
   },
   {
-    inputs: [{ internalType: "uint256", name: "day", type: "uint256" }],
+    inputs: [],
     name: "getLastStream",
     outputs: [
-      { internalType: "uint256", name: "dayNumber", type: "uint256" },
-      { internalType: "uint256", name: "playerCount", type: "uint256" },
-      { internalType: "address", name: "targetAddress", type: "address" }
+      { internalType: "uint256", name: "day", type: "uint256" },
+      { internalType: "uint256", name: "count", type: "uint256" },
+      { internalType: "address", name: "target", type: "address" }
     ],
     stateMutability: "view",
     type: "function"
