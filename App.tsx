@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { sdk } from '@farcaster/miniapp-sdk';
 import { api, canClickCube, getClickPower } from './services/storage';
@@ -90,6 +90,19 @@ const App: React.FC = () => {
     abi: GMLoggerABI,
     functionName: 'previousActiveDay',
   });
+
+  // Read current target from contract
+  const { data: currentDayStatus } = useReadContract({
+    address: userState.contractAddress as `0x${string}`,
+    abi: GMLoggerABI,
+    functionName: 'getCurrentDayStatus',
+  });
+
+  const isContractTarget = useMemo(() => {
+    if (!currentDayStatus || !address) return false;
+    const target = (currentDayStatus as any)[1];
+    return target?.toLowerCase() === address.toLowerCase();
+  }, [currentDayStatus, address]);
 
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -416,7 +429,11 @@ const App: React.FC = () => {
                     </div>
                 )}
                 
-                <Cube canClick={canClick} onClick={handleCubeClick} streamTarget={userState.streamTarget} />
+                <Cube 
+                  canClick={canClick} 
+                  onClick={handleCubeClick} 
+                  streamTarget={isContractTarget || userState.streamTarget} 
+                />
                 
                 {/* Floating Reward Animation (Score) */}
                 <AnimatePresence>

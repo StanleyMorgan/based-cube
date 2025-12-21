@@ -52,5 +52,17 @@ export const GMLoggerABI = [
     ],
     stateMutability: "view",
     type: "function"
+  },
+  {
+    inputs: [],
+    name: "getCurrentDayStatus",
+    outputs: [
+      { internalType: "uint256", name: "day", type: "uint256" },
+      { internalType: "address", name: "target", type: "address" },
+      { internalType: "uint256", name: "players", type: "uint256" },
+      { internalType: "uint256", name: "collectedFee", type: "uint256" }
+    ],
+    stateMutability: "view",
+    type: "function"
   }
 ] as const;
