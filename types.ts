@@ -4,6 +4,12 @@ export interface TeamMember {
   pfpUrl?: string;
 }
 
+export interface HistoryEntry {
+  day_number: number;
+  player_count: number;
+  target_address: string;
+}
+
 export interface UserState {
   score: number;
   rewards: number;

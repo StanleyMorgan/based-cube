@@ -1,5 +1,5 @@
 
-import { LeaderboardEntry, UserState, TeamMember } from '../types';
+import { LeaderboardEntry, UserState, TeamMember, HistoryEntry } from '../types';
 
 // Helper for date calculations on frontend
 export const getTodayString = (): string => {
@@ -51,6 +51,22 @@ export const getClickPower = (streak: number, neynarScore: number = 0, teamScore
 // --- API CLIENT ---
 
 export const api = {
+  getLatestSyncedDay: async (): Promise<number> => {
+    const res = await fetch('/api/history');
+    if (!res.ok) return 0;
+    const data = await res.json();
+    return data.lastDay || 0;
+  },
+
+  syncHistory: async (data: HistoryEntry): Promise<boolean> => {
+    const res = await fetch('/api/history', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return res.ok;
+  },
+
   syncUser: async (fid: number, username: string, pfpUrl?: string, primaryAddress?: string, referrerFid?: number): Promise<UserState & { rank: number }> => {
     const res = await fetch('/api/user', {
       method: 'POST',

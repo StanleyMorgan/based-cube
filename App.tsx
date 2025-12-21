@@ -18,6 +18,8 @@ import { Info, Wallet, Loader2 } from 'lucide-react';
 import { useAccount, useConnect, useWriteContract, useReadContract } from 'wagmi';
 import { base } from 'wagmi/chains';
 import { GMLoggerABI } from './src/abi';
+import { readContract } from 'wagmi/actions';
+import { config as wagmiConfig } from './src/config';
 
 // Animation variants for sliding tabs
 const slideVariants = {
@@ -82,7 +84,55 @@ const App: React.FC = () => {
     functionName: userState.version === 2 ? 'chargeFee' : 'gmFee',
   });
 
+  // Read Latest Inactive Day from contract
+  const { data: previousActiveDay } = useReadContract({
+    address: userState.contractAddress as `0x${string}`,
+    abi: GMLoggerABI,
+    functionName: 'previousActiveDay',
+  });
+
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Background History Sync
+  useEffect(() => {
+    const syncHistory = async () => {
+      if (!previousActiveDay || !userState.contractAddress) return;
+      
+      try {
+        const contractDay = Number(previousActiveDay);
+        if (contractDay === 0) return;
+
+        const dbLastDay = await api.getLatestSyncedDay();
+
+        if (contractDay > dbLastDay) {
+          // Fix: Explicitly cast readContract parameters to any to bypass the required authorizationList type error
+          // which is likely due to a library version mismatch or type regression in wagmi/viem.
+          const result = await readContract(wagmiConfig, {
+            address: userState.contractAddress as `0x${string}`,
+            abi: GMLoggerABI,
+            functionName: 'getLastStream',
+            args: [BigInt(contractDay)],
+          } as any);
+
+          if (result) {
+            const [dayNum, playerCount, targetAddr] = result as [bigint, bigint, string];
+            await api.syncHistory({
+              day_number: Number(dayNum),
+              player_count: Number(playerCount),
+              target_address: targetAddr
+            });
+            console.log(`History synced for day ${dayNum}`);
+          }
+        }
+      } catch (err) {
+        console.error("Background history sync failed", err);
+      }
+    };
+
+    if (userState.contractAddress && previousActiveDay) {
+        syncHistory();
+    }
+  }, [previousActiveDay, userState.contractAddress]);
 
   // Initialize Farcaster SDK and Sync User with DB
   useEffect(() => {
