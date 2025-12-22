@@ -191,8 +191,8 @@ const Tasks = () => {
         {/* Task 0: Like & Recast */}
         <div className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-200 backdrop-blur-sm ${taskStates['like_recast'] === 'claimed' ? 'bg-slate-800/20 border-slate-700/30 opacity-60' : 'bg-slate-800/40 border-slate-700/50 shadow-[0_0_15px_rgba(234,179,8,0.1)]'}`}>
             <div className="flex items-center flex-grow min-w-0 mr-4">
-                <div className={`flex-shrink-0 p-2 rounded-full mr-3 ${taskStates['like_recast'] === 'claimed' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-yellow-500/10 text-yellow-400'}`}>
-                    {taskStates['like_recast'] === 'claimed' ? <CheckCircle2 size={20} /> : <div className="flex -space-x-1"><Heart size={14} className="fill-current" /><Repeat size={14} /></div>}
+                <div className={`flex-shrink-0 p-2 rounded-full mr-3 ${taskStates['like_recast'] === 'claimed' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-slate-700 text-slate-400'}`}>
+                    {taskStates['like_recast'] === 'claimed' ? <CheckCircle2 size={20} /> : <ClipboardList size={20} />}
                 </div>
 
                 <div className="min-w-0">
@@ -201,7 +201,7 @@ const Tasks = () => {
                         <span className="text-yellow-400 font-bold flex items-center gap-0.5">
                             +50 <Zap size={10} />
                         </span>
-                        <span>Hot Reward</span>
+                        <span>Reward</span>
                     </div>
                 </div>
             </div>
