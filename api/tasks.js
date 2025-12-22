@@ -46,9 +46,26 @@ export default async function handler(request, response) {
              return refCheck.rowCount > 0;
         }
         if (taskId === 'follow_stmorgan') {
-            // Implicit trust for now as we rely on client action for following (or need expensive API call)
-            // You can add Neynar API check here if you have the key
+            // Implicit trust for now
             return true; 
+        }
+        if (taskId === 'like_recast') {
+            const castHash = '0x547fce304a0674d2918e1172f603b98e58330925';
+            if (!process.env.NEYNAR_API_KEY) return false;
+
+            try {
+                const res = await fetch(`https://api.neynar.com/v2/farcaster/cast?identifier=${castHash}&type=hash&viewer_fid=${fid}`, {
+                    headers: { 'api_key': process.env.NEYNAR_API_KEY }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    const vc = data.cast?.viewer_context;
+                    return vc?.liked === true && vc?.recasted === true;
+                }
+            } catch (e) {
+                console.error("Neynar task verify failed", e);
+            }
+            return false;
         }
         return false;
       };
@@ -59,10 +76,9 @@ export default async function handler(request, response) {
           return response.status(200).json({ verified: isVerified });
       }
 
-      // 2. Handle Claim Action (Default if action is missing for backward compat)
+      // 2. Handle Claim Action
       if (!action || action === 'claim') {
           
-          // Re-verify before claiming to be safe
           const isVerified = await checkVerification();
           if (!isVerified) {
               return response.status(400).json({ error: 'Task requirements not met' });
@@ -80,8 +96,9 @@ export default async function handler(request, response) {
               throw e;
           }
 
-          // Add Reward (10 points)
-          const reward = 10;
+          // Rewards logic
+          const reward = taskId === 'like_recast' ? 50 : 10;
+          
           const updateResult = await pool.sql`
             UPDATE users 
             SET score = score + ${reward}, updated_at = CURRENT_TIMESTAMP 

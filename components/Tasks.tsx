@@ -1,9 +1,11 @@
+
 import React, { useEffect, useState } from 'react';
-import { ClipboardList, CheckCircle2, Zap, Loader2, ArrowRight, Share, Check } from 'lucide-react';
+import { ClipboardList, CheckCircle2, Zap, Loader2, ArrowRight, Share, Check, Heart, Repeat } from 'lucide-react';
 import { sdk } from '@farcaster/miniapp-sdk';
 import { api } from '../services/storage';
 
 const STMORGAN_FID = 491961; // @stmorgan FID
+const TARGET_CAST_HASH = '0x547fce304a0674d2918e1172f603b98e58330925';
 
 // Define the 4 states
 type TaskStatus = 'start' | 'verify' | 'claim' | 'claimed';
@@ -28,9 +30,8 @@ const Tasks = () => {
                 const ids = await api.getCompletedTasks(context.user.fid);
                 
                 // Initialize states
-                // If ID exists in DB -> 'claimed'
-                // Else -> 'start'
                 const initialStates: Record<string, TaskStatus> = {
+                    'like_recast': ids.includes('like_recast') ? 'claimed' : 'start',
                     'follow_stmorgan': ids.includes('follow_stmorgan') ? 'claimed' : 'start',
                     'invite_friend': ids.includes('invite_friend') ? 'claimed' : 'start',
                 };
@@ -52,10 +53,17 @@ const Tasks = () => {
   // -- Action Handlers --
 
   const handleStart = async (taskId: string) => {
-      if (taskId === 'follow_stmorgan') {
+      if (taskId === 'like_recast') {
+          try {
+              await sdk.actions.viewCast({ hash: TARGET_CAST_HASH });
+              setTaskStates(prev => ({ ...prev, [taskId]: 'verify' }));
+          } catch (e) {
+              console.error("Failed to open cast", e);
+          }
+      }
+      else if (taskId === 'follow_stmorgan') {
           try {
               await sdk.actions.viewProfile({ fid: STMORGAN_FID });
-              // Assuming user returns, we move to verify
               setTaskStates(prev => ({ ...prev, [taskId]: 'verify' }));
           } catch (e) {
               console.error("Failed to open profile", e);
@@ -72,7 +80,6 @@ const Tasks = () => {
              setTaskStates(prev => ({ ...prev, [taskId]: 'verify' }));
           } catch (e) {
              console.error("Invite action failed", e);
-             // Even if failed (e.g. cancelled), allow verify check
              setTaskStates(prev => ({ ...prev, [taskId]: 'verify' }));
           }
       }
@@ -87,8 +94,8 @@ const Tasks = () => {
           if (verified) {
               setTaskStates(prev => ({ ...prev, [taskId]: 'claim' }));
           } else {
-              // Simple alert for now, could be a toast
               if (taskId === 'invite_friend') alert("No referrals found yet. Make sure someone joined via your link!");
+              else if (taskId === 'like_recast') alert("Please Like and Recast the cast before verifying!");
               else alert("Action not verified yet. Please try again.");
           }
       } catch (e) {
@@ -106,7 +113,6 @@ const Tasks = () => {
           const result = await api.claimTask(fid, taskId);
           if (result.success) {
               setTaskStates(prev => ({ ...prev, [taskId]: 'claimed' }));
-              // Optional: Trigger a confetti or score update in parent
           } else {
               alert(result.error || "Failed to claim task");
           }
@@ -181,6 +187,29 @@ const Tasks = () => {
       </div>
 
       <div className="space-y-4">
+
+        {/* Task 0: Like & Recast */}
+        <div className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-200 backdrop-blur-sm ${taskStates['like_recast'] === 'claimed' ? 'bg-slate-800/20 border-slate-700/30 opacity-60' : 'bg-slate-800/40 border-slate-700/50 shadow-[0_0_15px_rgba(234,179,8,0.1)]'}`}>
+            <div className="flex items-center flex-grow min-w-0 mr-4">
+                <div className={`flex-shrink-0 p-2 rounded-full mr-3 ${taskStates['like_recast'] === 'claimed' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-yellow-500/10 text-yellow-400'}`}>
+                    {taskStates['like_recast'] === 'claimed' ? <CheckCircle2 size={20} /> : <div className="flex -space-x-1"><Heart size={14} className="fill-current" /><Repeat size={14} /></div>}
+                </div>
+
+                <div className="min-w-0">
+                    <div className="font-semibold text-slate-100 truncate">Like & Recast</div>
+                    <div className="flex items-center gap-1 text-xs text-slate-400 mt-0.5">
+                        <span className="text-yellow-400 font-bold flex items-center gap-0.5">
+                            +50 <Zap size={10} />
+                        </span>
+                        <span>Hot Reward</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex-shrink-0">
+                {renderButton('like_recast')}
+            </div>
+        </div>
         
         {/* Task 1: Follow */}
         <div className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-200 backdrop-blur-sm ${taskStates['follow_stmorgan'] === 'claimed' ? 'bg-slate-800/20 border-slate-700/30 opacity-60' : 'bg-slate-800/40 border-slate-700/50'}`}>
