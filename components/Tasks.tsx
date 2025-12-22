@@ -14,9 +14,17 @@ const Tasks = () => {
   const [taskStates, setTaskStates] = useState<Record<string, TaskStatus>>({});
   const [loading, setLoading] = useState(true);
   const [processingTask, setProcessingTask] = useState<string | null>(null);
+  const [cooldowns, setCooldowns] = useState<Record<string, number>>({});
+  const [now, setNow] = useState(Date.now());
   
   const [fid, setFid] = useState<number | null>(null);
   const [score, setScore] = useState<number>(0);
+
+  // Update current time for cooldown calculations
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Initialize data
   useEffect(() => {
@@ -87,6 +95,11 @@ const Tasks = () => {
 
   const handleVerify = async (taskId: string) => {
       if (!fid) return;
+      
+      // Cooldown check
+      const lastAttempt = cooldowns[taskId] || 0;
+      if (Date.now() - lastAttempt < 30000) return;
+
       setProcessingTask(taskId);
       
       try {
@@ -94,9 +107,11 @@ const Tasks = () => {
           if (verified) {
               setTaskStates(prev => ({ ...prev, [taskId]: 'claim' }));
           } else {
+              // Set cooldown on failure
+              setCooldowns(prev => ({ ...prev, [taskId]: Date.now() }));
               if (taskId === 'invite_friend') alert("No referrals found yet. Make sure someone joined via your link!");
               else if (taskId === 'like_recast') alert("Please Like and Recast the cast before verifying!");
-              else alert("Action not verified yet. Please try again.");
+              else alert("Action not verified yet. Please try again in 30 seconds.");
           }
       } catch (e) {
           console.error("Verify failed", e);
@@ -149,13 +164,21 @@ const Tasks = () => {
       }
 
       if (status === 'verify') {
+          const lastAttempt = cooldowns[taskId] || 0;
+          const secondsLeft = Math.ceil((30000 - (now - lastAttempt)) / 1000);
+          const inCooldown = secondsLeft > 0;
+
           return (
             <button 
-                onClick={() => handleVerify(taskId)}
-                disabled={isProcessing}
-                className="px-4 py-2 rounded-lg text-sm font-bold bg-amber-600 text-white hover:bg-amber-500 shadow-lg shadow-amber-900/30 flex items-center gap-2 whitespace-nowrap"
+                onClick={() => inCooldown ? null : handleVerify(taskId)}
+                disabled={isProcessing || inCooldown}
+                className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 whitespace-nowrap transition-colors ${
+                    inCooldown 
+                    ? 'bg-slate-700 text-slate-400 cursor-not-allowed border border-slate-600' 
+                    : 'bg-amber-600 text-white hover:bg-amber-500 shadow-lg shadow-amber-900/30'
+                }`}
             >
-                {isProcessing ? <Loader2 size={16} className="animate-spin" /> : 'Verify'}
+                {isProcessing ? <Loader2 size={16} className="animate-spin" /> : (inCooldown ? `Wait ${secondsLeft}s` : 'Verify')}
             </button>
           );
       }
