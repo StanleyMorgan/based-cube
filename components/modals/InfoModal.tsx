@@ -109,7 +109,8 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, ney
                                 <span className="text-lg font-black text-white">+{teamPower}</span>
                             </div>
 
-                            {/* Bonus */}
+                            {/* Bonus - Commented out as per request */}
+                            {/* 
                             <div className="p-4 flex justify-between items-center hover:bg-slate-800/30 transition-colors">
                                 <div className="flex items-center gap-3 text-yellow-400">
                                     <div className="p-2 rounded-full bg-yellow-500/10">
@@ -119,6 +120,7 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, ney
                                 </div>
                                 <span className="text-lg font-black text-white">+0</span>
                             </div>
+                            */}
 
                             {/* Earned */}
                             <div className="p-4 flex justify-between items-center hover:bg-slate-800/30 transition-colors">
