@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from 'react';
 import { LeaderboardEntry, UserState } from '../types';
 import { api } from '../services/storage';
@@ -142,7 +143,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
                         entry.isCurrentUser
                             ? 'bg-sky-900/30 border-sky-500/50 shadow-[0_0_15px_rgba(14,165,233,0.15)] sticky top-0 z-10 backdrop-blur-md mb-2' 
                             : 'bg-slate-800/40 border-slate-700/50 hover:bg-slate-800/60'
-                        } ${isTarget ? 'ring-1 ring-yellow-400/50 shadow-[0_0_10px_rgba(250,204,21,0.2)]' : ''}`}
+                        } ${isTarget ? 'ring-2 ring-yellow-400/50 shadow-[0_0_10px_rgba(250,204,21,0.2)]' : ''}`}
                     >
                         <div className="flex-shrink-0 w-8 text-center font-bold text-lg">
                         {entry.rank === 1 && <Medal className="w-6 h-6 text-yellow-400 mx-auto" />}
@@ -156,10 +157,10 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
                             <img 
                                 src={entry.pfpUrl} 
                                 alt={entry.username} 
-                                className={`w-10 h-10 rounded-full border border-slate-600 ${isTarget ? 'gold-rim' : ''}`} 
+                                className="w-10 h-10 rounded-full border border-slate-600" 
                             />
                         ) : (
-                            <div className={`w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center border border-slate-600 ${isTarget ? 'gold-rim' : ''}`}>
+                            <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center border border-slate-600">
                                 <User size={20} className="text-slate-400" />
                             </div>
                         )}
