@@ -101,7 +101,7 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose, on
                                     #{player.rank}
                                 </div>
                             </button>
-                            <h2 className="text-xl font-bold text-white">{player.username}</h2>
+                            <h2 className={`text-xl font-bold ${isTarget ? 'animate-shimmer' : 'text-white'}`}>{player.username}</h2>
                         </div>
 
                         {/* Consolidated Stats Block */}

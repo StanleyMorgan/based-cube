@@ -133,6 +133,17 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
       ) : (
         <div className="space-y-3">
             {data.map((entry) => {
+                const isTarget = currentTargetAddress && entry.primaryAddress && 
+                               currentTargetAddress.toLowerCase() === entry.primaryAddress.toLowerCase();
+                
+                // Calculate display rewards if entry is today's target
+                let rewardsToShow = entry.rewards;
+                if (isTarget && currentTargetCollectedFee && currentUser.streamPercent && currentUser.unitPrice) {
+                    const pendingWei = (currentTargetCollectedFee * BigInt(currentUser.streamPercent)) / 100n;
+                    const pendingUsd = (Number(pendingWei) / 1e18) * currentUser.unitPrice;
+                    rewardsToShow += pendingUsd;
+                }
+
                 return (
                     <button
                         key={`${entry.id}-${entry.rank}`} // Unique key
@@ -165,7 +176,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
                         </div>
 
                         <div className="ml-3 flex-grow min-w-0">
-                            <div className={`font-semibold flex items-center gap-2 truncate text-slate-100`}>
+                            <div className={`font-semibold flex items-center gap-2 truncate ${isTarget ? 'animate-shimmer' : 'text-slate-100'}`}>
                                 {entry.username}
                                 {entry.isCurrentUser && (
                                     <span className="text-[10px] bg-sky-500 text-white px-1.5 py-0.5 rounded uppercase font-bold tracking-wide flex-shrink-0">YOU</span>
