@@ -121,14 +121,9 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, ney
                                     <span className="font-bold text-base">Earned</span>
                                 </div>
                                 <div className="flex flex-col items-end">
-                                    <span className={`text-lg font-black ${pendingRewards > 0 ? 'text-sky-400 animate-shimmer' : 'text-white'}`}>
+                                    <span className="text-lg font-black text-white">
                                         ${totalEarned.toFixed(2)}
                                     </span>
-                                    {pendingRewards > 0 && (
-                                        <span className="text-[10px] font-bold text-sky-400/70 tracking-tight leading-none">
-                                            +${pendingRewards.toFixed(2)} live
-                                        </span>
-                                    )}
                                 </div>
                             </div>
 

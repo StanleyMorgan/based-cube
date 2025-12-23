@@ -133,17 +133,6 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
       ) : (
         <div className="space-y-3">
             {data.map((entry) => {
-                const isTarget = currentTargetAddress && entry.primaryAddress && 
-                               currentTargetAddress.toLowerCase() === entry.primaryAddress.toLowerCase();
-                
-                // Calculate display rewards if entry is target
-                let rewardsToShow = entry.rewards;
-                if (isTarget && currentTargetCollectedFee && currentUser.streamPercent && currentUser.unitPrice) {
-                    const pendingWei = (currentTargetCollectedFee * BigInt(currentUser.streamPercent)) / 100n;
-                    const pendingUsd = (Number(pendingWei) / 1e18) * currentUser.unitPrice;
-                    rewardsToShow += pendingUsd;
-                }
-                               
                 return (
                     <button
                         key={`${entry.id}-${entry.rank}`} // Unique key
@@ -152,7 +141,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
                         entry.isCurrentUser
                             ? 'bg-sky-900/30 border-sky-500/50 shadow-[0_0_15px_rgba(14,165,233,0.15)] sticky top-0 z-10 backdrop-blur-md mb-2' 
                             : 'bg-slate-800/40 border-slate-700/50 hover:bg-slate-800/60'
-                        } ${isTarget ? 'ring-2 ring-yellow-400/50 shadow-[0_0_10px_rgba(250,204,21,0.2)]' : ''}`}
+                        }`}
                     >
                         <div className="flex-shrink-0 w-8 text-center font-bold text-lg">
                         {entry.rank === 1 && <Medal className="w-6 h-6 text-yellow-400 mx-auto" />}
@@ -176,18 +165,12 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
                         </div>
 
                         <div className="ml-3 flex-grow min-w-0">
-                            <div className={`font-semibold flex items-center gap-2 truncate ${isTarget ? 'animate-shimmer font-black text-lg' : 'text-slate-100'}`}>
+                            <div className={`font-semibold flex items-center gap-2 truncate text-slate-100`}>
                                 {entry.username}
                                 {entry.isCurrentUser && (
                                     <span className="text-[10px] bg-sky-500 text-white px-1.5 py-0.5 rounded uppercase font-bold tracking-wide flex-shrink-0">YOU</span>
                                 )}
                             </div>
-                            {isTarget && (
-                                <div className="text-[10px] font-bold text-sky-400 tracking-tight flex items-center gap-1">
-                                    <Flame size={10} className="fill-sky-400/20" /> 
-                                    <span>${rewardsToShow.toFixed(2)} STREAMING</span>
-                                </div>
-                            )}
                         </div>
 
                         <div className="text-right font-mono font-bold text-emerald-400 flex-shrink-0 pl-2 flex items-center justify-end gap-1.5">

@@ -101,7 +101,7 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose, on
                                     #{player.rank}
                                 </div>
                             </button>
-                            <h2 className={`text-xl font-bold ${isTarget ? 'animate-shimmer' : 'text-white'}`}>{player.username}</h2>
+                            <h2 className="text-xl font-bold text-white">{player.username}</h2>
                         </div>
 
                         {/* Consolidated Stats Block */}
@@ -193,14 +193,9 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose, on
                                     <span className="font-bold text-base">Earned</span>
                                 </div>
                                 <div className="flex flex-col items-end">
-                                    <span className={`text-lg font-black ${pendingRewards > 0 ? 'text-sky-400' : 'text-white'}`}>
+                                    <span className="text-lg font-black text-white">
                                         ${totalRewards.toFixed(2)}
                                     </span>
-                                    {pendingRewards > 0 && (
-                                        <span className="text-[10px] font-bold text-sky-400/70 tracking-tight leading-none animate-shimmer">
-                                            LIVE STREAMING
-                                        </span>
-                                    )}
                                 </div>
                             </div>
 
