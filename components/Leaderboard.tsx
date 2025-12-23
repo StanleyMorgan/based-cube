@@ -1,5 +1,4 @@
-
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { LeaderboardEntry, UserState } from '../types';
 import { api } from '../services/storage';
 import { Trophy, Medal, User, Loader2, Flame } from 'lucide-react';
@@ -7,10 +6,11 @@ import { Trophy, Medal, User, Loader2, Flame } from 'lucide-react';
 interface LeaderboardProps {
   currentUser: UserState;
   currentRank: number;
+  currentTargetAddress?: string;
   onPlayerSelect: (player: LeaderboardEntry) => void;
 }
 
-const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, onPlayerSelect }) => {
+const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, currentTargetAddress, onPlayerSelect }) => {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -61,7 +61,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, onP
                     isCurrentUser: true,
                     streak: currentUser.streak,
                     neynarScore: currentUser.neynarScore || 0,
-                    teamScore: currentUser.teamScore || 0
+                    teamScore: currentUser.teamScore || 0,
+                    primaryAddress: currentUser.primaryAddress
                 };
                 processedEntries.unshift(userEntry);
             }
@@ -129,50 +130,59 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, onP
           </div>
       ) : (
         <div className="space-y-3">
-            {data.map((entry) => (
-            <button
-                key={`${entry.id}-${entry.rank}`} // Unique key
-                onClick={() => onPlayerSelect(entry)}
-                className={`w-full flex items-center p-4 rounded-xl border text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
-                entry.isCurrentUser
-                    ? 'bg-sky-900/30 border-sky-500/50 shadow-[0_0_15px_rgba(14,165,233,0.15)] sticky top-0 z-10 backdrop-blur-md mb-2' 
-                    : 'bg-slate-800/40 border-slate-700/50 hover:bg-slate-800/60'
-                }`}
-            >
-                <div className="flex-shrink-0 w-8 text-center font-bold text-lg">
-                {entry.rank === 1 && <Medal className="w-6 h-6 text-yellow-400 mx-auto" />}
-                {entry.rank === 2 && <Medal className="w-6 h-6 text-gray-300 mx-auto" />}
-                {entry.rank === 3 && <Medal className="w-6 h-6 text-amber-700 mx-auto" />}
-                {entry.rank > 3 && <span className="text-slate-500">#{entry.rank}</span>}
-                </div>
+            {data.map((entry) => {
+                const isTarget = currentTargetAddress && entry.primaryAddress && 
+                               currentTargetAddress.toLowerCase() === entry.primaryAddress.toLowerCase();
+                               
+                return (
+                    <button
+                        key={`${entry.id}-${entry.rank}`} // Unique key
+                        onClick={() => onPlayerSelect(entry)}
+                        className={`w-full flex items-center p-4 rounded-xl border text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+                        entry.isCurrentUser
+                            ? 'bg-sky-900/30 border-sky-500/50 shadow-[0_0_15px_rgba(14,165,233,0.15)] sticky top-0 z-10 backdrop-blur-md mb-2' 
+                            : 'bg-slate-800/40 border-slate-700/50 hover:bg-slate-800/60'
+                        } ${isTarget ? 'ring-1 ring-yellow-400/50 shadow-[0_0_10px_rgba(250,204,21,0.2)]' : ''}`}
+                    >
+                        <div className="flex-shrink-0 w-8 text-center font-bold text-lg">
+                        {entry.rank === 1 && <Medal className="w-6 h-6 text-yellow-400 mx-auto" />}
+                        {entry.rank === 2 && <Medal className="w-6 h-6 text-gray-300 mx-auto" />}
+                        {entry.rank === 3 && <Medal className="w-6 h-6 text-amber-700 mx-auto" />}
+                        {entry.rank > 3 && <span className="text-slate-500">#{entry.rank}</span>}
+                        </div>
 
-                <div className="ml-3 flex-shrink-0">
-                {entry.pfpUrl ? (
-                    <img src={entry.pfpUrl} alt={entry.username} className="w-10 h-10 rounded-full border border-slate-600" />
-                ) : (
-                    <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center border border-slate-600">
-                        <User size={20} className="text-slate-400" />
-                    </div>
-                )}
-                </div>
-
-                <div className="ml-3 flex-grow min-w-0">
-                    <div className="font-semibold text-slate-100 flex items-center gap-2 truncate">
-                        {entry.username}
-                        {entry.isCurrentUser && (
-                        <span className="text-[10px] bg-sky-500 text-white px-1.5 py-0.5 rounded uppercase font-bold tracking-wide flex-shrink-0">YOU</span>
+                        <div className="ml-3 flex-shrink-0">
+                        {entry.pfpUrl ? (
+                            <img 
+                                src={entry.pfpUrl} 
+                                alt={entry.username} 
+                                className={`w-10 h-10 rounded-full border border-slate-600 ${isTarget ? 'gold-rim' : ''}`} 
+                            />
+                        ) : (
+                            <div className={`w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center border border-slate-600 ${isTarget ? 'gold-rim' : ''}`}>
+                                <User size={20} className="text-slate-400" />
+                            </div>
                         )}
-                    </div>
-                </div>
+                        </div>
 
-                <div className="text-right font-mono font-bold text-emerald-400 flex-shrink-0 pl-2 flex items-center justify-end gap-1.5">
-                    {entry.streak > 6 && (
-                        <Flame size={14} className="text-orange-500 fill-orange-500 animate-pulse" />
-                    )}
-                    {entry.score.toLocaleString()}
-                </div>
-            </button>
-            ))}
+                        <div className="ml-3 flex-grow min-w-0">
+                            <div className={`font-semibold flex items-center gap-2 truncate ${isTarget ? 'animate-shimmer font-black text-lg' : 'text-slate-100'}`}>
+                                {entry.username}
+                                {entry.isCurrentUser && (
+                                    <span className="text-[10px] bg-sky-500 text-white px-1.5 py-0.5 rounded uppercase font-bold tracking-wide flex-shrink-0">YOU</span>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="text-right font-mono font-bold text-emerald-400 flex-shrink-0 pl-2 flex items-center justify-end gap-1.5">
+                            {entry.streak > 6 && (
+                                <Flame size={14} className="text-orange-500 fill-orange-500 animate-pulse" />
+                            )}
+                            {entry.score.toLocaleString()}
+                        </div>
+                    </button>
+                );
+            })}
 
             {/* Intersection Observer Target */}
             <div ref={observerTarget} className="h-4 w-full flex justify-center items-center py-4">

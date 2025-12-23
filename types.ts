@@ -1,4 +1,3 @@
-
 export interface TeamMember {
   fid: number;
   pfpUrl?: string;
@@ -43,6 +42,7 @@ export interface LeaderboardEntry {
   neynarPowerChange?: number;
   teamScore?: number;
   teamMembers?: TeamMember[]; // List of team members
+  primaryAddress?: string;
 }
 
 export enum Tab {

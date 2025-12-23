@@ -1,4 +1,3 @@
-
 import { createPool } from '@vercel/postgres';
 
 export default async function handler(request, response) {
@@ -14,7 +13,7 @@ export default async function handler(request, response) {
     // Rank logic: Score higher OR (Score equal AND Updated earlier) OR (Score equal AND Updated equal AND FID lower)
     // Plus fetch Team Avatar URLs as JSON objects
     const result = await pool.sql`
-      SELECT u1.fid, u1.username, u1.score, u1.rewards, u1.pfp_url, u1.streak, u1.last_click_date, u1.neynar_score, u1.neynar_power_change, u1.referrer_fid,
+      SELECT u1.fid, u1.username, u1.score, u1.rewards, u1.pfp_url, u1.streak, u1.last_click_date, u1.neynar_score, u1.neynar_power_change, u1.referrer_fid, u1.primary_address,
       (
         SELECT COUNT(*) + 1 
         FROM users u2 
@@ -85,7 +84,8 @@ export default async function handler(request, response) {
             neynarScore: row.neynar_score,
             neynarPowerChange: row.neynar_power_change || 0,
             teamScore: teamScore,
-            teamMembers: finalTeamMembers
+            teamMembers: finalTeamMembers,
+            primaryAddress: row.primary_address
         };
     });
 

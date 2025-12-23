@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { sdk } from '@farcaster/miniapp-sdk';
@@ -98,11 +97,16 @@ const App: React.FC = () => {
     functionName: 'getCurrentDayStatus',
   });
 
+  // Extract current stream target address
+  const contractTargetAddress = useMemo(() => {
+    if (!currentDayStatus) return undefined;
+    return (currentDayStatus as any)[1] as string;
+  }, [currentDayStatus]);
+
   const isContractTarget = useMemo(() => {
-    if (!currentDayStatus || !address) return false;
-    const target = (currentDayStatus as any)[1];
-    return target?.toLowerCase() === address.toLowerCase();
-  }, [currentDayStatus, address]);
+    if (!contractTargetAddress || !address) return false;
+    return contractTargetAddress.toLowerCase() === address.toLowerCase();
+  }, [contractTargetAddress, address]);
 
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -467,6 +471,7 @@ const App: React.FC = () => {
               <Leaderboard 
                 currentUser={userState} 
                 currentRank={rank}
+                currentTargetAddress={contractTargetAddress}
                 onPlayerSelect={setSelectedPlayer} 
               />
             </motion.div>

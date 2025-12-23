@@ -27,3 +27,23 @@ body {
 .cube-face-glow {
   box-shadow: 0 0 15px rgba(56, 189, 248, 0.5) inset;
 }
+
+/* Shimmering Gold Text Animation */
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(to right, #fde047, #ca8a04, #fde047);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 3s linear infinite;
+}
+
+/* Golden Rim for Avatar */
+.gold-rim {
+  @apply ring-2 ring-yellow-400 ring-offset-2 ring-offset-slate-900;
+  box-shadow: 0 0 15px rgba(250, 204, 21, 0.6);
+}

@@ -1,4 +1,3 @@
-
 import { LeaderboardEntry, UserState, TeamMember, HistoryEntry } from '../types';
 
 // Helper for date calculations on frontend
@@ -149,7 +148,8 @@ export const api = {
       neynarScore: entry.neynarScore || 0,
       neynarPowerChange: entry.neynarPowerChange || 0,
       teamScore: entry.teamScore || 0,
-      teamMembers: entry.teamMembers || []
+      teamMembers: entry.teamMembers || [],
+      primaryAddress: entry.primaryAddress
     }));
   },
 
@@ -170,7 +170,8 @@ export const api = {
       neynarScore: data.neynar_score || 0,
       neynarPowerChange: data.neynarPowerChange || 0,
       teamScore: data.teamScore || 0,
-      teamMembers: data.teamMembers || []
+      teamMembers: data.teamMembers || [],
+      primaryAddress: data.primary_address
     };
   },
 
