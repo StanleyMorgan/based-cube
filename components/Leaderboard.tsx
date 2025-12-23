@@ -8,10 +8,11 @@ interface LeaderboardProps {
   currentUser: UserState;
   currentRank: number;
   currentTargetAddress?: string;
+  currentTargetCollectedFee?: bigint;
   onPlayerSelect: (player: LeaderboardEntry) => void;
 }
 
-const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, currentTargetAddress, onPlayerSelect }) => {
+const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, currentTargetAddress, currentTargetCollectedFee, onPlayerSelect }) => {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -134,6 +135,14 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
             {data.map((entry) => {
                 const isTarget = currentTargetAddress && entry.primaryAddress && 
                                currentTargetAddress.toLowerCase() === entry.primaryAddress.toLowerCase();
+                
+                // Calculate display rewards if entry is target
+                let rewardsToShow = entry.rewards;
+                if (isTarget && currentTargetCollectedFee && currentUser.streamPercent && currentUser.unitPrice) {
+                    const pendingWei = (currentTargetCollectedFee * BigInt(currentUser.streamPercent)) / 100n;
+                    const pendingUsd = (Number(pendingWei) / 1e18) * currentUser.unitPrice;
+                    rewardsToShow += pendingUsd;
+                }
                                
                 return (
                     <button
@@ -173,6 +182,12 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
                                     <span className="text-[10px] bg-sky-500 text-white px-1.5 py-0.5 rounded uppercase font-bold tracking-wide flex-shrink-0">YOU</span>
                                 )}
                             </div>
+                            {isTarget && (
+                                <div className="text-[10px] font-bold text-sky-400 tracking-tight flex items-center gap-1">
+                                    <Flame size={10} className="fill-sky-400/20" /> 
+                                    <span>${rewardsToShow.toFixed(2)} STREAMING</span>
+                                </div>
+                            )}
                         </div>
 
                         <div className="text-right font-mono font-bold text-emerald-400 flex-shrink-0 pl-2 flex items-center justify-end gap-1.5">

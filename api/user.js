@@ -42,8 +42,8 @@ export default async function handler(request, response) {
 
       // Get user, rank, and team score logic + Team Avatars (as JSON objects)
       const result = await pool.sql`
-        SELECT *, 
-        (SELECT contract_address FROM contracts WHERE version = u1.version LIMIT 1) as contract_address,
+        SELECT u1.*, 
+        c.contract_address, c.stream_percent, c.unit_price,
         (
           SELECT COUNT(*) + 1 
           FROM users u2 
@@ -52,7 +52,7 @@ export default async function handler(request, response) {
              OR (u2.score = u1.score AND u2.updated_at = u1.updated_at AND u2.fid < u1.fid)
         ) as rank,
         (
-             (CASE WHEN referrer_fid IS NOT NULL THEN 1 ELSE 0 END) +
+             (CASE WHEN u1.referrer_fid IS NOT NULL THEN 1 ELSE 0 END) +
              (CASE WHEN EXISTS (SELECT 1 FROM users u_inv WHERE u_inv.referrer_fid = u1.fid) THEN 2 ELSE 0 END)
         ) as team_score,
         (
@@ -70,7 +70,8 @@ export default async function handler(request, response) {
             ) sub
         ) as referral_data
         FROM users u1 
-        WHERE fid = ${fid};
+        LEFT JOIN contracts c ON c.version = u1.version
+        WHERE u1.fid = ${fid};
       `;
 
       if (result.rows.length === 0) {
@@ -95,6 +96,8 @@ export default async function handler(request, response) {
         teamMembers: finalTeamMembers,
         neynarPowerChange: user.neynar_power_change || 0,
         contractAddress: user.contract_address,
+        streamPercent: user.stream_percent || 0,
+        unitPrice: parseFloat(user.unit_price || 0),
         stream_target: user.stream_target,
         rewards: user.rewards || 0
       });
@@ -176,45 +179,49 @@ export default async function handler(request, response) {
           primary_address = COALESCE(EXCLUDED.primary_address, users.primary_address),
           referrer_fid = COALESCE(users.referrer_fid, EXCLUDED.referrer_fid),
           updated_at = CURRENT_TIMESTAMP
-        RETURNING *, (SELECT contract_address FROM contracts WHERE version = users.version LIMIT 1) as contract_address;
+        RETURNING *;
       `;
 
-      const user = upsertResult.rows[0];
+      const userRaw = upsertResult.rows[0];
 
       // 4. Calculate Rank, Team Score AND Team Members (JSON objects)
       const statsResult = await pool.sql`
         SELECT 
+          c.contract_address, c.stream_percent, c.unit_price,
           (
             SELECT COUNT(*) + 1
             FROM users
-            WHERE score > ${user.score} 
-               OR (score = ${user.score} AND updated_at < ${user.updated_at})
-               OR (score = ${user.score} AND updated_at = ${user.updated_at} AND fid < ${user.fid})
+            WHERE score > ${userRaw.score} 
+               OR (score = ${userRaw.score} AND updated_at < ${userRaw.updated_at})
+               OR (score = ${userRaw.score} AND updated_at = ${userRaw.updated_at} AND fid < ${userRaw.fid})
           ) as rank,
           (
-            CASE WHEN EXISTS (SELECT 1 FROM users WHERE referrer_fid = ${user.fid}) THEN 1 ELSE 0 END
+            CASE WHEN EXISTS (SELECT 1 FROM users WHERE referrer_fid = ${userRaw.fid}) THEN 1 ELSE 0 END
           ) as has_referrals,
           (
             SELECT json_build_object('fid', fid, 'pfpUrl', pfp_url) 
-            FROM users u_ref WHERE u_ref.fid = ${user.referrer_fid}
+            FROM users u_ref WHERE u_ref.fid = ${userRaw.referrer_fid}
           ) as referrer_data,
           (
             SELECT json_agg(json_build_object('fid', fid, 'pfpUrl', pfp_url)) 
             FROM (
                 SELECT fid, pfp_url 
                 FROM users u_sub 
-                WHERE u_sub.referrer_fid = ${user.fid} 
+                WHERE u_sub.referrer_fid = ${userRaw.fid} 
                 ORDER BY u_sub.neynar_score DESC 
                 LIMIT 3
             ) sub
           ) as referral_data
+        FROM contracts c
+        WHERE c.version = ${userRaw.version}
+        LIMIT 1;
       `;
 
       const stats = statsResult.rows[0];
       const rank = parseInt(stats.rank);
       const hasReferrals = parseInt(stats.has_referrals) === 1;
 
-      const invitedBySomeone = user.referrer_fid ? 1 : 0;
+      const invitedBySomeone = userRaw.referrer_fid ? 1 : 0;
       const invitedOthers = hasReferrals ? 2 : 0;
       const teamScore = invitedBySomeone + invitedOthers;
 
@@ -226,28 +233,30 @@ export default async function handler(request, response) {
       const finalTeamMembers = teamMembers.slice(0, 3);
 
       let referrerAddress = null;
-      if (user.referrer_fid) {
+      if (userRaw.referrer_fid) {
           const referrerRes = await pool.sql`
-            SELECT primary_address FROM users WHERE fid = ${user.referrer_fid}
+            SELECT primary_address FROM users WHERE fid = ${userRaw.referrer_fid}
           `;
           if (referrerRes.rows.length > 0) {
               referrerAddress = referrerRes.rows[0].primary_address;
           }
       }
       
-      const effectiveStreak = getEffectiveStreak(user);
+      const effectiveStreak = getEffectiveStreak(userRaw);
 
       return response.status(200).json({
-        ...user,
+        ...userRaw,
         streak: effectiveStreak,
         rank,
         teamScore,
         referrerAddress,
         teamMembers: finalTeamMembers,
-        neynarPowerChange: user.neynar_power_change || 0,
-        contractAddress: user.contract_address,
-        stream_target: user.stream_target,
-        rewards: user.rewards || 0
+        neynarPowerChange: userRaw.neynar_power_change || 0,
+        contractAddress: stats.contract_address,
+        streamPercent: stats.stream_percent || 0,
+        unitPrice: parseFloat(stats.unit_price || 0),
+        stream_target: userRaw.stream_target,
+        rewards: userRaw.rewards || 0
       });
     }
 

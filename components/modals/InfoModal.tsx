@@ -12,10 +12,13 @@ interface InfoModalProps {
     streakPower: number;
     teamPower?: number;
     rewards?: number;
+    pendingRewards?: number;
     teamMembers?: TeamMember[];
 }
 
-const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, neynarPowerChange = 0, streakPower, teamPower = 0, rewards = 0, teamMembers = [] }) => {
+const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, neynarPowerChange = 0, streakPower, teamPower = 0, rewards = 0, pendingRewards = 0, teamMembers = [] }) => {
+    const totalEarned = rewards + pendingRewards;
+
     return (
         <AnimatePresence>
             {isOpen && (
@@ -109,19 +112,6 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, ney
                                 <span className="text-lg font-black text-white">+{teamPower}</span>
                             </div>
 
-                            {/* Bonus - Commented out as per request */}
-                            {/* 
-                            <div className="p-4 flex justify-between items-center hover:bg-slate-800/30 transition-colors">
-                                <div className="flex items-center gap-3 text-yellow-400">
-                                    <div className="p-2 rounded-full bg-yellow-500/10">
-                                        <Star size={20} className="fill-yellow-400/20" />
-                                    </div>
-                                    <span className="font-bold text-base">Bonus</span>
-                                </div>
-                                <span className="text-lg font-black text-white">+0</span>
-                            </div>
-                            */}
-
                             {/* Earned */}
                             <div className="p-4 flex justify-between items-center hover:bg-slate-800/30 transition-colors">
                                 <div className="flex items-center gap-3 text-emerald-400">
@@ -130,7 +120,16 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, ney
                                     </div>
                                     <span className="font-bold text-base">Earned</span>
                                 </div>
-                                <span className="text-lg font-black text-white">${rewards.toFixed(2)}</span>
+                                <div className="flex flex-col items-end">
+                                    <span className={`text-lg font-black ${pendingRewards > 0 ? 'text-sky-400 animate-shimmer' : 'text-white'}`}>
+                                        ${totalEarned.toFixed(2)}
+                                    </span>
+                                    {pendingRewards > 0 && (
+                                        <span className="text-[10px] font-bold text-sky-400/70 tracking-tight leading-none">
+                                            +${pendingRewards.toFixed(2)} live
+                                        </span>
+                                    )}
+                                </div>
                             </div>
 
                         </div>

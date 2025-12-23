@@ -1,3 +1,4 @@
+
 export interface TeamMember {
   fid: number;
   pfpUrl?: string;
@@ -27,6 +28,8 @@ export interface UserState {
   contractAddress?: string; // Dynamic contract address from DB
   version?: number; // Contract version (1 or 2)
   streamTarget?: boolean;
+  streamPercent?: number;
+  unitPrice?: number;
 }
 
 export interface LeaderboardEntry {

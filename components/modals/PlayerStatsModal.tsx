@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Zap, Flame, Star, User, Users, Loader2, Banknote } from 'lucide-react';
 import { LeaderboardEntry } from '../../types';
@@ -10,11 +10,26 @@ interface PlayerStatsModalProps {
     player: LeaderboardEntry | null;
     onClose: () => void;
     onSelectPlayer: (player: LeaderboardEntry) => void;
+    currentTargetAddress?: string;
+    currentTargetCollectedFee?: bigint;
+    streamPercent?: number;
+    unitPrice?: number;
 }
 
-const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose, onSelectPlayer }) => {
+const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose, onSelectPlayer, currentTargetAddress, currentTargetCollectedFee, streamPercent, unitPrice }) => {
     const [loadingFid, setLoadingFid] = useState<number | null>(null);
     
+    const isTarget = useMemo(() => {
+        if (!player || !currentTargetAddress || !player.primaryAddress) return false;
+        return player.primaryAddress.toLowerCase() === currentTargetAddress.toLowerCase();
+    }, [player, currentTargetAddress]);
+
+    const pendingRewards = useMemo(() => {
+        if (!isTarget || !currentTargetCollectedFee || !streamPercent || !unitPrice) return 0;
+        const pendingWei = (currentTargetCollectedFee * BigInt(streamPercent)) / 100n;
+        return (Number(pendingWei) / 1e18) * unitPrice;
+    }, [isTarget, currentTargetCollectedFee, streamPercent, unitPrice]);
+
     const handleProfileClick = async (fid: number) => {
         setLoadingFid(fid);
         try {
@@ -45,7 +60,7 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose, on
     const neynarPowerChange = player.neynarPowerChange || 0;
     const streakPower = Math.min(player.streak, 30);
     const teamPower = player.teamScore || 0;
-    const rewards = player.rewards || 0;
+    const totalRewards = (player.rewards || 0) + pendingRewards;
     const teamMembers = player.teamMembers || [];
 
     return (
@@ -86,7 +101,7 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose, on
                                     #{player.rank}
                                 </div>
                             </button>
-                            <h2 className="text-xl font-bold text-white">{player.username}</h2>
+                            <h2 className={`text-xl font-bold ${isTarget ? 'animate-shimmer' : 'text-white'}`}>{player.username}</h2>
                         </div>
 
                         {/* Consolidated Stats Block */}
@@ -169,19 +184,6 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose, on
                                 </div>
                             </div>
 
-                            {/* Bonus - Commented out as per request */}
-                            {/* 
-                            <div className="p-4 flex justify-between items-center hover:bg-slate-800/30 transition-colors">
-                                <div className="flex items-center gap-3 text-yellow-400">
-                                    <div className="p-2 rounded-full bg-yellow-500/10">
-                                        <Star size={20} className="fill-yellow-400/20" />
-                                    </div>
-                                    <span className="font-bold text-base">Bonus</span>
-                                </div>
-                                <span className="text-lg font-black text-white">+0</span>
-                            </div>
-                            */}
-
                             {/* Earned */}
                             <div className="p-4 flex justify-between items-center hover:bg-slate-800/30 transition-colors">
                                 <div className="flex items-center gap-3 text-emerald-400">
@@ -190,7 +192,16 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose, on
                                     </div>
                                     <span className="font-bold text-base">Earned</span>
                                 </div>
-                                <span className="text-lg font-black text-white">${rewards.toFixed(2)}</span>
+                                <div className="flex flex-col items-end">
+                                    <span className={`text-lg font-black ${pendingRewards > 0 ? 'text-sky-400' : 'text-white'}`}>
+                                        ${totalRewards.toFixed(2)}
+                                    </span>
+                                    {pendingRewards > 0 && (
+                                        <span className="text-[10px] font-bold text-sky-400/70 tracking-tight leading-none animate-shimmer">
+                                            LIVE STREAMING
+                                        </span>
+                                    )}
+                                </div>
                             </div>
 
                         </div>

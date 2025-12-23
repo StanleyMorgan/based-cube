@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { sdk } from '@farcaster/miniapp-sdk';
@@ -54,7 +55,9 @@ const App: React.FC = () => {
     teamMembers: [],
     contractAddress: undefined,
     version: 1,
-    streamTarget: false
+    streamTarget: false,
+    streamPercent: 0,
+    unitPrice: 0
   });
   
   const [canClick, setCanClick] = useState(false);
@@ -103,10 +106,22 @@ const App: React.FC = () => {
     return (currentDayStatus as any)[1] as string;
   }, [currentDayStatus]);
 
+  const contractCollectedFee = useMemo(() => {
+    if (!currentDayStatus) return 0n;
+    return (currentDayStatus as any)[3] as bigint;
+  }, [currentDayStatus]);
+
   const isContractTarget = useMemo(() => {
     if (!contractTargetAddress || !address) return false;
     return contractTargetAddress.toLowerCase() === address.toLowerCase();
   }, [contractTargetAddress, address]);
+
+  // Calculate live rewards for current user if they are the target
+  const pendingRewards = useMemo(() => {
+    if (!isContractTarget || !contractCollectedFee || !userState.streamPercent || !userState.unitPrice) return 0;
+    const pendingWei = (contractCollectedFee * BigInt(userState.streamPercent)) / 100n;
+    return (Number(pendingWei) / 1e18) * userState.unitPrice;
+  }, [isContractTarget, contractCollectedFee, userState.streamPercent, userState.unitPrice]);
 
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -472,6 +487,7 @@ const App: React.FC = () => {
                 currentUser={userState} 
                 currentRank={rank}
                 currentTargetAddress={contractTargetAddress}
+                currentTargetCollectedFee={contractCollectedFee}
                 onPlayerSelect={setSelectedPlayer} 
               />
             </motion.div>
@@ -507,13 +523,18 @@ const App: React.FC = () => {
           streakPower={streakPowerCalc}
           teamPower={teamPowerCalc}
           rewards={userState.rewards}
+          pendingRewards={pendingRewards}
           teamMembers={userState.teamMembers}
       />
       
       <PlayerStatsModal 
         player={selectedPlayer} 
         onClose={() => setSelectedPlayer(null)}
-        onSelectPlayer={setSelectedPlayer} 
+        onSelectPlayer={setSelectedPlayer}
+        currentTargetAddress={contractTargetAddress}
+        currentTargetCollectedFee={contractCollectedFee}
+        streamPercent={userState.streamPercent}
+        unitPrice={userState.unitPrice}
       />
 
       {/* Navigation - Hidden when Player Stats Modal is open to prevent overlap */}

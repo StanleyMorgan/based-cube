@@ -1,3 +1,4 @@
+
 import { LeaderboardEntry, UserState, TeamMember, HistoryEntry } from '../types';
 
 // Helper for date calculations on frontend
@@ -94,7 +95,9 @@ export const api = {
       teamMembers: data.teamMembers || [],
       contractAddress: data.contractAddress,
       version: data.version,
-      streamTarget: !!data.stream_target
+      streamTarget: !!data.stream_target,
+      streamPercent: data.streamPercent || 0,
+      unitPrice: data.unitPrice || 0
     };
   },
 
@@ -126,7 +129,9 @@ export const api = {
       teamScore: data.teamScore || 0,
       contractAddress: data.contractAddress,
       version: data.version,
-      streamTarget: !!data.stream_target
+      streamTarget: !!data.stream_target,
+      streamPercent: data.streamPercent || 0,
+      unitPrice: data.unitPrice || 0
     };
   },
 
