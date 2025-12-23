@@ -31,16 +31,26 @@ body {
 
 /* Shimmering Blue Text Animation (Cosmic Theme) */
 @keyframes shimmer {
-  0% { background-position: -200% center; }
+  0% { background-position: 0% center; }
   100% { background-position: 200% center; }
 }
 
 .animate-shimmer {
-  background: linear-gradient(to right, #4ac4f8, #959ff4, #53c9fc);
-  background-size: 200% auto;
+  background: linear-gradient(
+    to right, 
+    #ff00de, /* Neon Pink */
+    #00ffff, /* Bright Cyan */
+    #7000ff, /* Electric Purple */
+    #00ff9f, /* Spring Green */
+    #ff00de  /* Back to Pink for smooth loop */
+  );
+  background-size: 300% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: shimmer 3s linear infinite;
+  animation: shimmer 2s linear infinite;
+  /* Multi-layered glow effect */
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3)) drop-shadow(0 0 8px rgba(0, 255, 255, 0.5));
+  font-weight: 900;
 }
 
 /* Golden Ring for Position Highlight (kept on the entry container) */
