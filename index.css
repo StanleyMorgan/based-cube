@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -30,8 +31,8 @@ body {
 
 /* Shimmering Blue Text Animation (Cosmic Theme) */
 @keyframes shimmer {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 100% 50%; }
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
 }
 
 .animate-shimmer {
@@ -39,16 +40,16 @@ body {
     to right, 
     #ff00de, /* Neon Pink */
     #00ffff, /* Bright Cyan */
-    #9242fb, /* Electric Purple */
+    #8c34ff, /* Electric Purple */
     #00ff9f, /* Spring Green */
     #ff00de  /* Back to Pink for smooth loop */
   );
-  background-size: 200% auto;
+  background-size: 300% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: shimmer 3s linear infinite;
-  /* Multi-layered glow effect - vivid cosmic vibes */
-  filter: drop-shadow(0 0 3px rgba(255, 0, 222, 0.6)) drop-shadow(0 0 12px rgba(0, 255, 255, 0.4));
+  animation: shimmer 2s linear infinite;
+  /* Multi-layered glow effect */
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3)) drop-shadow(0 0 8px rgba(0, 255, 255, 0.5));
   font-weight: 900;
 }
 
