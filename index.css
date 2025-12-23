@@ -38,18 +38,18 @@ body {
 .animate-shimmer {
   background: linear-gradient(
     to right, 
-    #ff00de, /* Neon Pink */
-    #00ffff, /* Bright Cyan */
-    #8c34ff, /* Electric Purple */
-    #00ff9f, /* Spring Green */
-    #ff00de  /* Back to Pink for smooth loop */
+    #55cfff,
+    #00ffff,
+    #9f58fc,
+    #00ff9f,
+    #55cfff
   );
   background-size: 300% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: shimmer 4s linear infinite;
   /* Multi-layered glow effect */
-  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3)) drop-shadow(0 0 8px rgba(0, 255, 255, 0.5));
+  filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.1)) drop-shadow(0 0 3px rgba(0, 255, 255, 0.3));
   font-weight: 900;
 }
 
