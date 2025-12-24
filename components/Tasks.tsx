@@ -1,17 +1,20 @@
 
-import React, { useEffect, useState } from 'react';
-import { ClipboardList, CheckCircle2, Zap, Loader2, ArrowRight, Share, Check, Heart, Repeat } from 'lucide-react';
+import React, { useEffect, useState, useMemo } from 'react';
+// Added Share to the lucide-react import list
+import { ClipboardList, CheckCircle2, Zap, Loader2, ArrowRight, Check, Heart, Repeat, ExternalLink, UserPlus, Share } from 'lucide-react';
 import { sdk } from '@farcaster/miniapp-sdk';
 import { api } from '../services/storage';
+import { Task } from '../types';
 
-const STMORGAN_FID = 491961; // @stmorgan FID
-const TARGET_CAST_HASH = '0x547fce304a0674d2918e1172f603b98e58330925';
+// Define the local status which includes the ephemeral 'verify' and 'claim' steps
+type LocalTaskStatus = 'start' | 'verify' | 'claim' | 'claimed';
 
-// Define the 4 states
-type TaskStatus = 'start' | 'verify' | 'claim' | 'claimed';
+interface DynamicTask extends Task {
+    localStatus: LocalTaskStatus;
+}
 
 const Tasks = () => {
-  const [taskStates, setTaskStates] = useState<Record<string, TaskStatus>>({});
+  const [tasks, setTasks] = useState<DynamicTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingTask, setProcessingTask] = useState<string | null>(null);
   const [cooldowns, setCooldowns] = useState<Record<string, number>>({});
@@ -32,21 +35,22 @@ const Tasks = () => {
         try {
             const context = await sdk.context;
             if (context.user?.fid) {
-                setFid(context.user.fid);
+                const userFid = context.user.fid;
+                setFid(userFid);
                 
-                // Get completed tasks from DB
-                const ids = await api.getCompletedTasks(context.user.fid);
+                // Get tasks from DB with their completion status
+                const dbTasks = await api.getTasks(userFid);
                 
-                // Initialize states
-                const initialStates: Record<string, TaskStatus> = {
-                    'like_recast': ids.includes('like_recast') ? 'claimed' : 'start',
-                    'follow_stmorgan': ids.includes('follow_stmorgan') ? 'claimed' : 'start',
-                    'invite_friend': ids.includes('invite_friend') ? 'claimed' : 'start',
-                };
-                setTaskStates(initialStates);
+                // Map to dynamic tasks
+                const mappedTasks: DynamicTask[] = dbTasks.map(t => ({
+                    ...t,
+                    localStatus: t.status as LocalTaskStatus // status returned from API is 'claimed' or 'start'
+                }));
+
+                setTasks(mappedTasks);
                 
-                // Get current score for share embed
-                const user = await api.syncUser(context.user.fid, context.user.username || 'User');
+                // Get current user details for share context
+                const user = await api.syncUser(userFid, context.user.username || 'User');
                 setScore(user.score);
             }
         } catch (e) {
@@ -60,24 +64,31 @@ const Tasks = () => {
 
   // -- Action Handlers --
 
-  const handleStart = async (taskId: string) => {
-      if (taskId === 'like_recast') {
+  const updateTaskStatus = (id: string, newStatus: LocalTaskStatus) => {
+      setTasks(prev => prev.map(t => t.id === id ? { ...t, localStatus: newStatus } : t));
+  };
+
+  const handleStart = async (task: DynamicTask) => {
+      if (task.type === 'NEYNAR_CAST') {
           try {
-              await sdk.actions.viewCast({ hash: TARGET_CAST_HASH });
-              setTaskStates(prev => ({ ...prev, [taskId]: 'verify' }));
+              await sdk.actions.viewCast({ hash: task.target_id });
+              updateTaskStatus(task.id, 'verify');
           } catch (e) {
               console.error("Failed to open cast", e);
           }
       }
-      else if (taskId === 'follow_stmorgan') {
+      else if (task.type === 'NEYNAR_FOLLOW') {
           try {
-              await sdk.actions.viewProfile({ fid: STMORGAN_FID });
-              setTaskStates(prev => ({ ...prev, [taskId]: 'verify' }));
+              const targetFid = parseInt(task.target_id);
+              if (!isNaN(targetFid)) {
+                  await sdk.actions.viewProfile({ fid: targetFid });
+                  updateTaskStatus(task.id, 'verify');
+              }
           } catch (e) {
               console.error("Failed to open profile", e);
           }
       } 
-      else if (taskId === 'invite_friend') {
+      else if (task.type === 'REFERRAL') {
           const text = `Join me on Tesseract! 🧊\nPlay daily and climb the leaderboard.`;
           const embedUrl = `https://tesseract-base.vercel.app/api/share/frame?fid=${fid}&score=${score}`;
           try {
@@ -85,10 +96,18 @@ const Tasks = () => {
                 text: text,
                 embeds: [embedUrl]
              });
-             setTaskStates(prev => ({ ...prev, [taskId]: 'verify' }));
+             updateTaskStatus(task.id, 'verify');
           } catch (e) {
              console.error("Invite action failed", e);
-             setTaskStates(prev => ({ ...prev, [taskId]: 'verify' }));
+             updateTaskStatus(task.id, 'verify');
+          }
+      }
+      else if (task.type === 'LINK') {
+          try {
+              await sdk.actions.openUrl(task.target_id);
+              updateTaskStatus(task.id, 'claim');
+          } catch (e) {
+              console.error("Failed to open URL", e);
           }
       }
   };
@@ -105,13 +124,11 @@ const Tasks = () => {
       try {
           const verified = await api.verifyTask(fid, taskId);
           if (verified) {
-              setTaskStates(prev => ({ ...prev, [taskId]: 'claim' }));
+              updateTaskStatus(taskId, 'claim');
           } else {
               // Set cooldown on failure
               setCooldowns(prev => ({ ...prev, [taskId]: Date.now() }));
-              if (taskId === 'invite_friend') alert("No referrals found yet. Make sure someone joined via your link!");
-              else if (taskId === 'like_recast') alert("Please Like and Recast the cast before verifying!");
-              else alert("Action not verified yet. Please try again in 30 seconds.");
+              alert("Verification failed. Please ensure you completed the action and try again in 30 seconds.");
           }
       } catch (e) {
           console.error("Verify failed", e);
@@ -127,7 +144,7 @@ const Tasks = () => {
       try {
           const result = await api.claimTask(fid, taskId);
           if (result.success) {
-              setTaskStates(prev => ({ ...prev, [taskId]: 'claimed' }));
+              updateTaskStatus(taskId, 'claimed');
           } else {
               alert(result.error || "Failed to claim task");
           }
@@ -138,10 +155,22 @@ const Tasks = () => {
       }
   };
 
-  // Render button based on state
-  const renderButton = (taskId: string) => {
-      const status = taskStates[taskId] || 'start';
-      const isProcessing = processingTask === taskId;
+  const getTaskIcon = (type: string, status: string) => {
+      if (status === 'claimed') return <CheckCircle2 size={20} />;
+      
+      switch (type) {
+          case 'NEYNAR_CAST': return <Repeat size={20} />;
+          case 'NEYNAR_FOLLOW': return <UserPlus size={20} />;
+          case 'REFERRAL': return <Share size={20} />;
+          case 'LINK': return <ExternalLink size={20} />;
+          default: return <ClipboardList size={20} />;
+      }
+  };
+
+  // Render button based on status
+  const renderButton = (task: DynamicTask) => {
+      const status = task.localStatus;
+      const isProcessing = processingTask === task.id;
 
       if (status === 'claimed') {
           return (
@@ -154,7 +183,7 @@ const Tasks = () => {
       if (status === 'claim') {
           return (
             <button 
-                onClick={() => handleClaim(taskId)}
+                onClick={() => handleClaim(task.id)}
                 disabled={isProcessing}
                 className="px-4 py-2 rounded-lg text-sm font-bold bg-emerald-600 text-white hover:bg-emerald-500 shadow-lg shadow-emerald-900/30 flex items-center gap-2 animate-pulse whitespace-nowrap"
             >
@@ -164,13 +193,13 @@ const Tasks = () => {
       }
 
       if (status === 'verify') {
-          const lastAttempt = cooldowns[taskId] || 0;
+          const lastAttempt = cooldowns[task.id] || 0;
           const secondsLeft = Math.ceil((30000 - (now - lastAttempt)) / 1000);
           const inCooldown = secondsLeft > 0;
 
           return (
             <button 
-                onClick={() => inCooldown ? null : handleVerify(taskId)}
+                onClick={() => inCooldown ? null : handleVerify(task.id)}
                 disabled={isProcessing || inCooldown}
                 className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 whitespace-nowrap transition-colors ${
                     inCooldown 
@@ -186,7 +215,7 @@ const Tasks = () => {
       // Default: Start
       return (
         <button 
-            onClick={() => handleStart(taskId)}
+            onClick={() => handleStart(task)}
             className="px-4 py-2 rounded-lg text-sm font-bold bg-purple-600 text-white hover:bg-purple-500 shadow-lg shadow-purple-900/30 flex items-center gap-2 whitespace-nowrap"
         >
             Start <ArrowRight size={16} />
@@ -210,78 +239,41 @@ const Tasks = () => {
       </div>
 
       <div className="space-y-4">
+        {tasks.map((task) => (
+            <div 
+                key={task.id}
+                className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-200 backdrop-blur-sm ${task.localStatus === 'claimed' ? 'bg-slate-800/20 border-slate-700/30 opacity-60' : 'bg-slate-800/40 border-slate-700/50 shadow-[0_0_15px_rgba(234,179,8,0.1)]'}`}
+            >
+                <div className="flex items-center flex-grow min-w-0 mr-4">
+                    <div className={`flex-shrink-0 p-2 rounded-full mr-3 ${task.localStatus === 'claimed' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-slate-700 text-slate-400'}`}>
+                        {getTaskIcon(task.type, task.localStatus)}
+                    </div>
 
-        {/* Task 0: Like & Recast */}
-        <div className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-200 backdrop-blur-sm ${taskStates['like_recast'] === 'claimed' ? 'bg-slate-800/20 border-slate-700/30 opacity-60' : 'bg-slate-800/40 border-slate-700/50 shadow-[0_0_15px_rgba(234,179,8,0.1)]'}`}>
-            <div className="flex items-center flex-grow min-w-0 mr-4">
-                <div className={`flex-shrink-0 p-2 rounded-full mr-3 ${taskStates['like_recast'] === 'claimed' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-slate-700 text-slate-400'}`}>
-                    {taskStates['like_recast'] === 'claimed' ? <CheckCircle2 size={20} /> : <ClipboardList size={20} />}
-                </div>
-
-                <div className="min-w-0">
-                    <div className="font-semibold text-slate-100 truncate">Like & Recast</div>
-                    <div className="flex items-center gap-1 text-xs text-slate-400 mt-0.5">
-                        <span className="text-yellow-400 font-bold flex items-center gap-0.5">
-                            +50 <Zap size={10} />
-                        </span>
-                        <span>Reward</span>
+                    <div className="min-w-0">
+                        <div className="font-semibold text-slate-100 truncate">{task.title}</div>
+                        <div className="flex items-center gap-1 text-xs text-slate-400 mt-0.5">
+                            <span className="text-yellow-400 font-bold flex items-center gap-0.5">
+                                +{task.reward} <Zap size={10} />
+                            </span>
+                            <span>Reward</span>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div className="flex-shrink-0">
-                {renderButton('like_recast')}
+                <div className="flex-shrink-0">
+                    {renderButton(task)}
+                </div>
             </div>
-        </div>
+        ))}
         
-        {/* Task 1: Follow */}
-        <div className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-200 backdrop-blur-sm ${taskStates['follow_stmorgan'] === 'claimed' ? 'bg-slate-800/20 border-slate-700/30 opacity-60' : 'bg-slate-800/40 border-slate-700/50'}`}>
-            <div className="flex items-center flex-grow min-w-0 mr-4">
-                <div className={`flex-shrink-0 p-2 rounded-full mr-3 ${taskStates['follow_stmorgan'] === 'claimed' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-slate-700 text-slate-400'}`}>
-                    {taskStates['follow_stmorgan'] === 'claimed' ? <CheckCircle2 size={20} /> : <ClipboardList size={20} />}
-                </div>
-
-                <div className="min-w-0">
-                    <div className="font-semibold text-slate-100 truncate">Follow @stmorgan</div>
-                    <div className="flex items-center gap-1 text-xs text-slate-400 mt-0.5">
-                        <span className="text-yellow-400 font-bold flex items-center gap-0.5">
-                            +10 <Zap size={10} />
-                        </span>
-                        <span>Reward</span>
-                    </div>
-                </div>
+        {tasks.length === 0 && (
+            <div className="text-center text-slate-500 text-sm py-12">
+                No active tasks available right now.
             </div>
-
-            <div className="flex-shrink-0">
-                {renderButton('follow_stmorgan')}
-            </div>
-        </div>
-
-        {/* Task 2: Invite */}
-        <div className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-200 backdrop-blur-sm ${taskStates['invite_friend'] === 'claimed' ? 'bg-slate-800/20 border-slate-700/30 opacity-60' : 'bg-slate-800/40 border-slate-700/50'}`}>
-            <div className="flex items-center flex-grow min-w-0 mr-4">
-                <div className={`flex-shrink-0 p-2 rounded-full mr-3 ${taskStates['invite_friend'] === 'claimed' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-slate-700 text-slate-400'}`}>
-                    {taskStates['invite_friend'] === 'claimed' ? <CheckCircle2 size={20} /> : <ClipboardList size={20} />}
-                </div>
-
-                <div className="min-w-0">
-                    <div className="font-semibold text-slate-100 truncate">Invite a Friend</div>
-                    <div className="flex items-center gap-1 text-xs text-slate-400 mt-0.5">
-                        <span className="text-yellow-400 font-bold flex items-center gap-0.5">
-                            +10 <Zap size={10} />
-                        </span>
-                        <span>Reward</span>
-                    </div>
-                </div>
-            </div>
-
-             <div className="flex-shrink-0">
-                {renderButton('invite_friend')}
-            </div>
-        </div>
+        )}
         
         <div className="mt-8 text-center text-slate-500 text-xs p-4 border border-dashed border-slate-800 rounded-xl">
-           Complete tasks to increase your total score.
+           Complete tasks to increase your total score. New tasks are added via the cosmic gateway.
         </div>
       </div>
     </div>

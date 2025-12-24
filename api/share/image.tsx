@@ -124,7 +124,7 @@ export default async function handler(req: Request) {
                     {rewardsValue > 0 && (
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
                           <div style={{ display: 'flex', fontSize: '24px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rewards</div>
-                          <div style={{ display: 'flex', fontSize: '64px', color: '#38bdf8', fontWeight: 700, lineHeight: 1 }}>{`$${rewardsValue.toFixed(2)}`}</div>
+                          <div style={{ display: 'flex', fontSize: '64px', color: '#10b981', fontWeight: 700, lineHeight: 1 }}>{`$${rewardsValue.toFixed(2)}`}</div>
                       </div>
                     )}
                 </div>

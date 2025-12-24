@@ -1,5 +1,5 @@
 
-import { LeaderboardEntry, UserState, TeamMember, HistoryEntry } from '../types';
+import { LeaderboardEntry, UserState, TeamMember, HistoryEntry, Task } from '../types';
 
 // Helper for date calculations on frontend
 export const getTodayString = (): string => {
@@ -180,11 +180,11 @@ export const api = {
     };
   },
 
-  getCompletedTasks: async (fid: number): Promise<string[]> => {
+  getTasks: async (fid: number): Promise<Task[]> => {
     const res = await fetch(`/api/tasks?fid=${fid}`);
     if (!res.ok) return [];
     const data = await res.json();
-    return data.completedIds || [];
+    return data.tasks || [];
   },
 
   verifyTask: async (fid: number, taskId: string): Promise<boolean> => {

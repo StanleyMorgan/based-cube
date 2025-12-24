@@ -10,6 +10,16 @@ export interface HistoryEntry {
   target_address: string;
 }
 
+export interface Task {
+  id: string;
+  title: string;
+  reward: number;
+  type: 'NEYNAR_FOLLOW' | 'NEYNAR_CAST' | 'REFERRAL' | 'LINK';
+  target_id: string;
+  is_active: boolean;
+  status?: 'start' | 'verify' | 'claim' | 'claimed';
+}
+
 export interface UserState {
   score: number;
   rewards: number;

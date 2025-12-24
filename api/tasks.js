@@ -23,12 +23,17 @@ export default async function handler(request, response) {
     if (request.method === 'GET') {
       if (!fid) return response.status(400).json({ error: 'FID is required' });
 
+      // Fetch all active tasks and join with user_tasks to see if they are completed
       const result = await pool.sql`
-        SELECT task_id FROM user_tasks WHERE fid = ${fid}
+        SELECT t.*, 
+        CASE WHEN ut.fid IS NOT NULL THEN 'claimed' ELSE 'start' END as status
+        FROM tasks t
+        LEFT JOIN user_tasks ut ON ut.task_id = t.id AND ut.fid = ${fid}
+        WHERE t.is_active = true
+        ORDER BY t.created_at ASC;
       `;
       
-      const completedIds = result.rows.map(r => r.task_id);
-      return response.status(200).json({ completedIds });
+      return response.status(200).json({ tasks: result.rows });
     }
 
     if (request.method === 'POST') {
@@ -36,22 +41,47 @@ export default async function handler(request, response) {
       const { fid, taskId, action } = request.body;
       if (!fid || !taskId) return response.status(400).json({ error: 'Missing data' });
 
-      // -- Verification Helper --
+      // Fetch task definition from DB
+      const taskRes = await pool.sql`SELECT * FROM tasks WHERE id = ${taskId}`;
+      if (taskRes.rows.length === 0) {
+          return response.status(404).json({ error: 'Task definition not found' });
+      }
+      const task = taskRes.rows[0];
+
+      // -- Verification Helper driven by Task Type --
       const checkVerification = async () => {
-        if (taskId === 'invite_friend') {
-             // Check if user has referred anyone
+        if (task.type === 'REFERRAL') {
+             // Check if user has referred anyone (matching target_id logic if needed, but default is any referral)
              const refCheck = await pool.sql`
                  SELECT 1 FROM users WHERE referrer_fid = ${fid} LIMIT 1
              `;
              return refCheck.rowCount > 0;
         }
-        if (taskId === 'follow_stmorgan') {
-            // Implicit trust for now
-            return true; 
+        
+        if (task.type === 'NEYNAR_FOLLOW') {
+            const targetFid = task.target_id;
+            if (!process.env.NEYNAR_API_KEY || !targetFid) return true; // Implicit trust if no key or id
+
+            try {
+                // Check if viewer_fid (current user) follows targetFid
+                const res = await fetch(`https://api.neynar.com/v2/farcaster/user/bulk?fids=${targetFid}&viewer_fid=${fid}`, {
+                    headers: { 'api_key': process.env.NEYNAR_API_KEY }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.users && data.users.length > 0) {
+                        return data.users[0]?.viewer_context?.following === true;
+                    }
+                }
+            } catch (e) {
+                console.error("Neynar follow verify failed", e);
+            }
+            return true; // Fallback to implicit trust
         }
-        if (taskId === 'like_recast') {
-            const castHash = '0x547fce304a0674d2918e1172f603b98e58330925';
-            if (!process.env.NEYNAR_API_KEY) return false;
+
+        if (task.type === 'NEYNAR_CAST') {
+            const castHash = task.target_id;
+            if (!process.env.NEYNAR_API_KEY || !castHash) return false;
 
             try {
                 const res = await fetch(`https://api.neynar.com/v2/farcaster/cast?identifier=${castHash}&type=hash&viewer_fid=${fid}`, {
@@ -67,6 +97,12 @@ export default async function handler(request, response) {
             }
             return false;
         }
+
+        if (task.type === 'LINK') {
+            // Links are verified by clicking (start -> verify bypasses check or user just clicks start)
+            return true;
+        }
+
         return false;
       };
 
@@ -96,8 +132,8 @@ export default async function handler(request, response) {
               throw e;
           }
 
-          // Rewards logic
-          const reward = taskId === 'like_recast' ? 50 : 10;
+          // Rewards logic - now dynamic from DB
+          const reward = task.reward || 10;
           
           const updateResult = await pool.sql`
             UPDATE users 
