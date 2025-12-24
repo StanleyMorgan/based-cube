@@ -273,7 +273,7 @@ const Tasks = () => {
         )}
         
         <div className="mt-8 text-center text-slate-500 text-xs p-4 border border-dashed border-slate-800 rounded-xl">
-           Complete tasks to increase your total score. New tasks are added via the cosmic gateway.
+           Complete tasks to increase your total score.
         </div>
       </div>
     </div>
