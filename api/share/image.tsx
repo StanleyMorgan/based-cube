@@ -23,7 +23,7 @@ export default async function handler(req: Request) {
 
     // Get user and rank
     const result = await pool.sql`
-        SELECT username, score, pfp_url, 
+        SELECT username, score, pfp_url, rewards,
         (
           SELECT COUNT(*) + 1 
           FROM users u2 
@@ -44,6 +44,7 @@ export default async function handler(req: Request) {
     const score = user.score.toLocaleString();
     const rank = `#${user.rank}`;
     const pfpUrl = user.pfp_url;
+    const rewardsValue = parseFloat(user.rewards || 0);
 
     // Load font locally from the same origin
     // Add { cache: 'force-cache' } to ensure the Edge Function caches the font file
@@ -103,18 +104,29 @@ export default async function handler(req: Request) {
                     {`${username}`}
                 </div>
                 
-                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '30px' }}>
+                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <div style={{ display: 'flex', fontSize: '24px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rank</div>
                         <div style={{ display: 'flex', fontSize: '64px', color: '#ffffff', fontWeight: 700, lineHeight: 1 }}>{rank}</div>
                     </div>
                     
-                    <div style={{ display: 'flex', width: '2px', height: '80px', backgroundColor: '#334155' }}></div>
+                    <div style={{ display: 'flex', width: '2px', height: '80px', backgroundColor: '#334155', margin: '0 30px' }}></div>
 
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <div style={{ display: 'flex', fontSize: '24px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Score</div>
                         <div style={{ display: 'flex', fontSize: '64px', color: '#38bdf8', fontWeight: 700, lineHeight: 1 }}>{score}</div>
                     </div>
+
+                    {rewardsValue > 0 && (
+                      <div style={{ display: 'flex', width: '2px', height: '80px', backgroundColor: '#334155', margin: '0 30px' }}></div>
+                    )}
+
+                    {rewardsValue > 0 && (
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <div style={{ display: 'flex', fontSize: '24px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rewards</div>
+                          <div style={{ display: 'flex', fontSize: '64px', color: '#10b981', fontWeight: 700, lineHeight: 1 }}>{`$${rewardsValue.toFixed(2)}`}</div>
+                      </div>
+                    )}
                 </div>
             </div>
           </div>
