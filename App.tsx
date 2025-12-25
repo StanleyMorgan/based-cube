@@ -63,6 +63,7 @@ const App: React.FC = () => {
   const [canClick, setCanClick] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showInfo, setShowInfo] = useState(false);
+  const [hasNewTask, setHasNewTask] = useState(false);
   
   // Stats State
   const [rank, setRank] = useState(0);
@@ -124,6 +125,22 @@ const App: React.FC = () => {
   }, [isContractTarget, contractCollectedFee, userState.streamPercent, userState.unitPrice]);
 
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Function to check tasks for the notification badge
+  const checkTasks = async (fid: number) => {
+    try {
+      const tasks = await api.getTasks(fid);
+      if (tasks.length > 0) {
+        // Last task by created_at (since API orders by created_at ASC)
+        const latestTask = tasks[tasks.length - 1];
+        setHasNewTask(latestTask && latestTask.status === 'start');
+      } else {
+        setHasNewTask(false);
+      }
+    } catch (e) {
+      console.error("Failed to check tasks for badge", e);
+    }
+  };
 
   // Background History Sync
   useEffect(() => {
@@ -190,6 +207,9 @@ const App: React.FC = () => {
             
             setUserState(syncedUser);
             setRank(syncedUser.rank);
+
+            // Check for new tasks for the badge
+            checkTasks(fid);
             
             // Try to connect wallet if available in connector
             if (!isConnected && connectors.length > 0) {
@@ -373,6 +393,15 @@ const App: React.FC = () => {
     
     setDirection(newIndex > oldIndex ? 1 : -1);
     setActiveTab(newTab);
+    
+    // When switching to Tasks, we can potentially hide the badge if it was the last task
+    // But we'll keep it until they actually claim it for consistency
+  };
+
+  const handleTaskUpdate = () => {
+    if (userState.fid) {
+      checkTasks(userState.fid);
+    }
   };
 
   // Use Math.round to handle floating point precision
@@ -502,7 +531,7 @@ const App: React.FC = () => {
               transition={{ duration: 0.2, ease: "easeInOut" }}
               className="flex-grow h-full overflow-hidden"
             >
-              <Tasks />
+              <Tasks onTaskUpdate={handleTaskUpdate} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -539,7 +568,11 @@ const App: React.FC = () => {
 
       {/* Navigation - Hidden when Player Stats Modal is open to prevent overlap */}
       {!selectedPlayer && (
-        <Navigation activeTab={activeTab} onTabChange={handleTabChange} />
+        <Navigation 
+          activeTab={activeTab} 
+          onTabChange={handleTabChange} 
+          hasNewTask={hasNewTask}
+        />
       )}
     </div>
   );

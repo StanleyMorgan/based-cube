@@ -13,7 +13,11 @@ interface DynamicTask extends Task {
     localStatus: LocalTaskStatus;
 }
 
-const Tasks = () => {
+interface TasksProps {
+  onTaskUpdate?: () => void;
+}
+
+const Tasks: React.FC<TasksProps> = ({ onTaskUpdate }) => {
   const [tasks, setTasks] = useState<DynamicTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingTask, setProcessingTask] = useState<string | null>(null);
@@ -145,6 +149,8 @@ const Tasks = () => {
           const result = await api.claimTask(fid, taskId);
           if (result.success) {
               updateTaskStatus(taskId, 'claimed');
+              // Notify parent to update badge
+              if (onTaskUpdate) onTaskUpdate();
           } else {
               alert(result.error || "Failed to claim task");
           }
