@@ -49,7 +49,7 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange, hasNewT
         
         {/* Notification Badge */}
         {hasNewTask && activeTab !== Tab.TASKS && (
-          <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-[#9334ea] rounded-full border border-slate-900" />
+          <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-[#9334ea] rounded-full border border-slate-900" />
         )}
       </button>
     </div>
