@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { X, Target, Banknote, Share, Zap } from 'lucide-react';
+import { X, Orbit, Share, Zap } from 'lucide-react';
 import Confetti from '../Confetti';
 
 interface WinnerModalProps {
@@ -40,7 +40,7 @@ const WinnerModal: React.FC<WinnerModalProps> = ({ isOpen, onClose, onShare, pen
 
                         <div className="mb-4 mt-2 relative">
                             <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center ring-4 ring-emerald-500/30 animate-pulse">
-                                <Target className="text-emerald-400" size={40} />
+                                <Orbit className="text-emerald-400" size={40} />
                             </div>
                             <div className="absolute -top-1 -right-1 bg-yellow-400 text-black rounded-full p-1 shadow-lg">
                                 <Zap size={16} fill="currentColor" />
@@ -59,7 +59,6 @@ const WinnerModal: React.FC<WinnerModalProps> = ({ isOpen, onClose, onShare, pen
                             <div className="flex flex-col items-center">
                                 <span className="text-emerald-400 text-xs font-bold uppercase tracking-widest mb-1">Current stream:</span>
                                 <div className="flex items-center gap-2">
-                                    <Banknote className="text-emerald-400" size={24} />
                                     <span className="text-4xl font-black text-white">
                                         ${pendingRewards.toFixed(2)}
                                     </span>
