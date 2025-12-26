@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { sdk } from '@farcaster/miniapp-sdk';
@@ -12,6 +11,7 @@ import Stats from './components/Stats';
 import InfoModal from './components/modals/InfoModal';
 import PlayerStatsModal from './components/modals/PlayerStatsModal';
 import SuccessModal, { SuccessModalData } from './components/modals/SuccessModal';
+import WinnerModal from './components/modals/WinnerModal';
 import { Info, Wallet, Loader2 } from 'lucide-react';
 
 // Wagmi & Contract imports
@@ -64,6 +64,7 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showInfo, setShowInfo] = useState(false);
   const [hasNewTask, setHasNewTask] = useState(false);
+  const [showWinnerModal, setShowWinnerModal] = useState(false);
   
   // Stats State
   const [rank, setRank] = useState(0);
@@ -117,12 +118,13 @@ const App: React.FC = () => {
     return contractTargetAddress.toLowerCase() === address.toLowerCase();
   }, [contractTargetAddress, address]);
 
-  // Calculate live rewards for current user if they are the target
+  // Calculate live rewards for current user if they are the target (or streamTarget override)
   const pendingRewards = useMemo(() => {
-    if (!isContractTarget || !contractCollectedFee || !userState.streamPercent || !userState.unitPrice) return 0;
+    const isActiveTarget = isContractTarget || userState.streamTarget;
+    if (!isActiveTarget || !contractCollectedFee || !userState.streamPercent || !userState.unitPrice) return 0;
     const pendingWei = (contractCollectedFee * BigInt(userState.streamPercent)) / 100n;
     return (Number(pendingWei) / 1e18) * userState.unitPrice;
-  }, [isContractTarget, contractCollectedFee, userState.streamPercent, userState.unitPrice]);
+  }, [isContractTarget, userState.streamTarget, contractCollectedFee, userState.streamPercent, userState.unitPrice]);
 
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -141,6 +143,17 @@ const App: React.FC = () => {
       console.error("Failed to check tasks for badge", e);
     }
   };
+
+  // Trigger Winner Modal if user is the target or streamTarget override is enabled
+  useEffect(() => {
+    if ((isContractTarget || userState.streamTarget) && !isLoading) {
+      const seenKey = `winner_modal_seen_${userState.fid}`;
+      if (!sessionStorage.getItem(seenKey)) {
+        setShowWinnerModal(true);
+        sessionStorage.setItem(seenKey, 'true');
+      }
+    }
+  }, [isContractTarget, userState.streamTarget, isLoading, userState.fid]);
 
   // Background History Sync
   useEffect(() => {
@@ -382,6 +395,21 @@ const App: React.FC = () => {
     }
   };
 
+  const handleWinnerShare = async () => {
+    const text = `I am today's target in Tesseract! 🧊\nEvery click you make rewards me with real value. Click the cube and help me grow the pot!\nNext target could be you:`;
+    const embedUrl = `https://tesseract-base.vercel.app/api/share/frame?fid=${userState.fid}`;
+
+    try {
+        await sdk.actions.composeCast({
+            text: text,
+            embeds: [embedUrl]
+        });
+        setShowWinnerModal(false);
+    } catch (e) {
+        console.error("Winner share failed", e);
+    }
+  };
+
   const handleTabChange = (newTab: Tab) => {
     if (newTab === activeTab) return;
     
@@ -393,9 +421,6 @@ const App: React.FC = () => {
     
     setDirection(newIndex > oldIndex ? 1 : -1);
     setActiveTab(newTab);
-    
-    // When switching to Tasks, we can potentially hide the badge if it was the last task
-    // But we'll keep it until they actually claim it for consistency
   };
 
   const handleTaskUpdate = () => {
@@ -542,6 +567,13 @@ const App: React.FC = () => {
           data={successModal}
           onClose={() => setSuccessModal(null)}
           onShare={handleShare}
+      />
+
+      <WinnerModal 
+          isOpen={showWinnerModal}
+          onClose={() => setShowWinnerModal(false)}
+          onShare={handleWinnerShare}
+          pendingRewards={pendingRewards}
       />
 
       <InfoModal
