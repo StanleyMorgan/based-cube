@@ -1,6 +1,6 @@
 import React from 'react';
-import { Hexagon } from 'lucide-react';
+import { Tree-pine } from 'lucide-react';
 
 export const BackIcon = () => (
-    <Hexagon size={40} strokeWidth={0.5} className="opacity-30" />
+    <Tree-pine size={40} strokeWidth={0.5} className="opacity-30" />
 );
