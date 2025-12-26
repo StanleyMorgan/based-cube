@@ -47,17 +47,17 @@ const WinnerModal: React.FC<WinnerModalProps> = ({ isOpen, onClose, onShare, pen
                             </div>
                         </div>
 
-                        <h2 className="text-3xl font-black text-white mb-2 tracking-tight">
-                            TARGET ACQUIRED!
+                        <h2 className="text-3xl font-black text-white mb-2 tracking-tight uppercase">
+                            Tesseract Activated
                         </h2>
                         
                         <p className="text-slate-400 text-sm mb-6 px-4">
-                            You are today's chosen one! You earn a percentage of every single click in the game right now.
+                            You are attracting energy right now. 
                         </p>
 
                         <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-6 w-full mb-8 relative">
                             <div className="flex flex-col items-center">
-                                <span className="text-emerald-400 text-xs font-bold uppercase tracking-widest mb-1">Live Pot</span>
+                                <span className="text-emerald-400 text-xs font-bold uppercase tracking-widest mb-1">Current stream:</span>
                                 <div className="flex items-center gap-2">
                                     <Banknote className="text-emerald-400" size={24} />
                                     <span className="text-4xl font-black text-white">
@@ -73,11 +73,11 @@ const WinnerModal: React.FC<WinnerModalProps> = ({ isOpen, onClose, onShare, pen
                                 className="w-full py-4 bg-emerald-600 text-white rounded-xl font-black text-lg hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-900/40 flex items-center justify-center gap-2"
                             >
                                 <Share size={20} />
-                                Boost Rewards
+                                Boost Stream
                             </button>
                             
                             <p className="text-[10px] text-slate-500 uppercase tracking-tighter">
-                                Share to get more players clicking and increase your payout!
+                                Share to boost stream
                             </p>
                         </div>
                     </motion.div>

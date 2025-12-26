@@ -146,14 +146,12 @@ const App: React.FC = () => {
 
   // Trigger Winner Modal if user is the target or streamTarget override is enabled
   useEffect(() => {
+    // We show the modal on every app initialization/render if the user is the target.
+    // Removed sessionStorage check to ensure it appears on every fresh enter as requested.
     if ((isContractTarget || userState.streamTarget) && !isLoading) {
-      const seenKey = `winner_modal_seen_${userState.fid}`;
-      if (!sessionStorage.getItem(seenKey)) {
-        setShowWinnerModal(true);
-        sessionStorage.setItem(seenKey, 'true');
-      }
+      setShowWinnerModal(true);
     }
-  }, [isContractTarget, userState.streamTarget, isLoading, userState.fid]);
+  }, [isContractTarget, userState.streamTarget, isLoading]);
 
   // Background History Sync
   useEffect(() => {
@@ -344,6 +342,7 @@ const App: React.FC = () => {
         }
 
         setUserState(newState);
+        // Correcting rankResult error by using newState directly
         setRank(newState.rank);
         setCanClick(false);
         
