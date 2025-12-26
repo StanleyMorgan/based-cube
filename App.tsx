@@ -395,7 +395,7 @@ const App: React.FC = () => {
   };
 
   const handleWinnerShare = async () => {
-    const text = `I am today's target in Tesseract! 🧊\nEvery click you make rewards me with real value. Click the cube and help me grow the pot!\nNext target could be you:`;
+    const text = `I’ve activated the Tesseract 🧊\nEarned $${pendingRewards.toFixed(2)} so far today.\nJoin in — you could be next:`;
     const embedUrl = `https://tesseract-base.vercel.app/api/share/frame?fid=${userState.fid}`;
 
     try {
