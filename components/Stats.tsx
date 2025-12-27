@@ -28,8 +28,6 @@ const Stats: React.FC<StatsProps> = ({ userState, canClick, rank, clickPower }) 
     return () => clearInterval(timer);
   }, [canClick, userState.lastClickDate]);
 
-  const isRestricted = userState.fid && userState.fid > 1596265;
-
   return (
     <div className="flex flex-col items-center gap-6 mb-8 w-full max-w-xs px-4">
       {/* Main Score */}
@@ -67,14 +65,8 @@ const Stats: React.FC<StatsProps> = ({ userState, canClick, rank, clickPower }) 
         {!canClick ? (
             <div className="px-4 py-1.5 bg-slate-900/80 rounded-full border border-slate-800 flex items-center gap-2 shadow-lg">
                 <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-                {isRestricted ? (
-                    <span className="text-gray-400 text-xs whitespace-nowrap font-bold">Access Restricted</span>
-                ) : (
-                    <>
-                        <span className="text-gray-400 text-xs whitespace-nowrap">Next in:</span>
-                        <span className="font-mono text-sky-300 text-sm">{timeLeft}</span>
-                    </>
-                )}
+                <span className="text-gray-400 text-xs whitespace-nowrap">Next in:</span>
+                <span className="font-mono text-sky-300 text-sm">{timeLeft}</span>
             </div>
         ) : (
             <div className="px-4 py-1.5 bg-emerald-900/20 rounded-full border border-emerald-500/30 animate-pulse flex items-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.2)]">

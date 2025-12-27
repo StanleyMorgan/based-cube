@@ -1,4 +1,3 @@
-
 import { createPool } from '@vercel/postgres';
 
 export default async function handler(request, response) {
@@ -13,11 +12,6 @@ export default async function handler(request, response) {
   try {
     const { fid } = request.body;
     if (!fid) return response.status(400).json({ error: 'FID is required' });
-
-    // Restriction: FID > 1600000 cannot play
-    if (parseInt(fid) > 1596265) {
-      return response.status(403).json({ error: 'Access restricted for this account' });
-    }
 
     // 1. Get current user state
     const userResult = await pool.sql`SELECT * FROM users WHERE fid = ${fid}`;
