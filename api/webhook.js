@@ -11,8 +11,6 @@ export default async function handler(request, response) {
   }
 
   try {
-    console.log("Webhook received!"); // Log to check that Warpcast sees the URL
-
     // 1. Ensure table exists
     await pool.sql`
       CREATE TABLE IF NOT EXISTS notification_tokens (
@@ -25,35 +23,46 @@ export default async function handler(request, response) {
 
     const body = request.body;
     
-    // Log raw body for debugging (be careful with PII in prod)
-    // console.log("Raw body:", JSON.stringify(body));
-
-    if (!body || !body.payload) {
-        console.error("Missing payload in body");
-        return response.status(400).json({ error: 'Invalid body' });
+    if (!body || !body.payload || !body.header) {
+        console.error("Missing payload or header in body");
+        return response.status(400).json({ error: 'Invalid JFS format' });
     }
 
-    // Decode Payload
+    // 2. Decode Header to get FID
+    // Farcaster Signatures (JFS) store the signer's FID in the header
+    let fid;
+    try {
+        const headerBuffer = Buffer.from(body.header, 'base64url');
+        const decodedHeader = JSON.parse(headerBuffer.toString());
+        fid = decodedHeader.fid;
+        console.log("Webhook Signer FID:", fid);
+    } catch (e) {
+        console.error("Failed to decode header", e);
+        return response.status(400).json({ error: 'Invalid header format' });
+    }
+
+    if (!fid) {
+        console.error("FID not found in header");
+        return response.status(400).json({ error: 'FID required' });
+    }
+
+    // 3. Decode Payload to get Event data
     let decodedPayload;
     try {
         const payloadBuffer = Buffer.from(body.payload, 'base64url');
         decodedPayload = JSON.parse(payloadBuffer.toString());
-        console.log("Decoded Event:", decodedPayload.event, "FID:", decodedPayload.fid);
+        console.log("Event Type:", decodedPayload.event);
     } catch (e) {
         console.error("Failed to decode payload", e);
         return response.status(400).json({ error: 'Invalid payload format' });
     }
 
-    const { fid, event } = decodedPayload;
+    const { event, notificationDetails } = decodedPayload;
 
-    if (!fid) {
-        return response.status(400).json({ error: 'FID not found' });
-    }
-
-    // Handle Events
+    // 4. Handle Events
     if (event === 'miniapp_added' || event === 'notifications_enabled') {
-        if (decodedPayload.notificationDetails) {
-            const { token, url } = decodedPayload.notificationDetails;
+        if (notificationDetails) {
+            const { token, url } = notificationDetails;
             
             await pool.sql`
                 INSERT INTO notification_tokens (fid, token, url, updated_at)
@@ -64,9 +73,9 @@ export default async function handler(request, response) {
                     url = EXCLUDED.url,
                     updated_at = NOW();
             `;
-            console.log(`✅ Token stored for FID ${fid}`);
+            console.log(`✅ Token stored successfully for FID ${fid}`);
         } else {
-            console.log(`⚠️ Event ${event} received but no notificationDetails found.`);
+            console.warn(`⚠️ Event ${event} received but notificationDetails is missing.`);
         }
     } else if (event === 'miniapp_removed' || event === 'notifications_disabled') {
         await pool.sql`
@@ -75,10 +84,11 @@ export default async function handler(request, response) {
         console.log(`🗑️ Token removed for FID ${fid}`);
     }
 
+    // Always return 200 OK to the Farcaster client
     return response.status(200).json({ success: true });
 
   } catch (error) {
-    console.error("Server Error in Webhook:", error);
+    console.error("Webhook Handler Error:", error);
     return response.status(500).json({ error: error.message });
   }
 }
