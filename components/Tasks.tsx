@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useMemo } from 'react';
 // Added Share to the lucide-react import list
 import { ClipboardList, CheckCircle2, Zap, Loader2, ArrowRight, Check, Heart, Repeat, ExternalLink, UserPlus, Share } from 'lucide-react';
@@ -132,7 +131,7 @@ const Tasks: React.FC<TasksProps> = ({ onTaskUpdate }) => {
           } else {
               // Set cooldown on failure
               setCooldowns(prev => ({ ...prev, [taskId]: Date.now() }));
-              alert("Verification failed. Please ensure you completed the action and try again in 30 seconds.");
+              // Removed alert as requested; cooldown timer provides sufficient feedback
           }
       } catch (e) {
           console.error("Verify failed", e);
@@ -152,7 +151,7 @@ const Tasks: React.FC<TasksProps> = ({ onTaskUpdate }) => {
               // Notify parent to update badge
               if (onTaskUpdate) onTaskUpdate();
           } else {
-              alert(result.error || "Failed to claim task");
+              console.error(result.error || "Failed to claim task");
           }
       } catch (e) {
           console.error("Claim failed", e);
