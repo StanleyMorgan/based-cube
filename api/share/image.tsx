@@ -7,21 +7,23 @@ export const config = {
 };
 
 export default async function handler(req: Request) {
+  const startTime = performance.now();
+  
   try {
     const url = new URL(req.url);
     const fid = url.searchParams.get('fid');
-    const origin = url.origin; // Get the current domain (e.g., https://tesseract-base.vercel.app or http://localhost:3000)
+    const origin = url.origin;
 
     if (!fid) {
       return new Response('FID is required', { status: 400 });
     }
 
-    // Connect to DB to get user stats
+    // 1. Profile Database
+    const dbStart = performance.now();
     const pool = createPool({
       connectionString: process.env.cube_POSTGRES_URL,
     });
 
-    // Get user and rank
     const result = await pool.sql`
         SELECT username, score, pfp_url, rewards,
         (
@@ -34,6 +36,7 @@ export default async function handler(req: Request) {
         FROM users u1 
         WHERE fid = ${fid};
     `;
+    const dbEnd = performance.now();
 
     if (result.rows.length === 0) {
        return new Response('User not found', { status: 404 });
@@ -46,14 +49,16 @@ export default async function handler(req: Request) {
     const pfpUrl = user.pfp_url;
     const rewardsValue = parseFloat(user.rewards || 0);
 
-    // Load font locally from the same origin
-    // Add { cache: 'force-cache' } to ensure the Edge Function caches the font file
+    // 2. Profile Font Loading
+    const fontStart = performance.now();
     const fontData = await fetch(new URL('/Inter-Bold.ttf', origin), { cache: 'force-cache' }).then((res) => res.arrayBuffer());
+    const fontEnd = performance.now();
 
-    // Use a local background image
     const bgImage = `${origin}/background.png`;
 
-    return new ImageResponse(
+    // 3. Profile Image Generation (Satori/Yoga layout + SVG generation)
+    const genStart = performance.now();
+    const response = new ImageResponse(
       (
         <div
           style={{
@@ -71,7 +76,6 @@ export default async function handler(req: Request) {
             position: 'relative',
           }}
         >
-          {/* Content Container */}
           <div
             style={{
               display: 'flex',
@@ -84,7 +88,6 @@ export default async function handler(req: Request) {
               boxShadow: '0 0 60px rgba(0,0,0,0.5)',
             }}
           >
-            {/* Avatar */}
             {pfpUrl && (
                 <img
                     src={pfpUrl}
@@ -148,8 +151,14 @@ export default async function handler(req: Request) {
         },
       },
     );
+    const genEnd = performance.now();
+    const totalTime = genEnd - startTime;
+
+    console.log(`[ShareImage Profile] FID: ${fid} | Total: ${totalTime.toFixed(2)}ms | DB: ${(dbEnd - dbStart).toFixed(2)}ms | Font: ${(fontEnd - fontStart).toFixed(2)}ms | RenderInit: ${(genEnd - genStart).toFixed(2)}ms`);
+
+    return response;
   } catch (e: any) {
-    console.error(e);
+    console.error(`[ShareImage Error]`, e);
     return new Response(`Failed to generate image`, { status: 500 });
   }
 }
