@@ -1,3 +1,4 @@
+
 import { createPool } from '@vercel/postgres';
 
 export default async function handler(request, response) {
@@ -6,20 +7,27 @@ export default async function handler(request, response) {
   });
 
   try {
-    const { page = 1, limit = 20 } = request.query;
+    const { page = 1, limit = 20, sort = 'score' } = request.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
     const limitVal = parseInt(limit);
 
-    // Rank logic: Score higher OR (Score equal AND Updated earlier) OR (Score equal AND Updated equal AND FID lower)
-    // Plus fetch Team Avatar URLs as JSON objects
+    const isRewardsSort = sort === 'rewards';
+    
+    // Determine Order By and Rank Calculation based on sort parameter
+    const orderBy = isRewardsSort 
+      ? `rewards DESC, score DESC, updated_at ASC` 
+      : `score DESC, updated_at ASC, fid ASC`;
+
+    const rankCondition = isRewardsSort
+      ? `u2.rewards > u1.rewards OR (u2.rewards = u1.rewards AND u2.score > u1.score) OR (u2.rewards = u1.rewards AND u2.score = u1.score AND u2.updated_at < u1.updated_at)`
+      : `u2.score > u1.score OR (u2.score = u1.score AND u2.updated_at < u1.updated_at) OR (u2.score = u1.score AND u2.updated_at = u1.updated_at AND u2.fid < u1.fid)`;
+
     const result = await pool.sql`
       SELECT u1.fid, u1.username, u1.score, u1.rewards, u1.pfp_url, u1.streak, u1.last_click_date, u1.neynar_score, u1.neynar_power_change, u1.referrer_fid, u1.primary_address,
       (
         SELECT COUNT(*) + 1 
         FROM users u2 
-        WHERE u2.score > u1.score 
-           OR (u2.score = u1.score AND u2.updated_at < u1.updated_at)
-           OR (u2.score = u1.score AND u2.updated_at = u1.updated_at AND u2.fid < u1.fid)
+        WHERE ${rankCondition}
       ) as rank,
       (
          CASE WHEN EXISTS (SELECT 1 FROM users ref WHERE ref.referrer_fid = u1.fid) THEN 1 ELSE 0 END
@@ -39,7 +47,7 @@ export default async function handler(request, response) {
         ) sub
       ) as referral_data
       FROM users u1
-      ORDER BY score DESC, updated_at ASC, fid ASC
+      ORDER BY ${orderBy}
       LIMIT ${limitVal} OFFSET ${offset};
     `;
     
@@ -47,12 +55,10 @@ export default async function handler(request, response) {
     const windowEnd = 48 * 60 * 60 * 1000; // 48 hours
 
     const entries = result.rows.map(row => {
-        // Team Score logic: +1 if has referrer, +2 if has referrals
         const invitedBySomeone = row.referrer_fid ? 1 : 0;
         const invitedOthers = row.has_referrals ? 2 : 0;
         const teamScore = invitedBySomeone + invitedOthers;
 
-        // Effective Streak Logic (Visual only)
         let effectiveStreak = row.streak;
         if (row.last_click_date) {
             const lastClick = new Date(row.last_click_date);
@@ -64,7 +70,6 @@ export default async function handler(request, response) {
              if (effectiveStreak > 0) effectiveStreak = 0;
         }
 
-        // Team Members logic
         const teamMembers = [];
         if (row.referrer_data) teamMembers.push(row.referrer_data);
         if (row.referral_data && Array.isArray(row.referral_data)) {
@@ -76,7 +81,7 @@ export default async function handler(request, response) {
             id: row.fid.toString(),
             username: row.username,
             score: row.score,
-            rewards: row.rewards || 0,
+            rewards: parseFloat(row.rewards || 0),
             rank: parseInt(row.rank),
             pfpUrl: row.pfp_url,
             fid: row.fid,
