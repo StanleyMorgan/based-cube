@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { LeaderboardEntry, UserState } from '../types';
 import { api } from '../services/storage';
-import { Trophy, Medal, User, Loader2, Flame, Star, Banknote } from 'lucide-react';
+import { Trophy, Medal, User, Loader2, Flame, Zap, Banknote } from 'lucide-react';
 
 interface LeaderboardProps {
   currentUser: UserState;
@@ -12,7 +12,7 @@ interface LeaderboardProps {
   onPlayerSelect: (player: LeaderboardEntry) => void;
 }
 
-type SortMode = 'score' | 'rewards';
+type SortBy = 'score' | 'rewards';
 
 const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, currentTargetAddress, currentTargetCollectedFee, onPlayerSelect }) => {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
@@ -20,40 +20,57 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [sortBy, setSortBy] = useState<SortMode>('score');
+  const [sortBy, setSortBy] = useState<SortBy>('score');
   
   // Ref for the intersection observer target
   const observerTarget = useRef<HTMLDivElement>(null);
 
-  const fetchLeaderboard = async (pageNum: number, isInitial: boolean = false, currentSort: SortMode = sortBy) => {
+  const fetchLeaderboard = async (pageNum: number, isInitial: boolean = false, sort: SortBy = sortBy) => {
     try {
         if (isInitial) setLoading(true);
         else setLoadingMore(true);
 
-        const entries = await api.getLeaderboard(currentUser.fid, pageNum, currentSort);
+        const entries = await api.getLeaderboard(currentUser.fid, pageNum, sort);
         
+        // If we got fewer than 20 entries, we've reached the end
         if (entries.length < 20) {
             setHasMore(false);
         }
 
         if (isInitial) {
+            // Process logic for current user visibility ONLY on the first page
             const processedEntries = [...entries];
             const userIndex = processedEntries.findIndex(e => e.isCurrentUser);
 
             if (userIndex !== -1) {
+                // User is in the fetched list
                 const userEntry = processedEntries[userIndex];
+                // Move to top if rank > 3 (so they see themselves pinned if not on podium)
+                // BUT only if we are on page 1 and they are visible there
                 if (userEntry.rank > 3) {
                     processedEntries.splice(userIndex, 1);
                     processedEntries.unshift(userEntry);
                 }
-            } else if (pageNum === 1) {
-                // If user is not in top 20, we don't necessarily have their exact rank for rewards mode 
-                // unless we sync user with rewards mode on. 
-                // For simplicity, we only pin if they are already in the list or we have score rank.
-                // In rewards mode, if they aren't in top 20, we might skip pinning for now.
+            } else if (pageNum === 1 && sort === 'score') { // Only pin user automatically in score mode if not in top 20
+                // Construct entry from currentUser state and prepend
+                const userEntry: LeaderboardEntry = {
+                    id: currentUser.fid?.toString() || 'user',
+                    username: currentUser.username,
+                    score: currentUser.score,
+                    rewards: currentUser.rewards,
+                    rank: currentRank,
+                    pfpUrl: currentUser.pfpUrl,
+                    isCurrentUser: true,
+                    streak: currentUser.streak,
+                    neynarScore: currentUser.neynarScore || 0,
+                    teamScore: currentUser.teamScore || 0,
+                    primaryAddress: currentUser.primaryAddress
+                };
+                processedEntries.unshift(userEntry);
             }
             setData(processedEntries);
         } else {
+            // Append new entries, filtering out any potential duplicates
             setData(prev => {
                 const existingIds = new Set(prev.map(e => e.id));
                 const uniqueNewEntries = entries.filter(e => !existingIds.has(e.id));
@@ -68,13 +85,12 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
     }
   };
 
-  // Re-fetch when sort changes
-  const handleSortChange = (newSort: SortMode) => {
-      if (newSort === sortBy) return;
-      setSortBy(newSort);
-      setPage(1);
-      setHasMore(true);
-      fetchLeaderboard(1, true, newSort);
+  const handleSortChange = (newSort: SortBy) => {
+    if (newSort === sortBy) return;
+    setSortBy(newSort);
+    setPage(1);
+    setHasMore(true);
+    fetchLeaderboard(1, true, newSort);
   };
 
   // Initial fetch
@@ -111,120 +127,116 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
   }, [hasMore, loading, loadingMore]);
 
   return (
-    <div className="w-full max-w-md mx-auto h-full flex flex-col overflow-hidden pb-32">
-      <div className="px-4 pt-4 flex-shrink-0">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-                <Trophy className="w-8 h-8 text-yellow-400" />
-                <h2 className="text-2xl font-bold">Top Players</h2>
-            </div>
-          </div>
+    <div className="w-full max-w-md mx-auto h-full overflow-y-auto pb-32 px-4 scroll-smooth">
+      <div className="flex items-center justify-between mb-6 mt-4">
+        <div className="flex items-center gap-3">
+          <Trophy className="w-8 h-8 text-yellow-400" />
+          <h2 className="text-2xl font-bold">Top Players</h2>
+        </div>
 
-          {/* Sort Toggle */}
-          <div className="flex bg-slate-900/50 p-1 rounded-xl border border-slate-800 mb-6">
-              <button 
-                onClick={() => handleSortChange('score')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-bold text-sm transition-all ${sortBy === 'score' ? 'bg-sky-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
-              >
-                  <Star size={16} /> Power
-              </button>
-              <button 
-                onClick={() => handleSortChange('rewards')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-bold text-sm transition-all ${sortBy === 'rewards' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
-              >
-                  <Banknote size={16} /> Earned
-              </button>
-          </div>
+        {/* Sort Toggle */}
+        <div className="flex items-center gap-1 bg-slate-800/80 p-1 rounded-full border border-slate-700/50">
+          <button 
+            onClick={() => handleSortChange('score')}
+            className={`p-1.5 rounded-full transition-all ${sortBy === 'score' ? 'bg-sky-500 text-white shadow-lg' : 'text-slate-500 hover:text-slate-400'}`}
+          >
+            <Zap size={18} fill={sortBy === 'score' ? 'currentColor' : 'none'} />
+          </button>
+          <button 
+            onClick={() => handleSortChange('rewards')}
+            className={`p-1.5 rounded-full transition-all ${sortBy === 'rewards' ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-500 hover:text-slate-400'}`}
+          >
+            <Banknote size={18} fill={sortBy === 'rewards' ? 'currentColor' : 'none'} />
+          </button>
+        </div>
       </div>
 
-      <div className="flex-grow overflow-y-auto px-4 scroll-smooth">
-          {loading ? (
-              <div className="flex justify-center py-10">
-                  <Loader2 className="animate-spin w-8 h-8 text-sky-500" />
-              </div>
-          ) : (
-            <div className="space-y-3">
-                {data.map((entry) => {
-                    const isTarget = currentTargetAddress && entry.primaryAddress && 
-                                   currentTargetAddress.toLowerCase() === entry.primaryAddress.toLowerCase();
-                    
-                    // Calculate display rewards if entry is today's target
-                    let rewardsToShow = entry.rewards;
-                    if (isTarget && currentTargetCollectedFee && currentUser.streamPercent && currentUser.unitPrice) {
-                        const pendingWei = (currentTargetCollectedFee * BigInt(currentUser.streamPercent)) / 100n;
-                        const pendingUsd = (Number(pendingWei) / 1e18) * currentUser.unitPrice;
-                        rewardsToShow += pendingUsd;
-                    }
+      {loading ? (
+          <div className="flex justify-center py-10">
+              <Loader2 className="animate-spin w-8 h-8 text-sky-500" />
+          </div>
+      ) : (
+        <div className="space-y-3">
+            {data.map((entry) => {
+                const isTarget = currentTargetAddress && entry.primaryAddress && 
+                               currentTargetAddress.toLowerCase() === entry.primaryAddress.toLowerCase();
+                
+                // Calculate display rewards if entry is today's target
+                let rewardsToShow = entry.rewards;
+                if (isTarget && currentTargetCollectedFee && currentUser.streamPercent && currentUser.unitPrice) {
+                    const pendingWei = (currentTargetCollectedFee * BigInt(currentUser.streamPercent)) / 100n;
+                    const pendingUsd = (Number(pendingWei) / 1e18) * currentUser.unitPrice;
+                    rewardsToShow += pendingUsd;
+                }
 
-                    return (
-                        <button
-                            key={`${entry.id}-${entry.rank}-${sortBy}`}
-                            onClick={() => onPlayerSelect(entry)}
-                            className={`w-full flex items-center p-4 rounded-xl border text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
-                            entry.isCurrentUser
-                                ? 'bg-sky-900/30 border-sky-500/50 shadow-[0_0_15px_rgba(14,165,233,0.15)] sticky top-0 z-10 backdrop-blur-md mb-2' 
-                                : 'bg-slate-800/40 border-slate-700/50 hover:bg-slate-800/60'
-                            }`}
-                        >
-                            <div className="flex-shrink-0 w-8 text-center font-bold text-lg">
-                            {entry.rank === 1 && <Medal className="w-6 h-6 text-yellow-400 mx-auto" />}
-                            {entry.rank === 2 && <Medal className="w-6 h-6 text-gray-300 mx-auto" />}
-                            {entry.rank === 3 && <Medal className="w-6 h-6 text-amber-700 mx-auto" />}
-                            {entry.rank > 3 && <span className="text-slate-500">#{entry.rank}</span>}
+                return (
+                    <button
+                        key={`${entry.id}-${entry.rank}-${sortBy}`} // Add sortBy to key to force fresh render on toggle
+                        onClick={() => onPlayerSelect(entry)}
+                        className={`w-full flex items-center p-4 rounded-xl border text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+                        entry.isCurrentUser
+                            ? 'bg-sky-900/30 border-sky-500/50 shadow-[0_0_15px_rgba(14,165,233,0.15)] sticky top-0 z-10 backdrop-blur-md mb-2' 
+                            : 'bg-slate-800/40 border-slate-700/50 hover:bg-slate-800/60'
+                        }`}
+                    >
+                        <div className="flex-shrink-0 w-8 text-center font-bold text-lg">
+                        {entry.rank === 1 && <Medal className="w-6 h-6 text-yellow-400 mx-auto" />}
+                        {entry.rank === 2 && <Medal className="w-6 h-6 text-gray-300 mx-auto" />}
+                        {entry.rank === 3 && <Medal className="w-6 h-6 text-amber-700 mx-auto" />}
+                        {entry.rank > 3 && <span className="text-slate-500">#{entry.rank}</span>}
+                        </div>
+
+                        <div className="ml-3 flex-shrink-0">
+                        {entry.pfpUrl ? (
+                            <img 
+                                src={entry.pfpUrl} 
+                                alt={entry.username} 
+                                className="w-10 h-10 rounded-full border border-slate-600" 
+                            />
+                        ) : (
+                            <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center border border-slate-600">
+                                <User size={20} className="text-slate-400" />
                             </div>
+                        )}
+                        </div>
 
-                            <div className="ml-3 flex-shrink-0">
-                            {entry.pfpUrl ? (
-                                <img 
-                                    src={entry.pfpUrl} 
-                                    alt={entry.username} 
-                                    className="w-10 h-10 rounded-full border border-slate-600" 
-                                />
-                            ) : (
-                                <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center border border-slate-600">
-                                    <User size={20} className="text-slate-400" />
-                                </div>
-                            )}
-                            </div>
-
-                            <div className="ml-3 flex-grow min-w-0">
-                                <div className={`font-semibold flex items-center gap-2 truncate ${isTarget ? 'animate-shimmer' : 'text-slate-100'}`}>
-                                    {entry.username}
-                                    {entry.isCurrentUser && (
-                                        <span className="text-[10px] bg-sky-500 text-white px-1.5 py-0.5 rounded uppercase font-bold tracking-wide flex-shrink-0">YOU</span>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className={`text-right font-mono font-bold flex-shrink-0 pl-2 flex items-center justify-end gap-1.5 ${sortBy === 'rewards' ? 'text-emerald-400' : 'text-sky-400'}`}>
-                                {sortBy === 'rewards' ? (
-                                    `$${rewardsToShow.toFixed(2)}`
-                                ) : (
-                                    <>
-                                        {entry.streak > 6 && (
-                                            <Flame size={14} className="text-orange-500 fill-orange-500 animate-pulse" />
-                                        )}
-                                        {entry.score.toLocaleString()}
-                                    </>
+                        <div className="ml-3 flex-grow min-w-0">
+                            <div className={`font-semibold flex items-center gap-2 truncate ${isTarget ? 'animate-shimmer' : 'text-slate-100'}`}>
+                                {entry.username}
+                                {entry.isCurrentUser && (
+                                    <span className="text-[10px] bg-sky-500 text-white px-1.5 py-0.5 rounded uppercase font-bold tracking-wide flex-shrink-0">YOU</span>
                                 )}
                             </div>
-                        </button>
-                    );
-                })}
+                        </div>
 
-                {/* Intersection Observer Target */}
-                <div ref={observerTarget} className="h-4 w-full flex justify-center items-center py-4">
-                    {loadingMore && <Loader2 className="animate-spin w-6 h-6 text-sky-500/50" />}
-                </div>
-                
-                {!hasMore && data.length > 5 && (
-                    <div className="text-center text-slate-500 text-sm py-4 pb-8">
-                        End of Leaderboard
-                    </div>
-                )}
+                        <div className={`text-right font-mono font-bold flex-shrink-0 pl-2 flex items-center justify-end gap-1.5 ${sortBy === 'rewards' ? 'text-emerald-400' : 'text-sky-400'}`}>
+                            {sortBy === 'rewards' ? (
+                                `$${rewardsToShow.toFixed(2)}`
+                            ) : (
+                                <>
+                                    {entry.streak > 6 && (
+                                        <Flame size={14} className="text-orange-500 fill-orange-500 animate-pulse" />
+                                    )}
+                                    {entry.score.toLocaleString()}
+                                </>
+                            )}
+                        </div>
+                    </button>
+                );
+            })}
+
+            {/* Intersection Observer Target */}
+            <div ref={observerTarget} className="h-4 w-full flex justify-center items-center py-4">
+                {loadingMore && <Loader2 className="animate-spin w-6 h-6 text-sky-500/50" />}
             </div>
-          )}
-      </div>
+            
+            {!hasMore && data.length > 20 && (
+                <div className="text-center text-slate-500 text-sm py-4 pb-8">
+                    End of Leaderboard
+                </div>
+            )}
+        </div>
+      )}
     </div>
   );
 };
