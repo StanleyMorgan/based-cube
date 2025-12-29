@@ -132,29 +132,23 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
 
   return (
     <div className="w-full max-w-md mx-auto h-full overflow-y-auto pb-32 px-4 scroll-smooth">
-      <div className="flex items-center justify-between mb-4 mt-4">
+      <div className="flex items-center justify-between mb-6 mt-4">
         <div className="flex items-center gap-3">
             <Trophy className="w-8 h-8 text-yellow-400" />
             <h2 className="text-2xl font-bold">Top Players</h2>
         </div>
-      </div>
 
-      {/* Sort Toggle */}
-      <div className="flex bg-slate-800/50 p-1 rounded-xl mb-6 w-fit border border-slate-700/50">
-          <button 
-              onClick={() => handleSortChange('score')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${sortBy === 'score' ? 'bg-sky-600 text-white shadow-lg shadow-sky-900/40' : 'text-slate-400 hover:text-slate-200'}`}
-          >
-              <Zap size={14} className={sortBy === 'score' ? 'fill-white' : ''} />
-              SCORE
-          </button>
-          <button 
-              onClick={() => handleSortChange('rewards')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${sortBy === 'rewards' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/40' : 'text-slate-400 hover:text-slate-200'}`}
-          >
-              <Banknote size={14} className={sortBy === 'rewards' ? 'fill-white' : ''} />
-              REWARDS
-          </button>
+        {/* Sort Toggle Button */}
+        <button 
+            onClick={() => handleSortChange(sortBy === 'score' ? 'rewards' : 'score')}
+            className={`p-2.5 rounded-xl border transition-all duration-200 flex items-center justify-center shadow-lg active:scale-95 ${
+                sortBy === 'score' 
+                ? 'bg-sky-600/20 border-sky-500/50 text-sky-400' 
+                : 'bg-emerald-600/20 border-emerald-500/50 text-emerald-400'
+            }`}
+        >
+            {sortBy === 'score' ? <Zap size={22} className="fill-sky-400/20" /> : <Banknote size={22} className="fill-emerald-400/20" />}
+        </button>
       </div>
 
       {loading ? (
