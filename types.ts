@@ -63,3 +63,5 @@ export enum Tab {
   LEADERBOARD = 'LEADERBOARD',
   TASKS = 'TASKS',
 }
+
+export type LeaderboardSort = 'score' | 'rewards';

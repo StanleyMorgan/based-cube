@@ -1,3 +1,4 @@
+
 import { createPool } from '@vercel/postgres';
 
 export default async function handler(request, response) {
@@ -6,20 +7,28 @@ export default async function handler(request, response) {
   });
 
   try {
-    const { page = 1, limit = 20 } = request.query;
+    const { page = 1, limit = 20, sort = 'score' } = request.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
     const limitVal = parseInt(limit);
+    const isRewards = sort === 'rewards';
 
-    // Rank logic: Score higher OR (Score equal AND Updated earlier) OR (Score equal AND Updated equal AND FID lower)
+    // Rank logic: Higher score/rewards OR (Equal value AND Updated earlier) OR (Equal value AND Updated equal AND FID lower)
     // Plus fetch Team Avatar URLs as JSON objects
     const result = await pool.sql`
       SELECT u1.fid, u1.username, u1.score, u1.rewards, u1.pfp_url, u1.streak, u1.last_click_date, u1.neynar_score, u1.neynar_power_change, u1.referrer_fid, u1.primary_address,
       (
         SELECT COUNT(*) + 1 
         FROM users u2 
-        WHERE u2.score > u1.score 
-           OR (u2.score = u1.score AND u2.updated_at < u1.updated_at)
-           OR (u2.score = u1.score AND u2.updated_at = u1.updated_at AND u2.fid < u1.fid)
+        WHERE (CASE WHEN ${isRewards} THEN u2.rewards > u1.rewards ELSE u2.score > u1.score END)
+           OR (
+             (CASE WHEN ${isRewards} THEN u2.rewards = u1.rewards ELSE u2.score = u1.score END)
+             AND u2.updated_at < u1.updated_at
+           )
+           OR (
+             (CASE WHEN ${isRewards} THEN u2.rewards = u1.rewards ELSE u2.score = u1.score END)
+             AND u2.updated_at = u1.updated_at 
+             AND u2.fid < u1.fid
+           )
       ) as rank,
       (
          CASE WHEN EXISTS (SELECT 1 FROM users ref WHERE ref.referrer_fid = u1.fid) THEN 1 ELSE 0 END
@@ -39,7 +48,9 @@ export default async function handler(request, response) {
         ) sub
       ) as referral_data
       FROM users u1
-      ORDER BY score DESC, updated_at ASC, fid ASC
+      ORDER BY 
+        (CASE WHEN ${isRewards} THEN rewards ELSE score END) DESC, 
+        updated_at ASC, fid ASC
       LIMIT ${limitVal} OFFSET ${offset};
     `;
     

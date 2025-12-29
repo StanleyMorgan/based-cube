@@ -1,4 +1,5 @@
-import { LeaderboardEntry, UserState, TeamMember, HistoryEntry, Task } from '../types';
+
+import { LeaderboardEntry, UserState, TeamMember, HistoryEntry, Task, LeaderboardSort } from '../types';
 
 // Helper for date calculations on frontend
 export const getTodayString = (): string => {
@@ -131,8 +132,8 @@ export const api = {
     };
   },
 
-  getLeaderboard: async (currentFid?: number, page: number = 1): Promise<LeaderboardEntry[]> => {
-    const res = await fetch(`/api/leaderboard?page=${page}&limit=20`);
+  getLeaderboard: async (currentFid?: number, page: number = 1, sort: LeaderboardSort = 'score'): Promise<LeaderboardEntry[]> => {
+    const res = await fetch(`/api/leaderboard?page=${page}&limit=20&sort=${sort}`);
     if (!res.ok) return [];
     
     const data: any[] = await res.json();
