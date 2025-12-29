@@ -1,4 +1,3 @@
-
 import { LeaderboardEntry, UserState, TeamMember, HistoryEntry, Task } from '../types';
 
 // Helper for date calculations on frontend
@@ -132,8 +131,8 @@ export const api = {
     };
   },
 
-  getLeaderboard: async (currentFid?: number, page: number = 1, sortBy: 'score' | 'rewards' = 'score'): Promise<LeaderboardEntry[]> => {
-    const res = await fetch(`/api/leaderboard?page=${page}&limit=20&sort=${sortBy}`);
+  getLeaderboard: async (currentFid?: number, page: number = 1): Promise<LeaderboardEntry[]> => {
+    const res = await fetch(`/api/leaderboard?page=${page}&limit=20`);
     if (!res.ok) return [];
     
     const data: any[] = await res.json();
@@ -167,10 +166,10 @@ export const api = {
       rewards: parseFloat(data.rewards || 0),
       rank: data.rank,
       pfpUrl: data.pfp_url,
-      isCurrentUser: false,
+      isCurrentUser: false, // In modal context typically not current user, or doesn't matter
       streak: data.streak,
       neynarScore: data.neynar_score || 0,
-      neynarPowerChange: data.neynar_power_change || 0,
+      neynarPowerChange: data.neynarPowerChange || 0,
       teamScore: data.teamScore || 0,
       teamMembers: data.teamMembers || [],
       primaryAddress: data.primary_address

@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { LeaderboardEntry, UserState } from '../types';
 import { api } from '../services/storage';
-import { Trophy, Medal, User, Loader2, Flame, Zap, Banknote } from 'lucide-react';
+import { Trophy, Medal, User, Loader2, Flame } from 'lucide-react';
 
 interface LeaderboardProps {
   currentUser: UserState;
@@ -12,25 +12,22 @@ interface LeaderboardProps {
   onPlayerSelect: (player: LeaderboardEntry) => void;
 }
 
-type SortBy = 'score' | 'rewards';
-
 const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, currentTargetAddress, currentTargetCollectedFee, onPlayerSelect }) => {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [sortBy, setSortBy] = useState<SortBy>('score');
   
   // Ref for the intersection observer target
   const observerTarget = useRef<HTMLDivElement>(null);
 
-  const fetchLeaderboard = async (pageNum: number, isInitial: boolean = false, sort: SortBy = sortBy) => {
+  const fetchLeaderboard = async (pageNum: number, isInitial: boolean = false) => {
     try {
         if (isInitial) setLoading(true);
         else setLoadingMore(true);
 
-        const entries = await api.getLeaderboard(currentUser.fid, pageNum, sort);
+        const entries = await api.getLeaderboard(currentUser.fid, pageNum);
         
         // If we got fewer than 20 entries, we've reached the end
         if (entries.length < 20) {
@@ -51,7 +48,10 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
                     processedEntries.splice(userIndex, 1);
                     processedEntries.unshift(userEntry);
                 }
-            } else if (pageNum === 1 && sort === 'score') { // Only pin user automatically in score mode if not in top 20
+            } else if (currentRank > 0) { // If user has a rank
+                // User is not in this fetched list.
+                // If it's page 1, check if we should show them pinned at top
+                
                 // Construct entry from currentUser state and prepend
                 const userEntry: LeaderboardEntry = {
                     id: currentUser.fid?.toString() || 'user',
@@ -70,8 +70,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
             }
             setData(processedEntries);
         } else {
-            // Append new entries, filtering out any potential duplicates
+            // Append new entries, filtering out any potential duplicates (e.g. pinned user from page 1 appearing naturally on page X)
             setData(prev => {
+                // Create a Set of existing IDs to prevent duplicates
                 const existingIds = new Set(prev.map(e => e.id));
                 const uniqueNewEntries = entries.filter(e => !existingIds.has(e.id));
                 return [...prev, ...uniqueNewEntries];
@@ -85,20 +86,12 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
     }
   };
 
-  const handleSortChange = (newSort: SortBy) => {
-    if (newSort === sortBy) return;
-    setSortBy(newSort);
-    setPage(1);
-    setHasMore(true);
-    fetchLeaderboard(1, true, newSort);
-  };
-
   // Initial fetch
   useEffect(() => {
     setPage(1);
     setHasMore(true);
     fetchLeaderboard(1, true);
-  }, [currentUser.fid]); 
+  }, [currentUser.fid, currentRank]); // Reload if user identity changes
 
   // Infinite Scroll Observer
   useEffect(() => {
@@ -112,7 +105,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
           });
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 } // Trigger when 10% of the target is visible
     );
 
     if (observerTarget.current) {
@@ -128,27 +121,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
 
   return (
     <div className="w-full max-w-md mx-auto h-full overflow-y-auto pb-32 px-4 scroll-smooth">
-      <div className="flex items-center justify-between mb-6 mt-4">
-        <div className="flex items-center gap-3">
-          <Trophy className="w-8 h-8 text-yellow-400" />
-          <h2 className="text-2xl font-bold">Top Players</h2>
-        </div>
-
-        {/* Sort Toggle */}
-        <div className="flex items-center gap-1 bg-slate-800/80 p-1 rounded-full border border-slate-700/50">
-          <button 
-            onClick={() => handleSortChange('score')}
-            className={`p-1.5 rounded-full transition-all ${sortBy === 'score' ? 'bg-sky-500 text-white shadow-lg' : 'text-slate-500 hover:text-slate-400'}`}
-          >
-            <Zap size={18} fill={sortBy === 'score' ? 'currentColor' : 'none'} />
-          </button>
-          <button 
-            onClick={() => handleSortChange('rewards')}
-            className={`p-1.5 rounded-full transition-all ${sortBy === 'rewards' ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-500 hover:text-slate-400'}`}
-          >
-            <Banknote size={18} fill={sortBy === 'rewards' ? 'currentColor' : 'none'} />
-          </button>
-        </div>
+      <div className="flex items-center gap-3 mb-6 mt-4">
+        <Trophy className="w-8 h-8 text-yellow-400" />
+        <h2 className="text-2xl font-bold">Top Players</h2>
       </div>
 
       {loading ? (
@@ -171,7 +146,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
 
                 return (
                     <button
-                        key={`${entry.id}-${entry.rank}-${sortBy}`} // Add sortBy to key to force fresh render on toggle
+                        key={`${entry.id}-${entry.rank}`} // Unique key
                         onClick={() => onPlayerSelect(entry)}
                         className={`w-full flex items-center p-4 rounded-xl border text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
                         entry.isCurrentUser
@@ -209,17 +184,11 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
                             </div>
                         </div>
 
-                        <div className={`text-right font-mono font-bold flex-shrink-0 pl-2 flex items-center justify-end gap-1.5 ${sortBy === 'rewards' ? 'text-emerald-400' : 'text-sky-400'}`}>
-                            {sortBy === 'rewards' ? (
-                                `$${rewardsToShow.toFixed(2)}`
-                            ) : (
-                                <>
-                                    {entry.streak > 6 && (
-                                        <Flame size={14} className="text-orange-500 fill-orange-500 animate-pulse" />
-                                    )}
-                                    {entry.score.toLocaleString()}
-                                </>
+                        <div className="text-right font-mono font-bold text-emerald-400 flex-shrink-0 pl-2 flex items-center justify-end gap-1.5">
+                            {entry.streak > 6 && (
+                                <Flame size={14} className="text-orange-500 fill-orange-500 animate-pulse" />
                             )}
+                            {entry.score.toLocaleString()}
                         </div>
                     </button>
                 );
