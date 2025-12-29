@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { LeaderboardEntry, UserState, LeaderboardSort } from '../types';
 import { api } from '../services/storage';
-import { Trophy, Medal, User, Loader2, Flame, Banknote, Zap } from 'lucide-react';
+import { Trophy, Medal, User, Loader2, Flame, CircleDollarSign, Zap } from 'lucide-react';
 
 interface LeaderboardProps {
   currentUser: UserState;
@@ -147,7 +147,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
                 : 'bg-emerald-600/20 border-emerald-500/50 text-emerald-400'
             }`}
         >
-            {sortBy === 'score' ? <Zap size={22} className="fill-sky-400/20" /> : <Banknote size={22} className="fill-emerald-400/20" />}
+            {sortBy === 'score' ? <Zap size={22} className="fill-sky-400/20" /> : <CircleDollarSign size={22} className="fill-emerald-400/20" />}
         </button>
       </div>
 

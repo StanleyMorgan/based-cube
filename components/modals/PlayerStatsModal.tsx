@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Zap, Flame, Star, User, Users, Loader2, Banknote } from 'lucide-react';
+import { Zap, Flame, Star, User, Users, Loader2, CircleDollarSign } from 'lucide-react';
 import { LeaderboardEntry } from '../../types';
 import { api } from '../../services/storage';
 import { sdk } from '@farcaster/miniapp-sdk';
@@ -188,7 +188,7 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose, on
                             <div className="p-4 flex justify-between items-center hover:bg-slate-800/30 transition-colors">
                                 <div className="flex items-center gap-3 text-emerald-400">
                                     <div className="p-2 rounded-full bg-emerald-500/10">
-                                        <Banknote size={20} className="fill-emerald-400/20" />
+                                        <CircleDollarSign size={20} className="fill-emerald-400/20" />
                                     </div>
                                     <span className="font-bold text-base">Earned</span>
                                 </div>
