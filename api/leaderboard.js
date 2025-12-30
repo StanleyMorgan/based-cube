@@ -1,5 +1,8 @@
 
 import { createPool } from '@vercel/postgres';
+import { createPublicClient, http } from 'viem';
+import { base } from 'viem/chains';
+import { GMLoggerABI } from '../src/abi';
 
 export default async function handler(request, response) {
   const pool = createPool({
@@ -12,6 +15,42 @@ export default async function handler(request, response) {
     const limitVal = parseInt(limit);
     const isRewards = sort === 'rewards';
 
+    // Live Target Logic for Dynamic Sorting
+    let targetAddr = '0x0000000000000000000000000000000000000000';
+    let pendingUsd = 0;
+
+    const publicClient = createPublicClient({
+      chain: base,
+      transport: http()
+    });
+
+    const contractRes = await pool.sql`
+      SELECT contract_address, stream_percent, unit_price 
+      FROM contracts 
+      ORDER BY version DESC LIMIT 1
+    `;
+    const contract = contractRes.rows[0];
+
+    if (contract && contract.contract_address) {
+      try {
+        const status = await publicClient.readContract({
+          address: contract.contract_address,
+          abi: GMLoggerABI,
+          functionName: 'getCurrentDayStatus'
+        });
+        
+        targetAddr = status[1];
+        const collectedFee = status[3];
+        const streamPercent = contract.stream_percent || 0;
+        const unitPrice = parseFloat(contract.unit_price || 0);
+
+        const pendingWei = (BigInt(collectedFee) * BigInt(streamPercent)) / 100n;
+        pendingUsd = (Number(pendingWei) / 1e18) * unitPrice;
+      } catch (e) {
+        console.error("Contract read failed", e);
+      }
+    }
+
     // Rank logic: Higher score/rewards OR (Equal value AND Updated earlier) OR (Equal value AND Updated equal AND FID lower)
     // Plus fetch Team Avatar URLs as JSON objects
     const result = await pool.sql`
@@ -19,13 +58,22 @@ export default async function handler(request, response) {
       (
         SELECT COUNT(*) + 1 
         FROM users u2 
-        WHERE (CASE WHEN ${isRewards} THEN u2.rewards > u1.rewards ELSE u2.score > u1.score END)
+        WHERE (CASE WHEN ${isRewards} THEN 
+                 (CASE WHEN LOWER(u2.primary_address) = LOWER(${targetAddr}) THEN u2.rewards + ${pendingUsd} ELSE u2.rewards END) > 
+                 (CASE WHEN LOWER(u1.primary_address) = LOWER(${targetAddr}) THEN u1.rewards + ${pendingUsd} ELSE u1.rewards END)
+               ELSE u2.score > u1.score END)
            OR (
-             (CASE WHEN ${isRewards} THEN u2.rewards = u1.rewards ELSE u2.score = u1.score END)
+             (CASE WHEN ${isRewards} THEN 
+                (CASE WHEN LOWER(u2.primary_address) = LOWER(${targetAddr}) THEN u2.rewards + ${pendingUsd} ELSE u2.rewards END) = 
+                (CASE WHEN LOWER(u1.primary_address) = LOWER(${targetAddr}) THEN u1.rewards + ${pendingUsd} ELSE u1.rewards END)
+              ELSE u2.score = u1.score END)
              AND u2.updated_at > u1.updated_at
            )
            OR (
-             (CASE WHEN ${isRewards} THEN u2.rewards = u1.rewards ELSE u2.score = u1.score END)
+             (CASE WHEN ${isRewards} THEN 
+                (CASE WHEN LOWER(u2.primary_address) = LOWER(${targetAddr}) THEN u2.rewards + ${pendingUsd} ELSE u2.rewards END) = 
+                (CASE WHEN LOWER(u1.primary_address) = LOWER(${targetAddr}) THEN u1.rewards + ${pendingUsd} ELSE u1.rewards END)
+              ELSE u2.score = u1.score END)
              AND u2.updated_at = u1.updated_at 
              AND u2.fid < u1.fid
            )
@@ -49,7 +97,10 @@ export default async function handler(request, response) {
       ) as referral_data
       FROM users u1
       ORDER BY 
-        (CASE WHEN ${isRewards} THEN rewards ELSE score END) DESC, 
+        (CASE WHEN ${isRewards} 
+              THEN (CASE WHEN LOWER(u1.primary_address) = LOWER(${targetAddr}) THEN rewards + ${pendingUsd} ELSE rewards END)
+              ELSE score 
+         END) DESC, 
         updated_at DESC, fid ASC
       LIMIT ${limitVal} OFFSET ${offset};
     `;
