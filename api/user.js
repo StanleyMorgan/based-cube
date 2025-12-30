@@ -48,7 +48,7 @@ export default async function handler(request, response) {
           SELECT COUNT(*) + 1 
           FROM users u2 
           WHERE u2.score > u1.score 
-             OR (u2.score = u1.score AND u2.updated_at < u1.updated_at)
+             OR (u2.score = u1.score AND u2.updated_at > u1.updated_at)
              OR (u2.score = u1.score AND u2.updated_at = u1.updated_at AND u2.fid < u1.fid)
         ) as rank,
         (
@@ -192,7 +192,7 @@ export default async function handler(request, response) {
             SELECT COUNT(*) + 1
             FROM users
             WHERE score > ${userRaw.score} 
-               OR (score = ${userRaw.score} AND updated_at < ${userRaw.updated_at})
+               OR (score = ${userRaw.score} AND updated_at > ${userRaw.updated_at})
                OR (score = ${userRaw.score} AND updated_at = ${userRaw.updated_at} AND fid < ${userRaw.fid})
           ) as rank,
           (

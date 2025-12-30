@@ -22,7 +22,7 @@ export default async function handler(request, response) {
         WHERE (CASE WHEN ${isRewards} THEN u2.rewards > u1.rewards ELSE u2.score > u1.score END)
            OR (
              (CASE WHEN ${isRewards} THEN u2.rewards = u1.rewards ELSE u2.score = u1.score END)
-             AND u2.updated_at < u1.updated_at
+             AND u2.updated_at > u1.updated_at
            )
            OR (
              (CASE WHEN ${isRewards} THEN u2.rewards = u1.rewards ELSE u2.score = u1.score END)
@@ -50,7 +50,7 @@ export default async function handler(request, response) {
       FROM users u1
       ORDER BY 
         (CASE WHEN ${isRewards} THEN rewards ELSE score END) DESC, 
-        updated_at ASC, fid ASC
+        updated_at DESC, fid ASC
       LIMIT ${limitVal} OFFSET ${offset};
     `;
     

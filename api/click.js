@@ -1,3 +1,4 @@
+
 import { createPool } from '@vercel/postgres';
 
 export default async function handler(request, response) {
@@ -93,7 +94,7 @@ export default async function handler(request, response) {
       SELECT COUNT(*) + 1 as rank
       FROM users
       WHERE score > ${updatedUser.score} 
-         OR (score = ${updatedUser.score} AND updated_at < ${updatedUser.updated_at})
+         OR (score = ${updatedUser.score} AND updated_at > ${updatedUser.updated_at})
          OR (score = ${updatedUser.score} AND updated_at = ${updatedUser.updated_at} AND fid < ${updatedUser.fid})
     `;
 
