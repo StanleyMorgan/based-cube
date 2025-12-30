@@ -7,20 +7,6 @@ export default async function handler(request, response) {
   });
 
   try {
-    // Ensure the column exists (Idempotent)
-    await pool.sql`
-      ALTER TABLE users ADD COLUMN IF NOT EXISTS neynar_power_change INTEGER DEFAULT 0;
-    `;
-    await pool.sql`
-      ALTER TABLE users ADD COLUMN IF NOT EXISTS version INTEGER DEFAULT 1;
-    `;
-    await pool.sql`
-      ALTER TABLE users ADD COLUMN IF NOT EXISTS stream_target BOOLEAN DEFAULT false;
-    `;
-    await pool.sql`
-      ALTER TABLE users ADD COLUMN IF NOT EXISTS rewards NUMERIC(20,2) DEFAULT 0;
-    `;
-
     // Helper to calculate effective streak based on time
     const getEffectiveStreak = (user) => {
         if (!user.last_click_date) return user.streak;
@@ -37,8 +23,10 @@ export default async function handler(request, response) {
     };
 
     if (request.method === 'GET') {
-      const { fid } = request.query;
+      const { fid, target = null, pendingRewards = 0 } = request.query;
       if (!fid) return response.status(400).json({ error: 'FID is required' });
+
+      const pendingVal = parseFloat(pendingRewards);
 
       // Get user, rank, and team score logic + Team Avatars (as JSON objects)
       const result = await pool.sql`
@@ -145,7 +133,6 @@ export default async function handler(request, response) {
                     const newScore = data.users[0]?.experimental?.neynar_user_score || 0;
                     
                     // Calculate change in Power (Neynar Score * 100)
-                    // Use Math.round to handle precision errors (0.57 * 100 = 57)
                     const oldPower = Math.round((existingUser?.neynar_score || 0) * 100);
                     const newPower = Math.round(newScore * 100);
                     
