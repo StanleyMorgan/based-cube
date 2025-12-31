@@ -7,7 +7,7 @@ export default async function handler(request, response) {
   });
 
   try {
-    // Ensure the column exists (Idempotent)
+    // Ensure columns exist (Idempotent)
     await pool.sql`
       ALTER TABLE users ADD COLUMN IF NOT EXISTS neynar_power_change INTEGER DEFAULT 0;
     `;
@@ -19,6 +19,9 @@ export default async function handler(request, response) {
     `;
     await pool.sql`
       ALTER TABLE users ADD COLUMN IF NOT EXISTS rewards NUMERIC(20,2) DEFAULT 0;
+    `;
+    await pool.sql`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS actual_rewards NUMERIC(20,2) DEFAULT 0;
     `;
 
     // Helper to calculate effective streak based on time
@@ -99,7 +102,7 @@ export default async function handler(request, response) {
         streamPercent: user.stream_percent || 0,
         unitPrice: parseFloat(user.unit_price || 0),
         stream_target: user.stream_target,
-        rewards: user.rewards || 0
+        rewards: parseFloat(user.actual_rewards || user.rewards || 0)
       });
     }
 
@@ -109,7 +112,7 @@ export default async function handler(request, response) {
 
       // 1. Check existing user data...
       const existingUserRes = await pool.sql`
-        SELECT neynar_score, neynar_last_updated, referrer_fid, neynar_power_change, stream_target, rewards
+        SELECT neynar_score, neynar_last_updated, referrer_fid, neynar_power_change, stream_target, rewards, actual_rewards
         FROM users 
         WHERE fid = ${fid}
       `;
@@ -143,14 +146,9 @@ export default async function handler(request, response) {
                 const data = await neynarRes.json();
                 if (data.users && data.users.length > 0) {
                     const newScore = data.users[0]?.experimental?.neynar_user_score || 0;
-                    
-                    // Calculate change in Power (Neynar Score * 100)
-                    // Use Math.round to handle precision errors (0.57 * 100 = 57)
                     const oldPower = Math.round((existingUser?.neynar_score || 0) * 100);
                     const newPower = Math.round(newScore * 100);
-                    
                     neynarPowerChange = newPower - oldPower;
-                    
                     neynarScore = newScore;
                     neynarLastUpdated = new Date().toISOString(); 
                 }
@@ -167,8 +165,8 @@ export default async function handler(request, response) {
       }
 
       const upsertResult = await pool.sql`
-        INSERT INTO users (fid, username, pfp_url, score, streak, neynar_score, neynar_last_updated, primary_address, referrer_fid, neynar_power_change, rewards)
-        VALUES (${fid}, ${username}, ${pfpUrl || null}, 0, 0, ${neynarScore}, ${neynarLastUpdated}, ${primaryAddress || null}, ${referrerValue}, ${neynarPowerChange}, 0)
+        INSERT INTO users (fid, username, pfp_url, score, streak, neynar_score, neynar_last_updated, primary_address, referrer_fid, neynar_power_change, rewards, actual_rewards)
+        VALUES (${fid}, ${username}, ${pfpUrl || null}, 0, 0, ${neynarScore}, ${neynarLastUpdated}, ${primaryAddress || null}, ${referrerValue}, ${neynarPowerChange}, 0, 0)
         ON CONFLICT (fid) 
         DO UPDATE SET 
           username = EXCLUDED.username,
@@ -256,7 +254,7 @@ export default async function handler(request, response) {
         streamPercent: stats.stream_percent || 0,
         unitPrice: parseFloat(stats.unit_price || 0),
         stream_target: userRaw.stream_target,
-        rewards: userRaw.rewards || 0
+        rewards: parseFloat(userRaw.actual_rewards || userRaw.rewards || 0)
       });
     }
 

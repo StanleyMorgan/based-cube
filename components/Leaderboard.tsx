@@ -161,13 +161,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
                 const isTarget = currentTargetAddress && entry.primaryAddress && 
                                currentTargetAddress.toLowerCase() === entry.primaryAddress.toLowerCase();
                 
-                // Calculate display rewards if entry is today's target
-                let rewardsToShow = entry.rewards;
-                if (isTarget && currentTargetCollectedFee && currentUser.streamPercent && currentUser.unitPrice) {
-                    const pendingWei = (currentTargetCollectedFee * BigInt(currentUser.streamPercent)) / 100n;
-                    const pendingUsd = (Number(pendingWei) / 1e18) * currentUser.unitPrice;
-                    rewardsToShow += pendingUsd;
-                }
+                // Entry rewards now include live rewards from actual_rewards column if it was synced
+                const rewardsToShow = entry.rewards;
 
                 return (
                     <button

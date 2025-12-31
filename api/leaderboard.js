@@ -12,20 +12,20 @@ export default async function handler(request, response) {
     const limitVal = parseInt(limit);
     const isRewards = sort === 'rewards';
 
-    // Rank logic: Higher score/rewards OR (Equal value AND Updated earlier) OR (Equal value AND Updated equal AND FID lower)
-    // Plus fetch Team Avatar URLs as JSON objects
+    // Rank logic: Higher score/actual_rewards OR (Equal value AND Updated earlier) OR (Equal value AND Updated equal AND FID lower)
+    // actual_rewards contains (historical rewards + current day live rewards) for target
     const result = await pool.sql`
-      SELECT u1.fid, u1.username, u1.score, u1.rewards, u1.pfp_url, u1.streak, u1.last_click_date, u1.neynar_score, u1.neynar_power_change, u1.referrer_fid, u1.primary_address,
+      SELECT u1.fid, u1.username, u1.score, COALESCE(u1.actual_rewards, u1.rewards, 0) as rewards, u1.pfp_url, u1.streak, u1.last_click_date, u1.neynar_score, u1.neynar_power_change, u1.referrer_fid, u1.primary_address,
       (
         SELECT COUNT(*) + 1 
         FROM users u2 
-        WHERE (CASE WHEN ${isRewards} THEN u2.rewards > u1.rewards ELSE u2.score > u1.score END)
+        WHERE (CASE WHEN ${isRewards} THEN COALESCE(u2.actual_rewards, u2.rewards, 0) > COALESCE(u1.actual_rewards, u1.rewards, 0) ELSE u2.score > u1.score END)
            OR (
-             (CASE WHEN ${isRewards} THEN u2.rewards = u1.rewards ELSE u2.score = u1.score END)
+             (CASE WHEN ${isRewards} THEN COALESCE(u2.actual_rewards, u2.rewards, 0) = COALESCE(u1.actual_rewards, u1.rewards, 0) ELSE u2.score = u1.score END)
              AND u2.updated_at > u1.updated_at
            )
            OR (
-             (CASE WHEN ${isRewards} THEN u2.rewards = u1.rewards ELSE u2.score = u1.score END)
+             (CASE WHEN ${isRewards} THEN COALESCE(u2.actual_rewards, u2.rewards, 0) = COALESCE(u1.actual_rewards, u1.rewards, 0) ELSE u2.score = u1.score END)
              AND u2.updated_at = u1.updated_at 
              AND u2.fid < u1.fid
            )
@@ -49,7 +49,7 @@ export default async function handler(request, response) {
       ) as referral_data
       FROM users u1
       ORDER BY 
-        (CASE WHEN ${isRewards} THEN rewards ELSE score END) DESC, 
+        (CASE WHEN ${isRewards} THEN COALESCE(actual_rewards, rewards, 0) ELSE score END) DESC, 
         updated_at DESC, fid ASC
       LIMIT ${limitVal} OFFSET ${offset};
     `;
@@ -87,7 +87,7 @@ export default async function handler(request, response) {
             id: row.fid.toString(),
             username: row.username,
             score: row.score,
-            rewards: row.rewards || 0,
+            rewards: parseFloat(row.rewards || 0),
             rank: parseInt(row.rank),
             pfpUrl: row.pfp_url,
             fid: row.fid,
