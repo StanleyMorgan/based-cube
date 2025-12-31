@@ -132,16 +132,8 @@ export const api = {
     };
   },
 
-  getLeaderboard: async (currentFid?: number, page: number = 1, sort: LeaderboardSort = 'score', target?: string, pendingRewards?: number): Promise<LeaderboardEntry[]> => {
-    const params = new URLSearchParams({
-      page: page.toString(),
-      limit: '20',
-      sort: sort
-    });
-    if (target) params.append('target', target);
-    if (pendingRewards !== undefined) params.append('pendingRewards', pendingRewards.toString());
-
-    const res = await fetch(`/api/leaderboard?${params.toString()}`);
+  getLeaderboard: async (currentFid?: number, page: number = 1, sort: LeaderboardSort = 'score'): Promise<LeaderboardEntry[]> => {
+    const res = await fetch(`/api/leaderboard?page=${page}&limit=20&sort=${sort}`);
     if (!res.ok) return [];
     
     const data: any[] = await res.json();

@@ -28,14 +28,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
         if (isInitial) setLoading(true);
         else setLoadingMore(true);
 
-        // Pre-calculate pending rewards for the target to pass to API
-        let pendingUsd = 0;
-        if (currentTargetCollectedFee && currentUser.streamPercent && currentUser.unitPrice) {
-            const pendingWei = (currentTargetCollectedFee * BigInt(currentUser.streamPercent)) / 100n;
-            pendingUsd = (Number(pendingWei) / 1e18) * currentUser.unitPrice;
-        }
-
-        const entries = await api.getLeaderboard(currentUser.fid, pageNum, sort, currentTargetAddress, pendingUsd);
+        const entries = await api.getLeaderboard(currentUser.fid, pageNum, sort);
         
         // If we got fewer than 20 entries, we've reached the end
         if (entries.length < 20) {

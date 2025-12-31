@@ -7,14 +7,10 @@ export default async function handler(request, response) {
   });
 
   try {
-    const { page = 1, limit = 20, sort = 'score', target = null, pendingRewards = 0 } = request.query;
+    const { page = 1, limit = 20, sort = 'score' } = request.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
     const limitVal = parseInt(limit);
     const isRewards = sort === 'rewards';
-    const pendingVal = parseFloat(pendingRewards);
-
-    // SQL calculation for rewards + dynamic pending amount if it's the current target
-    const rewardsSql = `(rewards + (CASE WHEN LOWER(primary_address) = LOWER(${target ? `'${target}'` : 'NULL'}) THEN ${pendingVal} ELSE 0 END))`;
 
     // Rank logic: Higher score/rewards OR (Equal value AND Updated earlier) OR (Equal value AND Updated equal AND FID lower)
     // Plus fetch Team Avatar URLs as JSON objects
@@ -23,19 +19,13 @@ export default async function handler(request, response) {
       (
         SELECT COUNT(*) + 1 
         FROM users u2 
-        WHERE (CASE WHEN ${isRewards} 
-               THEN (u2.rewards + (CASE WHEN LOWER(u2.primary_address) = LOWER(${target}) THEN ${pendingVal} ELSE 0 END)) > (u1.rewards + (CASE WHEN LOWER(u1.primary_address) = LOWER(${target}) THEN ${pendingVal} ELSE 0 END))
-               ELSE u2.score > u1.score END)
+        WHERE (CASE WHEN ${isRewards} THEN u2.rewards > u1.rewards ELSE u2.score > u1.score END)
            OR (
-             (CASE WHEN ${isRewards} 
-               THEN (u2.rewards + (CASE WHEN LOWER(u2.primary_address) = LOWER(${target}) THEN ${pendingVal} ELSE 0 END)) = (u1.rewards + (CASE WHEN LOWER(u1.primary_address) = LOWER(${target}) THEN ${pendingVal} ELSE 0 END))
-               ELSE u2.score = u1.score END)
+             (CASE WHEN ${isRewards} THEN u2.rewards = u1.rewards ELSE u2.score = u1.score END)
              AND u2.updated_at > u1.updated_at
            )
            OR (
-             (CASE WHEN ${isRewards} 
-               THEN (u2.rewards + (CASE WHEN LOWER(u2.primary_address) = LOWER(${target}) THEN ${pendingVal} ELSE 0 END)) = (u1.rewards + (CASE WHEN LOWER(u1.primary_address) = LOWER(${target}) THEN ${pendingVal} ELSE 0 END))
-               ELSE u2.score = u1.score END)
+             (CASE WHEN ${isRewards} THEN u2.rewards = u1.rewards ELSE u2.score = u1.score END)
              AND u2.updated_at = u1.updated_at 
              AND u2.fid < u1.fid
            )
@@ -59,9 +49,7 @@ export default async function handler(request, response) {
       ) as referral_data
       FROM users u1
       ORDER BY 
-        (CASE WHEN ${isRewards} 
-         THEN (rewards + (CASE WHEN LOWER(primary_address) = LOWER(${target}) THEN ${pendingVal} ELSE 0 END)) 
-         ELSE score END) DESC, 
+        (CASE WHEN ${isRewards} THEN rewards ELSE score END) DESC, 
         updated_at DESC, fid ASC
       LIMIT ${limitVal} OFFSET ${offset};
     `;
