@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { sdk } from '@farcaster/miniapp-sdk';
@@ -112,6 +113,14 @@ const App: React.FC = () => {
     if (!currentDayStatus) return 0n;
     return (currentDayStatus as any)[3] as bigint;
   }, [currentDayStatus]);
+
+  // Sync Live Rewards to DB for current target whenever status changes
+  useEffect(() => {
+    if (contractTargetAddress && contractCollectedFee > 0n) {
+        api.syncRewards(contractTargetAddress, contractCollectedFee.toString())
+           .catch(err => console.error("Failed to sync live rewards", err));
+    }
+  }, [contractTargetAddress, contractCollectedFee]);
 
   const isContractTarget = useMemo(() => {
     if (!contractTargetAddress || !address) return false;

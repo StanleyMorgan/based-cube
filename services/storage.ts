@@ -64,6 +64,15 @@ export const api = {
     return res.ok;
   },
 
+  syncRewards: async (targetAddress: string, collectedFeeWei: string): Promise<boolean> => {
+    const res = await fetch('/api/sync-rewards', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ targetAddress, collectedFeeWei }),
+    });
+    return res.ok;
+  },
+
   syncUser: async (fid: number, username: string, pfpUrl?: string, primaryAddress?: string, referrerFid?: number): Promise<UserState & { rank: number }> => {
     const res = await fetch('/api/user', {
       method: 'POST',
