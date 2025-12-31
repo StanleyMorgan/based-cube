@@ -54,11 +54,13 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
                 // If it's page 1, check if we should show them pinned at top
                 
                 // Construct entry from currentUser state and prepend
+                // Added missing actualRewards property to match LeaderboardEntry interface
                 const userEntry: LeaderboardEntry = {
                     id: currentUser.fid?.toString() || 'user',
                     username: currentUser.username,
                     score: currentUser.score,
                     rewards: currentUser.rewards,
+                    actualRewards: currentUser.actualRewards,
                     rank: currentRank,
                     pfpUrl: currentUser.pfpUrl,
                     isCurrentUser: true,
@@ -162,7 +164,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
                                currentTargetAddress.toLowerCase() === entry.primaryAddress.toLowerCase();
                 
                 // Entry rewards now include live rewards from actual_rewards column if it was synced
-                const rewardsToShow = entry.rewards;
+                // Updated to use actualRewards as intended for live reward display
+                const rewardsToShow = entry.actualRewards;
 
                 return (
                     <button

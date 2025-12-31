@@ -102,7 +102,8 @@ export default async function handler(request, response) {
         streamPercent: user.stream_percent || 0,
         unitPrice: parseFloat(user.unit_price || 0),
         stream_target: user.stream_target,
-        rewards: parseFloat(user.actual_rewards || user.rewards || 0)
+        rewards: parseFloat(user.rewards || 0),
+        actualRewards: parseFloat(user.actual_rewards || user.rewards || 0)
       });
     }
 
@@ -254,7 +255,8 @@ export default async function handler(request, response) {
         streamPercent: stats.stream_percent || 0,
         unitPrice: parseFloat(stats.unit_price || 0),
         stream_target: userRaw.stream_target,
-        rewards: parseFloat(userRaw.actual_rewards || userRaw.rewards || 0)
+        rewards: parseFloat(userRaw.rewards || 0),
+        actualRewards: parseFloat(userRaw.actual_rewards || userRaw.rewards || 0)
       });
     }
 

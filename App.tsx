@@ -48,6 +48,7 @@ const App: React.FC = () => {
   const [userState, setUserState] = useState<UserState>({
     score: 0,
     rewards: 0,
+    actualRewards: 0,
     streak: 0,
     username: 'Loading...',
     lastClickDate: null,
@@ -126,14 +127,6 @@ const App: React.FC = () => {
     if (!contractTargetAddress || !address) return false;
     return contractTargetAddress.toLowerCase() === address.toLowerCase();
   }, [contractTargetAddress, address]);
-
-  // Calculate live rewards for current user if they are the target (or streamTarget override)
-  const pendingRewards = useMemo(() => {
-    const isActiveTarget = isContractTarget || userState.streamTarget;
-    if (!isActiveTarget || !contractCollectedFee || !userState.streamPercent || !userState.unitPrice) return 0;
-    const pendingWei = (contractCollectedFee * BigInt(userState.streamPercent)) / 100n;
-    return (Number(pendingWei) / 1e18) * userState.unitPrice;
-  }, [isContractTarget, userState.streamTarget, contractCollectedFee, userState.streamPercent, userState.unitPrice]);
 
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -404,7 +397,8 @@ const App: React.FC = () => {
   };
 
   const handleWinnerShare = async () => {
-    const text = `I’ve activated the Tesseract 🧊\nEarned $${pendingRewards.toFixed(2)} so far today.\nJoin in — you could be next:`;
+    const todayRewards = userState.actualRewards - userState.rewards;
+    const text = `I’ve activated the Tesseract 🧊\nEarned $${todayRewards.toFixed(2)} so far today.\nJoin in — you could be next:`;
     const embedUrl = `https://tesseract-base.vercel.app/api/share/frame?fid=${userState.fid}`;
 
     try {
@@ -581,7 +575,8 @@ const App: React.FC = () => {
           isOpen={showWinnerModal}
           onClose={() => setShowWinnerModal(false)}
           onShare={handleWinnerShare}
-          pendingRewards={pendingRewards}
+          rewards={userState.actualRewards}
+          historicalRewards={userState.rewards}
       />
 
       <InfoModal
@@ -591,8 +586,7 @@ const App: React.FC = () => {
           neynarPowerChange={userState.neynarPowerChange}
           streakPower={streakPowerCalc}
           teamPower={teamPowerCalc}
-          rewards={userState.rewards}
-          pendingRewards={pendingRewards}
+          rewards={userState.actualRewards}
           teamMembers={userState.teamMembers}
       />
       
@@ -600,10 +594,6 @@ const App: React.FC = () => {
         player={selectedPlayer} 
         onClose={() => setSelectedPlayer(null)}
         onSelectPlayer={setSelectedPlayer}
-        currentTargetAddress={contractTargetAddress}
-        currentTargetCollectedFee={contractCollectedFee}
-        streamPercent={userState.streamPercent}
-        unitPrice={userState.unitPrice}
       />
 
       {/* Navigation - Hidden when Player Stats Modal is open to prevent overlap */}

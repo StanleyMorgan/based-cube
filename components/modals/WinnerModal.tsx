@@ -8,10 +8,13 @@ interface WinnerModalProps {
     isOpen: boolean;
     onClose: () => void;
     onShare: () => void;
-    pendingRewards: number;
+    rewards: number;
+    historicalRewards: number;
 }
 
-const WinnerModal: React.FC<WinnerModalProps> = ({ isOpen, onClose, onShare, pendingRewards }) => {
+const WinnerModal: React.FC<WinnerModalProps> = ({ isOpen, onClose, onShare, rewards, historicalRewards }) => {
+    const todayRewards = rewards - historicalRewards;
+
     return (
         <AnimatePresence>
             {isOpen && (
@@ -60,7 +63,7 @@ const WinnerModal: React.FC<WinnerModalProps> = ({ isOpen, onClose, onShare, pen
                                 <span className="text-emerald-400 text-xs font-bold uppercase tracking-widest mb-1">Current stream:</span>
                                 <div className="flex items-center gap-2">
                                     <span className="text-4xl font-black text-white">
-                                        ${pendingRewards.toFixed(2)}
+                                        ${todayRewards.toFixed(2)}
                                     </span>
                                 </div>
                             </div>

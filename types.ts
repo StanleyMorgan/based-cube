@@ -23,6 +23,7 @@ export interface Task {
 export interface UserState {
   score: number;
   rewards: number;
+  actualRewards: number;
   lastClickDate: string | null; // ISO Date string YYYY-MM-DD
   streak: number;
   username: string;
@@ -47,6 +48,7 @@ export interface LeaderboardEntry {
   username: string;
   score: number;
   rewards: number;
+  actualRewards: number;
   rank: number;
   isCurrentUser?: boolean;
   pfpUrl?: string;

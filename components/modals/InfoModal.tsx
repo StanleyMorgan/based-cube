@@ -12,13 +12,10 @@ interface InfoModalProps {
     streakPower: number;
     teamPower?: number;
     rewards?: number;
-    pendingRewards?: number;
     teamMembers?: TeamMember[];
 }
 
-const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, neynarPowerChange = 0, streakPower, teamPower = 0, rewards = 0, pendingRewards = 0, teamMembers = [] }) => {
-    const totalEarned = rewards + pendingRewards;
-
+const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, neynarPowerChange = 0, streakPower, teamPower = 0, rewards = 0, teamMembers = [] }) => {
     return (
         <AnimatePresence>
             {isOpen && (
@@ -122,7 +119,7 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, neynarPower, ney
                                 </div>
                                 <div className="flex flex-col items-end">
                                     <span className="text-lg font-black text-white">
-                                        ${totalEarned.toFixed(2)}
+                                        ${rewards.toFixed(2)}
                                     </span>
                                 </div>
                             </div>

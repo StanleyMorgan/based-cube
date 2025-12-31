@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Zap, Flame, Star, User, Users, Loader2, CircleDollarSign } from 'lucide-react';
 import { LeaderboardEntry } from '../../types';
@@ -10,26 +10,11 @@ interface PlayerStatsModalProps {
     player: LeaderboardEntry | null;
     onClose: () => void;
     onSelectPlayer: (player: LeaderboardEntry) => void;
-    currentTargetAddress?: string;
-    currentTargetCollectedFee?: bigint;
-    streamPercent?: number;
-    unitPrice?: number;
 }
 
-const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose, onSelectPlayer, currentTargetAddress, currentTargetCollectedFee, streamPercent, unitPrice }) => {
+const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose, onSelectPlayer }) => {
     const [loadingFid, setLoadingFid] = useState<number | null>(null);
     
-    const isTarget = useMemo(() => {
-        if (!player || !currentTargetAddress || !player.primaryAddress) return false;
-        return player.primaryAddress.toLowerCase() === currentTargetAddress.toLowerCase();
-    }, [player, currentTargetAddress]);
-
-    const pendingRewards = useMemo(() => {
-        if (!isTarget || !currentTargetCollectedFee || !streamPercent || !unitPrice) return 0;
-        const pendingWei = (currentTargetCollectedFee * BigInt(streamPercent)) / 100n;
-        return (Number(pendingWei) / 1e18) * unitPrice;
-    }, [isTarget, currentTargetCollectedFee, streamPercent, unitPrice]);
-
     const handleProfileClick = async (fid: number) => {
         setLoadingFid(fid);
         try {
@@ -60,7 +45,7 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose, on
     const neynarPowerChange = player.neynarPowerChange || 0;
     const streakPower = Math.min(player.streak, 30);
     const teamPower = player.teamScore || 0;
-    const totalRewards = (player.rewards || 0) + pendingRewards;
+    const totalRewards = player.actualRewards || 0;
     const teamMembers = player.teamMembers || [];
 
     return (
@@ -101,7 +86,7 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose, on
                                     #{player.rank}
                                 </div>
                             </button>
-                            <h2 className={`text-xl font-bold ${isTarget ? 'animate-shimmer' : 'text-white'}`}>{player.username}</h2>
+                            <h2 className="text-xl font-bold text-white">{player.username}</h2>
                         </div>
 
                         {/* Consolidated Stats Block */}

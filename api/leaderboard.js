@@ -15,7 +15,7 @@ export default async function handler(request, response) {
     // Rank logic: Higher score/actual_rewards OR (Equal value AND Updated earlier) OR (Equal value AND Updated equal AND FID lower)
     // actual_rewards contains (historical rewards + current day live rewards) for target
     const result = await pool.sql`
-      SELECT u1.fid, u1.username, u1.score, COALESCE(u1.actual_rewards, u1.rewards, 0) as rewards, u1.pfp_url, u1.streak, u1.last_click_date, u1.neynar_score, u1.neynar_power_change, u1.referrer_fid, u1.primary_address,
+      SELECT u1.fid, u1.username, u1.score, u1.rewards as base_rewards, COALESCE(u1.actual_rewards, u1.rewards, 0) as current_rewards, u1.pfp_url, u1.streak, u1.last_click_date, u1.neynar_score, u1.neynar_power_change, u1.referrer_fid, u1.primary_address,
       (
         SELECT COUNT(*) + 1 
         FROM users u2 
@@ -87,7 +87,8 @@ export default async function handler(request, response) {
             id: row.fid.toString(),
             username: row.username,
             score: row.score,
-            rewards: parseFloat(row.rewards || 0),
+            rewards: parseFloat(row.base_rewards || 0),
+            actualRewards: parseFloat(row.current_rewards || 0),
             rank: parseInt(row.rank),
             pfpUrl: row.pfp_url,
             fid: row.fid,
