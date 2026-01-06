@@ -19,7 +19,8 @@ export default async function handler(request, response) {
       (
         SELECT COUNT(*) + 1 
         FROM users u2 
-        WHERE (CASE WHEN ${isRewards} THEN COALESCE(u2.actual_rewards, u2.rewards, 0) > COALESCE(u1.actual_rewards, u1.rewards, 0) ELSE u2.score > u1.score END)
+        WHERE u2.fid != u1.fid AND (
+          (CASE WHEN ${isRewards} THEN COALESCE(u2.actual_rewards, u2.rewards, 0) > COALESCE(u1.actual_rewards, u1.rewards, 0) ELSE u2.score > u1.score END)
            OR (
              (CASE WHEN ${isRewards} THEN COALESCE(u2.actual_rewards, u2.rewards, 0) = COALESCE(u1.actual_rewards, u1.rewards, 0) ELSE u2.score = u1.score END)
              AND u2.updated_at > u1.updated_at
@@ -29,6 +30,7 @@ export default async function handler(request, response) {
              AND u2.updated_at = u1.updated_at 
              AND u2.fid < u1.fid
            )
+        )
       ) as rank,
       (
          CASE WHEN EXISTS (SELECT 1 FROM users ref WHERE ref.referrer_fid = u1.fid) THEN 1 ELSE 0 END

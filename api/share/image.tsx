@@ -29,9 +29,11 @@ export default async function handler(req: Request) {
         (
           SELECT COUNT(*) + 1 
           FROM users u2 
-          WHERE u2.score > u1.score 
-             OR (u2.score = u1.score AND u2.updated_at < u1.updated_at)
+          WHERE u2.fid != u1.fid AND (
+            u2.score > u1.score 
+             OR (u2.score = u1.score AND u2.updated_at > u1.updated_at)
              OR (u2.score = u1.score AND u2.updated_at = u1.updated_at AND u2.fid < u1.fid)
+          )
         ) as rank
         FROM users u1 
         WHERE fid = ${fid};
