@@ -1,8 +1,8 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import { LeaderboardEntry, UserState, LeaderboardSort } from '../types';
 import { api } from '../services/storage';
 import { Trophy, Medal, User, Loader2, Flame, CircleDollarSign, Zap } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface LeaderboardProps {
   currentUser: UserState;
@@ -140,17 +140,31 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
             <h2 className="text-2xl font-bold">Top Players</h2>
         </div>
 
-        {/* Sort Toggle Button */}
-        <button 
-            onClick={() => handleSortChange(sortBy === 'score' ? 'rewards' : 'score')}
-            className={`p-2.5 rounded-xl border transition-all duration-200 flex items-center justify-center shadow-lg active:scale-95 ${
-                sortBy === 'score' 
-                ? 'bg-sky-600/20 border-sky-500/50 text-sky-400' 
-                : 'bg-emerald-600/20 border-emerald-500/50 text-emerald-400'
-            }`}
-        >
-            {sortBy === 'score' ? <Zap size={22} className="fill-sky-400/20" /> : <CircleDollarSign size={22} className="fill-emerald-400/20" />}
-        </button>
+        {/* Dual Mode Switch */}
+        <div className="flex bg-slate-800/50 p-1 rounded-xl border border-slate-700/50 relative overflow-hidden shadow-lg">
+            {/* Active background indicator */}
+            <motion.div 
+                animate={{ x: sortBy === 'score' ? 0 : '100%' }}
+                transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                className={`absolute top-1 left-1 bottom-1 w-[calc(50%-4px)] rounded-lg z-0 ${
+                    sortBy === 'score' ? 'bg-sky-500/20' : 'bg-emerald-500/20'
+                }`}
+            />
+            
+            <button 
+                onClick={() => handleSortChange('score')}
+                className={`relative z-10 p-2 px-3 flex items-center justify-center transition-colors duration-300 ${sortBy === 'score' ? 'text-sky-400' : 'text-slate-500'}`}
+            >
+                <Zap size={20} className={sortBy === 'score' ? 'fill-sky-400/20' : ''} />
+            </button>
+            
+            <button 
+                onClick={() => handleSortChange('rewards')}
+                className={`relative z-10 p-2 px-3 flex items-center justify-center transition-colors duration-300 ${sortBy === 'rewards' ? 'text-emerald-400' : 'text-slate-500'}`}
+            >
+                <CircleDollarSign size={20} className={sortBy === 'rewards' ? 'fill-emerald-400/20' : ''} />
+            </button>
+        </div>
       </div>
 
       {loading ? (
