@@ -83,11 +83,11 @@ const App: React.FC = () => {
   const { connect, connectors } = useConnect();
   const { writeContractAsync, isPending: isTxPending } = useWriteContract();
   
-  // Read Fee from contract (gmFee for V1, chargeFee for V2)
+  // Read Fee from contract (gmFee for V1, chargeFee for V2/V3)
   const { data: contractFee } = useReadContract({
     address: userState.contractAddress as `0x${string}`,
     abi: GMLoggerABI,
-    functionName: userState.version === 2 ? 'chargeFee' : 'gmFee',
+    functionName: userState.version === 1 ? 'gmFee' : 'chargeFee',
   });
 
   // Read Latest Inactive Day from contract
@@ -285,32 +285,47 @@ const App: React.FC = () => {
     setIsProcessing(true);
 
     try {
-        // 1. Execute On-Chain GM/Charge
         const fee = contractFee ? BigInt(contractFee) : BigInt(0);
-        
-        // Use referrer address from backend if available, otherwise zero address
         const referrer = userState.referrerAddress || "0x0000000000000000000000000000000000000000";
 
-        await writeContractAsync({
-            address: userState.contractAddress as `0x${string}`,
-            abi: GMLoggerABI,
-            functionName: userState.version === 2 ? 'Charge' : 'GM',
-            args: [referrer as `0x${string}`],
-            value: fee,
-            account: address,
-            chain: base,
-        });
+        // Logic branching based on contract version
+        if (userState.version === 3) {
+            // 1. Get Signature for V3
+            const { points, day, signature } = await api.getSign(userState.fid, address);
+            
+            // 2. Execute On-Chain Charge with Signature
+            await writeContractAsync({
+                address: userState.contractAddress as `0x${string}`,
+                abi: GMLoggerABI,
+                functionName: 'Charge',
+                args: [referrer as `0x${string}`, BigInt(points), BigInt(day), signature as `0x${string}`],
+                value: fee,
+                account: address,
+                chain: base,
+            });
+        } else {
+            // Legacy V1/V2 Logic
+            await writeContractAsync({
+                address: userState.contractAddress as `0x${string}`,
+                abi: GMLoggerABI,
+                functionName: userState.version === 2 ? 'Charge' : 'GM',
+                args: [referrer as `0x${string}`],
+                value: fee,
+                account: address,
+                chain: base,
+            });
+        }
         
         const oldRank = rank;
         const oldScore = userState.score;
         
-        // 2. Call API to update Score in DB
+        // 3. Call API to update Score in DB
         const newState = await api.performClick(userState.fid);
         
         // Calculate actual points earned
         const earnedPoints = newState.score - oldScore;
         
-        // 3. Fetch Leaderboard to show visualization (Snippet)
+        // 4. Fetch Leaderboard to show visualization (Snippet)
         // We fetch the full leaderboard and slice it around the user
         let lbSnippet: LeaderboardEntry[] = [];
         let overtakenUser: string | undefined;

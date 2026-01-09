@@ -34,6 +34,43 @@ export const GMLoggerABI = [
     stateMutability: "view",
     type: "function"
   },
+  // V3 Functions (Overloaded Charge)
+  {
+    inputs: [
+      { internalType: "address payable", name: "referrer", type: "address" },
+      { internalType: "uint256", name: "signedPoints", type: "uint256" },
+      { internalType: "uint256", name: "signedDay", type: "uint256" },
+      { internalType: "bytes", name: "sig", type: "bytes" }
+    ],
+    name: "Charge",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function"
+  },
+  {
+    inputs: [{ internalType: "address", name: "", type: "address" }],
+    name: "totalPoints",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    inputs: [],
+    name: "getLeaderboard",
+    outputs: [
+      {
+        components: [
+          { internalType: "address", name: "player", type: "address" },
+          { internalType: "uint256", name: "score", type: "uint256" }
+        ],
+        internalType: "struct Tesseract.Leader[]",
+        name: "",
+        type: "tuple[]"
+      }
+    ],
+    stateMutability: "view",
+    type: "function"
+  },
   // Common History Functions
   {
     inputs: [],

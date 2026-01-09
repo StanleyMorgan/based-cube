@@ -108,6 +108,19 @@ export const api = {
     };
   },
 
+  getSign: async (fid: number, address: string): Promise<{ points: number; day: number; signature: string }> => {
+    const res = await fetch('/api/sign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fid, address }),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to get signature');
+    }
+    return res.json();
+  },
+
   performClick: async (fid: number): Promise<UserState & { rank: number }> => {
     const res = await fetch('/api/click', {
       method: 'POST',
