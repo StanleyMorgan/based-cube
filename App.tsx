@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { sdk } from '@farcaster/miniapp-sdk';
@@ -90,11 +89,12 @@ const App: React.FC = () => {
     functionName: userState.version === 1 ? 'gmFee' : 'chargeFee',
   });
 
-  // Read Latest Inactive Day from contract
-  const { data: previousActiveDay } = useReadContract({
+  // Read Last Stream Details (Day, Count, Target) from contract
+  // We use this instead of previousActiveDay because in V3 that variable is internal
+  const { data: lastStreamData } = useReadContract({
     address: userState.contractAddress as `0x${string}`,
     abi: GMLoggerABI,
-    functionName: 'previousActiveDay',
+    functionName: 'getLastStream',
   });
 
   // Read current target from contract
@@ -158,43 +158,35 @@ const App: React.FC = () => {
   // Background History Sync
   useEffect(() => {
     const syncHistory = async () => {
-      if (!previousActiveDay || !userState.contractAddress) return;
+      // Use lastStreamData which contains [day, count, target]
+      if (!lastStreamData || !userState.contractAddress) return;
       
       try {
-        const contractDay = Number(previousActiveDay);
+        const [dayNum, playerCount, targetAddr] = lastStreamData as [bigint, bigint, string];
+        const contractDay = Number(dayNum);
+        
         if (contractDay === 0) return;
 
         const dbLastDay = await api.getLatestSyncedDay();
 
+        // If the contract has a newer closed day than our database, sync it
         if (contractDay > dbLastDay) {
-          // Fetch missing details from contract
-          // Fix: The contract function "getLastStream" takes no arguments based on provided ABI
-          const result = await readContract(wagmiConfig, {
-            address: userState.contractAddress as `0x${string}`,
-            abi: GMLoggerABI,
-            functionName: 'getLastStream',
-          } as any);
-
-          if (result) {
-            // Result is [day, count, target]
-            const [dayNum, playerCount, targetAddr] = result as [bigint, bigint, string];
-            await api.syncHistory({
-              day_number: Number(dayNum),
-              player_count: Number(playerCount),
-              target_address: targetAddr
-            });
-            console.log(`History synced for day ${dayNum}`);
-          }
+          await api.syncHistory({
+            day_number: contractDay,
+            player_count: Number(playerCount),
+            target_address: targetAddr
+          });
+          console.log(`History auto-synced for day ${contractDay}`);
         }
       } catch (err) {
         console.error("Background history sync failed", err);
       }
     };
 
-    if (userState.contractAddress && previousActiveDay) {
+    if (userState.contractAddress && lastStreamData) {
         syncHistory();
     }
-  }, [previousActiveDay, userState.contractAddress]);
+  }, [lastStreamData, userState.contractAddress]);
 
   // Initialize Farcaster SDK and Sync User with DB
   useEffect(() => {
