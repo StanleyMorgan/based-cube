@@ -66,6 +66,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
                     isCurrentUser: true,
                     streak: currentUser.streak,
                     neynarScore: currentUser.neynarScore || 0,
+                    neynarPowerChange: currentUser.neynarPowerChange || 0,
                     teamScore: currentUser.teamScore || 0,
                     primaryAddress: currentUser.primaryAddress
                 };
