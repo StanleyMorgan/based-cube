@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Zap, Flame, Star, User, Users, Loader2, CircleDollarSign, Share } from 'lucide-react';
+import { Zap, Flame, Star, User, Users, Loader2, CircleDollarSign } from 'lucide-react';
 import { LeaderboardEntry } from '../../types';
 import { api } from '../../services/storage';
 import { sdk } from '@farcaster/miniapp-sdk';
@@ -14,7 +14,6 @@ interface PlayerStatsModalProps {
 
 const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose, onSelectPlayer }) => {
     const [loadingFid, setLoadingFid] = useState<number | null>(null);
-    const [isSharing, setIsSharing] = useState(false);
     
     const handleProfileClick = async (fid: number) => {
         setLoadingFid(fid);
@@ -35,25 +34,6 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose, on
         const fid = parseInt(player.id);
         if (!isNaN(fid)) {
             sdk.actions.viewProfile({ fid });
-        }
-    };
-
-    const handleSharePowerCard = async () => {
-        if (!player) return;
-        setIsSharing(true);
-        try {
-            const fid = parseInt(player.id);
-            const text = `Check out ${player.isCurrentUser ? 'my' : `@${player.username}'s`} Power Card on Tesseract! 🧊💪\nUse your Superpower:`;
-            const embedUrl = `https://tesseract-base.vercel.app/api/share/frame?fid=${fid}&mode=power`;
-            
-            await sdk.actions.composeCast({
-                text: text,
-                embeds: [embedUrl]
-            });
-        } catch (e) {
-            console.error("Failed to share power card", e);
-        } finally {
-            setIsSharing(false);
         }
     };
 
@@ -110,7 +90,7 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose, on
                         </div>
 
                         {/* Consolidated Stats Block */}
-                        <div className="bg-slate-800/50 border border-slate-700/50 rounded-3xl overflow-hidden divide-y divide-slate-700/50 mb-6">
+                        <div className="bg-slate-800/50 border border-slate-700/50 rounded-3xl overflow-hidden divide-y divide-slate-700/50">
                             
                             {/* Neynar */}
                             <div className="p-4 flex justify-between items-center relative hover:bg-slate-800/30 transition-colors">
@@ -205,16 +185,6 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose, on
                             </div>
 
                         </div>
-
-                        {/* Share Button */}
-                        <button 
-                            onClick={handleSharePowerCard}
-                            disabled={isSharing}
-                            className="w-full py-3 bg-sky-600/20 text-sky-200 border border-sky-500/30 rounded-xl font-bold text-base hover:bg-sky-600/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95"
-                        >
-                            {isSharing ? <Loader2 size={20} className="animate-spin" /> : <Share size={20} />}
-                            Share Power Card
-                        </button>
                     </motion.div>
                 </div>
             )}
