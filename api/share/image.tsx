@@ -56,7 +56,7 @@ export default async function handler(req: Request) {
     const fontData = await fetch(new URL('/Inter-Bold.ttf', origin), { cache: 'force-cache' }).then((res) => res.arrayBuffer());
     const fontEnd = performance.now();
 
-    const bgImage = `${origin}/background.png`;
+    const bgImage = `${origin}/background.jpg`;
 
     // 3. Profile Image Generation (Satori/Yoga layout + SVG generation)
     const genStart = performance.now();
