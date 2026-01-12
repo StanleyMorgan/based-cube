@@ -7,13 +7,17 @@ export default async function handler(req: Request) {
   try {
     const url = new URL(req.url);
     const fid = url.searchParams.get('fid');
+    const mode = url.searchParams.get('mode'); // 'power' or default
 
     // Define the origin
     const host = req.headers.get('host');
     const origin = host ? `https://${host}` : 'https://tesseract-base.vercel.app';
 
-    // Image URL points to our generator
-    const imageUrl = `${origin}/api/share/image?fid=${fid}`;
+    // Image URL points to our generator with mode parameter
+    let imageUrl = `${origin}/api/share/image?fid=${fid}`;
+    if (mode) {
+        imageUrl += `&mode=${mode}`;
+    }
     
     // App Launch URL (with referral)
     let appUrl = `${origin}/`;
