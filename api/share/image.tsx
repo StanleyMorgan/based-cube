@@ -1,4 +1,3 @@
-
 import { ImageResponse } from '@vercel/og';
 import { createPool } from '@vercel/postgres';
 
@@ -148,7 +147,7 @@ export default async function handler(req: Request) {
 
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <div style={{ display: 'flex', fontSize: '24px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Team</div>
-                        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', height: '64px' }}>
                             {finalTeamMembers.length > 0 ? (
                                 finalTeamMembers.map((member: any, i) => (
                                     <img
@@ -161,14 +160,12 @@ export default async function handler(req: Request) {
                                             border: '1px solid #1e293b',
                                             marginLeft: i === 0 ? '0' : '-16px',
                                             backgroundColor: '#1e293b',
-                                            objectFit: 'cover',
-                                            position: 'relative', 
-                                            top: '-5px' 
+                                            objectFit: 'cover'
                                         }}
                                     />
                                 ))
                             ) : (
-                                <div style={{ display: 'flex', fontSize: '56px', color: '#475569', fontWeight: 700 }}>-</div>
+                                <div style={{ display: 'flex', fontSize: '56px', color: '#475569', fontWeight: 700, lineHeight: 1 }}>-</div>
                             )}
                         </div>
                     </div>
