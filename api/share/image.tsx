@@ -155,10 +155,10 @@ export default async function handler(req: Request) {
                                         key={i}
                                         src={member.pfpUrl || `${origin}/logo.png`}
                                         style={{
-                                            width: '56px',
-                                            height: '56px',
+                                            width: '50px',
+                                            height: '50px',
                                             borderRadius: '50%',
-                                            border: '2px solid #1e293b',
+                                            border: '1px solid #1e293b',
                                             marginLeft: i === 0 ? '0' : '-16px',
                                             backgroundColor: '#1e293b',
                                             objectFit: 'cover',
