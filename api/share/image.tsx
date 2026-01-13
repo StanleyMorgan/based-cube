@@ -148,7 +148,7 @@ export default async function handler(req: Request) {
 
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <div style={{ display: 'flex', fontSize: '24px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Team</div>
-                        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: '-5px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', transform: 'translateY(-5px)' }}>
                             {finalTeamMembers.length > 0 ? (
                                 finalTeamMembers.map((member: any, i) => (
                                     <img
