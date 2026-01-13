@@ -147,8 +147,8 @@ export default async function handler(req: Request) {
                     <div style={{ display: 'flex', width: '2px', height: '80px', backgroundColor: '#334155', margin: '0 30px' }}></div>
 
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <div style={{ display: 'flex', fontSize: '24px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Team</div>
-                        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', transform: 'translateY(-5px)' }}>
+                        <div style={{ display: 'flex', fontSize: '24px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Team</div>
+                        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                             {finalTeamMembers.length > 0 ? (
                                 finalTeamMembers.map((member: any, i) => (
                                     <img
@@ -158,7 +158,7 @@ export default async function handler(req: Request) {
                                             width: '50px',
                                             height: '50px',
                                             borderRadius: '50%',
-                                            border: '2px solid #1e293b',
+                                            border: '1px solid #1e293b',
                                             marginLeft: i === 0 ? '0' : '-16px',
                                             backgroundColor: '#1e293b',
                                             objectFit: 'cover',
