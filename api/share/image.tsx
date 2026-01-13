@@ -62,7 +62,7 @@ export default async function handler(req: Request) {
     const rank = `#${user.rank}`;
     const pfpUrl = user.pfp_url;
     const rewardsValue = parseFloat(user.rewards || 0);
-    const neynarPower = Math.round((user.neynar_score || 0) * 100);
+    const neynarPower = (user.neynar_score || 0).toFixed(2);
 
     // Process team members for avatars
     const teamMembers = [];
@@ -140,7 +140,7 @@ export default async function handler(req: Request) {
 
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <div style={{ display: 'flex', fontSize: '24px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Neynar</div>
-                        <div style={{ display: 'flex', fontSize: '64px', color: '#38bdf8', fontWeight: 700, lineHeight: 1 }}>{`${neynarPower}`}</div>
+                        <div style={{ display: 'flex', fontSize: '64px', color: '#38bdf8', fontWeight: 700, lineHeight: 1 }}>{neynarPower}</div>
                     </div>
 
                     <div style={{ display: 'flex', width: '2px', height: '80px', backgroundColor: '#334155', margin: '0 30px' }}></div>
