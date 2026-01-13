@@ -25,7 +25,7 @@ export default async function handler(req: Request) {
     });
 
     const result = await pool.sql`
-        SELECT username, score, pfp_url, rewards,
+        SELECT u1.username, u1.score, u1.pfp_url, u1.rewards, u1.neynar_score,
         (
           SELECT COUNT(*) + 1 
           FROM users u2 
@@ -34,9 +34,23 @@ export default async function handler(req: Request) {
              OR (u2.score = u1.score AND u2.updated_at > u1.updated_at)
              OR (u2.score = u1.score AND u2.updated_at = u1.updated_at AND u2.fid < u1.fid)
           )
-        ) as rank
+        ) as rank,
+        (
+            SELECT json_build_object('fid', fid, 'pfpUrl', pfp_url) 
+            FROM users u_ref WHERE u_ref.fid = u1.referrer_fid
+        ) as referrer_data,
+        (
+            SELECT json_agg(json_build_object('fid', fid, 'pfpUrl', pfp_url)) 
+            FROM (
+                SELECT fid, pfp_url 
+                FROM users u_sub 
+                WHERE u_sub.referrer_fid = u1.fid 
+                ORDER BY u_sub.neynar_score DESC 
+                LIMIT 3
+            ) sub
+        ) as referral_data
         FROM users u1 
-        WHERE fid = ${fid};
+        WHERE u1.fid = ${fid};
     `;
     const dbEnd = performance.now();
 
@@ -46,10 +60,18 @@ export default async function handler(req: Request) {
 
     const user = result.rows[0];
     const username = user.username || 'Player';
-    const score = user.score.toLocaleString();
     const rank = `#${user.rank}`;
     const pfpUrl = user.pfp_url;
     const rewardsValue = parseFloat(user.rewards || 0);
+    const neynarPower = Math.round((user.neynar_score || 0) * 100);
+
+    // Process team members for avatars
+    const teamMembers = [];
+    if (user.referrer_data) teamMembers.push(user.referrer_data);
+    if (user.referral_data && Array.isArray(user.referral_data)) {
+        teamMembers.push(...user.referral_data);
+    }
+    const finalTeamMembers = teamMembers.slice(0, 3);
 
     // 2. Profile Font Loading
     const fontStart = performance.now();
@@ -118,8 +140,35 @@ export default async function handler(req: Request) {
                     <div style={{ display: 'flex', width: '2px', height: '80px', backgroundColor: '#334155', margin: '0 30px' }}></div>
 
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <div style={{ display: 'flex', fontSize: '24px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Score</div>
-                        <div style={{ display: 'flex', fontSize: '64px', color: '#38bdf8', fontWeight: 700, lineHeight: 1 }}>{score}</div>
+                        <div style={{ display: 'flex', fontSize: '24px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Neynar</div>
+                        <div style={{ display: 'flex', fontSize: '64px', color: '#38bdf8', fontWeight: 700, lineHeight: 1 }}>{`+${neynarPower}`}</div>
+                    </div>
+
+                    <div style={{ display: 'flex', width: '2px', height: '80px', backgroundColor: '#334155', margin: '0 30px' }}></div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ display: 'flex', fontSize: '24px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Team</div>
+                        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                            {finalTeamMembers.length > 0 ? (
+                                finalTeamMembers.map((member: any, i) => (
+                                    <img
+                                        key={i}
+                                        src={member.pfpUrl || `${origin}/logo.png`}
+                                        style={{
+                                            width: '56px',
+                                            height: '56px',
+                                            borderRadius: '50%',
+                                            border: '2px solid #1e293b',
+                                            marginLeft: i === 0 ? '0' : '-16px',
+                                            backgroundColor: '#1e293b',
+                                            objectFit: 'cover',
+                                        }}
+                                    />
+                                ))
+                            ) : (
+                                <div style={{ display: 'flex', fontSize: '56px', color: '#475569', fontWeight: 700 }}>-</div>
+                            )}
+                        </div>
                     </div>
 
                     {rewardsValue > 0 && (
@@ -129,7 +178,7 @@ export default async function handler(req: Request) {
                     {rewardsValue > 0 && (
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
                           <div style={{ display: 'flex', fontSize: '24px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rewards</div>
-                          <div style={{ display: 'flex', fontSize: '64px', color: '#38bdf8', fontWeight: 700, lineHeight: 1 }}>{`$${rewardsValue.toFixed(2)}`}</div>
+                          <div style={{ display: 'flex', fontSize: '64px', color: '#10b981', fontWeight: 700, lineHeight: 1 }}>{`$${rewardsValue.toFixed(2)}`}</div>
                       </div>
                     )}
                 </div>
