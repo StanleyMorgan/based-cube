@@ -215,6 +215,7 @@ const App: React.FC = () => {
             setRank(syncedUser.rank);
 
             // Check for new tasks for the badge
+            // Corrected: use local 'fid' variable instead of non-existent 'userFid'
             checkTasks(fid);
             
             // Try to connect wallet if available in connector
@@ -504,6 +505,14 @@ const App: React.FC = () => {
               />
               
               <div className="relative">
+                {/* HUD Indicators */}
+                <div className="absolute -top-4 -left-8 sm:-left-12 w-10 h-10 rounded-full bg-slate-800/40 border border-slate-700/50 backdrop-blur-md flex items-center justify-center z-20 shadow-lg">
+                    <span className="text-[10px] font-black text-slate-300">T1</span>
+                </div>
+                <div className="absolute -top-4 -right-8 sm:-right-12 w-10 h-10 rounded-full bg-slate-800/40 border border-slate-700/50 backdrop-blur-md flex items-center justify-center z-20 shadow-lg">
+                    <img src="https://raw.githubusercontent.com/StanleyMorgan/graphics/main/coin/eth.svg" alt="ETH" className="w-5 h-5" />
+                </div>
+
                 {/* Overlay for processing state */}
                 {(isProcessing || isTxPending) && (
                     <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm rounded-xl">
