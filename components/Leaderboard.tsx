@@ -68,7 +68,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
                     neynarScore: currentUser.neynarScore || 0,
                     neynarPowerChange: currentUser.neynarPowerChange || 0,
                     teamScore: currentUser.teamScore || 0,
-                    primaryAddress: currentUser.primaryAddress
+                    primaryAddress: currentUser.primaryAddress,
+                    teamMembers: currentUser.teamMembers || []
                 };
                 processedEntries.unshift(userEntry);
             }
