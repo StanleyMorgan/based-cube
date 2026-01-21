@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { sdk } from '@farcaster/miniapp-sdk';
@@ -8,11 +9,11 @@ import Leaderboard from './components/Leaderboard';
 import Tasks from './components/Tasks';
 import Navigation from './components/Navigation';
 import Stats from './components/Stats';
-import InfoModal from './components/modals/InfoModal';
+import MenuDropdown from './components/modals/MenuDropdown';
 import PlayerStatsModal from './components/modals/PlayerStatsModal';
 import SuccessModal, { SuccessModalData } from './components/modals/SuccessModal';
 import WinnerModal from './components/modals/WinnerModal';
-import { Info, Wallet, Loader2 } from 'lucide-react';
+import { Menu, Wallet, Loader2 } from 'lucide-react';
 
 // Wagmi & Contract imports
 import { useAccount, useConnect, useWriteContract, useReadContract } from 'wagmi';
@@ -63,7 +64,7 @@ const App: React.FC = () => {
   
   const [canClick, setCanClick] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [showInfo, setShowInfo] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   const [hasNewTask, setHasNewTask] = useState(false);
   const [showWinnerModal, setShowWinnerModal] = useState(false);
   
@@ -473,10 +474,10 @@ const App: React.FC = () => {
             )}
             
             <button 
-                onClick={() => setShowInfo(true)}
+                onClick={() => setShowMenu(true)}
                 className="p-2 rounded-full bg-slate-800/50 text-slate-400 hover:text-white transition-colors border border-slate-700/50"
             >
-                <Info size={20} />
+                <Menu size={20} />
             </button>
         </div>
       </header>
@@ -586,9 +587,9 @@ const App: React.FC = () => {
           historicalRewards={userState.rewards}
       />
 
-      <InfoModal
-          isOpen={showInfo}
-          onClose={() => setShowInfo(false)}
+      <MenuDropdown
+          isOpen={showMenu}
+          onClose={() => setShowMenu(false)}
           neynarPower={neynarPowerCalc}
           neynarPowerChange={userState.neynarPowerChange}
           streakPower={streakPowerCalc}
