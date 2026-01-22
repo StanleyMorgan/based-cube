@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { sdk } from '@farcaster/miniapp-sdk';
@@ -56,7 +55,7 @@ const App: React.FC = () => {
     teamScore: 0,
     teamMembers: [],
     contractAddress: undefined,
-    version: 1,
+    version: 3,
     streamTarget: false,
     streamPercent: 0,
     unitPrice: 0
@@ -83,11 +82,11 @@ const App: React.FC = () => {
   const { connect, connectors } = useConnect();
   const { writeContractAsync, isPending: isTxPending } = useWriteContract();
   
-  // Read Fee from contract (gmFee for V1, chargeFee for V2/V3)
+  // Read Fee from contract (chargeFee for V3/V4)
   const { data: contractFee } = useReadContract({
     address: userState.contractAddress as `0x${string}`,
     abi: GMLoggerABI,
-    functionName: userState.version === 1 ? 'gmFee' : 'chargeFee',
+    functionName: 'chargeFee',
   });
 
   // Read Last Stream Details (Day, Count, Target) from contract
@@ -282,33 +281,19 @@ const App: React.FC = () => {
         const fee = contractFee ? BigInt(contractFee) : BigInt(0);
         const referrer = userState.referrerAddress || "0x0000000000000000000000000000000000000000";
 
-        // Logic branching based on contract version
-        if (userState.version === 3) {
-            // 1. Get Signature for V3
-            const { points, day, signature } = await api.getSign(userState.fid, address);
-            
-            // 2. Execute On-Chain Charge with Signature
-            await writeContractAsync({
-                address: userState.contractAddress as `0x${string}`,
-                abi: GMLoggerABI,
-                functionName: 'Charge',
-                args: [referrer as `0x${string}`, BigInt(points), BigInt(day), signature as `0x${string}`],
-                value: fee,
-                account: address,
-                chain: base,
-            });
-        } else {
-            // Legacy V1/V2 Logic
-            await writeContractAsync({
-                address: userState.contractAddress as `0x${string}`,
-                abi: GMLoggerABI,
-                functionName: userState.version === 2 ? 'Charge' : 'GM',
-                args: [referrer as `0x${string}`],
-                value: fee,
-                account: address,
-                chain: base,
-            });
-        }
+        // Logic using V3/V4 signature (Referrer, Points, Day, Signature)
+        const { points, day, signature } = await api.getSign(userState.fid, address);
+        
+        // Execute On-Chain Charge with Signature
+        await writeContractAsync({
+            address: userState.contractAddress as `0x${string}`,
+            abi: GMLoggerABI,
+            functionName: 'Charge',
+            args: [referrer as `0x${string}`, BigInt(points), BigInt(day), signature as `0x${string}`],
+            value: fee,
+            account: address,
+            chain: base,
+        });
         
         const oldRank = rank;
         const oldScore = userState.score;
@@ -507,7 +492,7 @@ const App: React.FC = () => {
               <div className="relative">
                 {/* HUD Indicators */}
                 <div className="absolute -top-4 -left-20 sm:-left-32 w-10 h-10 rounded-full bg-slate-800/40 border border-slate-700/50 backdrop-blur-md flex items-center justify-center z-20 shadow-lg">
-                    <span className="text-[20px] font-black text-slate-300">T1</span>
+                    <span className="text-[24px] font-black text-slate-300">T1</span>
                 </div>
                 <div className="absolute -top-4 -right-20 sm:-right-32 w-10 h-10 rounded-full bg-slate-800/40 border border-slate-700/50 backdrop-blur-md flex items-center justify-center z-20 shadow-lg overflow-hidden">
                     <img src="https://raw.githubusercontent.com/StanleyMorgan/graphics/main/coin/eth.png" alt="ETH" className="w-8 h-8" />

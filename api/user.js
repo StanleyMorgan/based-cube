@@ -1,4 +1,3 @@
-
 import { createPool } from '@vercel/postgres';
 
 export default async function handler(request, response) {
@@ -12,7 +11,7 @@ export default async function handler(request, response) {
       ALTER TABLE users ADD COLUMN IF NOT EXISTS neynar_power_change INTEGER DEFAULT 0;
     `;
     await pool.sql`
-      ALTER TABLE users ADD COLUMN IF NOT EXISTS version INTEGER DEFAULT 1;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS version INTEGER DEFAULT 3;
     `;
     await pool.sql`
       ALTER TABLE users ADD COLUMN IF NOT EXISTS stream_target BOOLEAN DEFAULT false;
@@ -168,8 +167,8 @@ export default async function handler(request, response) {
       }
 
       const upsertResult = await pool.sql`
-        INSERT INTO users (fid, username, pfp_url, score, streak, neynar_score, neynar_last_updated, primary_address, referrer_fid, neynar_power_change, rewards, actual_rewards)
-        VALUES (${fid}, ${username}, ${pfpUrl || null}, 0, 0, ${neynarScore}, ${neynarLastUpdated}, ${primaryAddress || null}, ${referrerValue}, ${neynarPowerChange}, 0, 0)
+        INSERT INTO users (fid, username, pfp_url, score, streak, neynar_score, neynar_last_updated, primary_address, referrer_fid, neynar_power_change, rewards, actual_rewards, version)
+        VALUES (${fid}, ${username}, ${pfpUrl || null}, 0, 0, ${neynarScore}, ${neynarLastUpdated}, ${primaryAddress || null}, ${referrerValue}, ${neynarPowerChange}, 0, 0, 3)
         ON CONFLICT (fid) 
         DO UPDATE SET 
           username = EXCLUDED.username,

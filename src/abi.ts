@@ -1,26 +1,11 @@
-
 export const GMLoggerABI = [
-  // V1 Functions
+  // V3/V4 Functions (Standard Charge)
   {
     inputs: [
-      { internalType: "address payable", name: "referrer", type: "address" }
-    ],
-    name: "GM",
-    outputs: [],
-    stateMutability: "payable",
-    type: "function"
-  },
-  {
-    inputs: [],
-    name: "gmFee",
-    outputs: [{ internalType: "uint64", name: "", type: "uint64" }],
-    stateMutability: "view",
-    type: "function"
-  },
-  // V2 Functions
-  {
-    inputs: [
-      { internalType: "address payable", name: "referrer", type: "address" }
+      { internalType: "address payable", name: "referrer", type: "address" },
+      { internalType: "uint256", name: "signedPoints", type: "uint256" },
+      { internalType: "uint256", name: "signedDay", type: "uint256" },
+      { internalType: "bytes", name: "sig", type: "bytes" }
     ],
     name: "Charge",
     outputs: [],
@@ -32,19 +17,6 @@ export const GMLoggerABI = [
     name: "chargeFee",
     outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
     stateMutability: "view",
-    type: "function"
-  },
-  // V3 Functions (Overloaded Charge)
-  {
-    inputs: [
-      { internalType: "address payable", name: "referrer", type: "address" },
-      { internalType: "uint256", name: "signedPoints", type: "uint256" },
-      { internalType: "uint256", name: "signedDay", type: "uint256" },
-      { internalType: "bytes", name: "sig", type: "bytes" }
-    ],
-    name: "Charge",
-    outputs: [],
-    stateMutability: "payable",
     type: "function"
   },
   {
