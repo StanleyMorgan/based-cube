@@ -510,7 +510,7 @@ const App: React.FC = () => {
                     <span className="text-[20px] font-black text-slate-300">T1</span>
                 </div>
                 <div className="absolute -top-4 -right-20 sm:-right-32 w-10 h-10 rounded-full bg-slate-800/40 border border-slate-700/50 backdrop-blur-md flex items-center justify-center z-20 shadow-lg overflow-hidden">
-                    <img src="https://raw.githubusercontent.com/StanleyMorgan/graphics/main/coin/eth.svg" alt="ETH" className="w-7 h-7" />
+                    <img src="https://raw.githubusercontent.com/StanleyMorgan/graphics/main/coin/eth.jpg" alt="ETH" className="w-7 h-7" />
                 </div>
 
                 {/* Overlay for processing state */}
