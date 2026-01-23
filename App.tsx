@@ -55,7 +55,7 @@ const App: React.FC = () => {
     teamScore: 0,
     teamMembers: [],
     contractAddress: undefined,
-    version: 3,
+    version: 1,
     streamTarget: false,
     streamPercent: 0,
     unitPrice: 0
