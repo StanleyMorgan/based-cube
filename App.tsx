@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { sdk } from '@farcaster/miniapp-sdk';
@@ -167,7 +168,8 @@ const App: React.FC = () => {
         
         if (contractDay === 0) return;
 
-        const dbLastDay = await api.getLatestSyncedDay();
+        // Pass current user version to get versioned history
+        const dbLastDay = await api.getLatestSyncedDay(userState.version || 1);
 
         // If the contract has a newer closed day than our database, sync it
         if (contractDay > dbLastDay) {
@@ -175,8 +177,8 @@ const App: React.FC = () => {
             day_number: contractDay,
             player_count: Number(playerCount),
             target_address: targetAddr
-          });
-          console.log(`History auto-synced for day ${contractDay}`);
+          }, userState.version || 1);
+          console.log(`History auto-synced for day ${contractDay} (Tier ${userState.version || 1})`);
         }
       } catch (err) {
         console.error("Background history sync failed", err);
@@ -186,7 +188,7 @@ const App: React.FC = () => {
     if (userState.contractAddress && lastStreamData) {
         syncHistory();
     }
-  }, [lastStreamData, userState.contractAddress]);
+  }, [lastStreamData, userState.contractAddress, userState.version]);
 
   // Initialize Farcaster SDK and Sync User with DB
   useEffect(() => {

@@ -22,13 +22,14 @@ export default async function handler(request, response) {
       ALTER TABLE users ADD COLUMN IF NOT EXISTS actual_rewards NUMERIC(20,2) DEFAULT 0;
     `;
 
-    // 1. Fetch current contract settings to calculate USD value and user's historical rewards
+    // 1. Fetch user's historical rewards and their SPECIFIC contract version settings
     const dataRes = await pool.sql`
       SELECT 
-        (SELECT stream_percent FROM contracts ORDER BY version DESC LIMIT 1) as stream_percent,
-        (SELECT unit_price FROM contracts ORDER BY version DESC LIMIT 1) as unit_price,
+        c.stream_percent,
+        c.unit_price,
         u.rewards
       FROM users u
+      LEFT JOIN contracts c ON c.version = u.version
       WHERE LOWER(u.primary_address) = LOWER(${targetAddress})
       LIMIT 1;
     `;

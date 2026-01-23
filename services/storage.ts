@@ -48,18 +48,18 @@ export const getClickPower = (streak: number, neynarScore: number = 0, teamScore
 // --- API CLIENT ---
 
 export const api = {
-  getLatestSyncedDay: async (): Promise<number> => {
-    const res = await fetch('/api/history');
+  getLatestSyncedDay: async (version: number = 1): Promise<number> => {
+    const res = await fetch(`/api/history?version=${version}`);
     if (!res.ok) return 0;
     const data = await res.json();
     return data.lastDay || 0;
   },
 
-  syncHistory: async (data: HistoryEntry): Promise<boolean> => {
+  syncHistory: async (data: HistoryEntry, version: number = 1): Promise<boolean> => {
     const res = await fetch('/api/history', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, version }),
     });
     return res.ok;
   },
