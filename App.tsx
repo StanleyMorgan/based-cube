@@ -512,6 +512,7 @@ const App: React.FC = () => {
                   canClick={canClick} 
                   onClick={handleCubeClick} 
                   streamTarget={isContractTarget || userState.streamTarget} 
+                  version={userState.version}
                 />
                 
                 {/* Floating Reward Animation (Score) */}
