@@ -6,6 +6,29 @@ export const getTodayString = (): string => {
   return new Date().toISOString().split('T')[0];
 };
 
+export const canUpdateTier = (tierUpdatable: string | null | undefined): boolean => {
+  if (!tierUpdatable) return true;
+  const updatable = new Date(tierUpdatable);
+  const now = new Date();
+  return now >= updatable;
+};
+
+export const getTimeUntilTierUpdate = (tierUpdatable: string | null | undefined): string => {
+  if (!tierUpdatable) return "00:00:00";
+  
+  const updatable = new Date(tierUpdatable);
+  const now = new Date();
+  
+  const diff = updatable.getTime() - now.getTime();
+  if (diff <= 0) return "00:00:00";
+  
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+  
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+};
+
 export const getTimeUntilNextClick = (lastClickDate: string | null): string => {
   if (!lastClickDate) return "00:00:00";
   
@@ -102,6 +125,43 @@ export const api = {
       teamMembers: data.teamMembers || [],
       contractAddress: data.contractAddress,
       version: data.version,
+      tierUpdatable: data.tierUpdatable,
+      streamTarget: !!data.stream_target,
+      streamPercent: data.streamPercent || 0,
+      unitPrice: data.unitPrice || 0
+    };
+  },
+
+  updateTier: async (fid: number, version: number): Promise<UserState & { rank: number }> => {
+    const res = await fetch('/api/tier', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fid, version }),
+    });
+
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to update tier');
+    }
+
+    const data = await res.json();
+    return {
+      fid: parseInt(data.fid),
+      username: data.username,
+      score: data.score,
+      rewards: parseFloat(data.rewards || 0),
+      actualRewards: parseFloat(data.actualRewards || 0),
+      streak: data.streak,
+      lastClickDate: data.last_click_date,
+      pfpUrl: data.pfp_url,
+      rank: parseInt(data.rank),
+      neynarScore: data.neynar_score || 0,
+      neynarPowerChange: data.neynarPowerChange || 0,
+      primaryAddress: data.primary_address,
+      teamScore: data.teamScore || 0,
+      contractAddress: data.contractAddress,
+      version: data.version,
+      tierUpdatable: data.tierUpdatable,
       streamTarget: !!data.stream_target,
       streamPercent: data.streamPercent || 0,
       unitPrice: data.unitPrice || 0
@@ -150,6 +210,7 @@ export const api = {
       teamScore: data.teamScore || 0,
       contractAddress: data.contractAddress,
       version: data.version,
+      tierUpdatable: data.tierUpdatable,
       streamTarget: !!data.stream_target,
       streamPercent: data.streamPercent || 0,
       unitPrice: data.unitPrice || 0

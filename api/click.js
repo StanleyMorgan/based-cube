@@ -82,6 +82,7 @@ export default async function handler(request, response) {
         score = ${newScore},
         streak = ${newStreak},
         last_click_date = CURRENT_TIMESTAMP,
+        tier_updatable = CURRENT_TIMESTAMP + INTERVAL '24 hours',
         updated_at = CURRENT_TIMESTAMP
       WHERE fid = ${fid}
       RETURNING *, (SELECT contract_address FROM contracts WHERE version = users.version LIMIT 1) as contract_address;
@@ -106,7 +107,8 @@ export default async function handler(request, response) {
       teamScore: teamBonus,
       contractAddress: updatedUser.contract_address,
       rewards: parseFloat(updatedUser.rewards || 0),
-      actualRewards: parseFloat(updatedUser.actual_rewards || updatedUser.rewards || 0)
+      actualRewards: parseFloat(updatedUser.actual_rewards || updatedUser.rewards || 0),
+      tierUpdatable: updatedUser.tier_updatable
     });
 
   } catch (error) {

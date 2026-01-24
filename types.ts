@@ -38,6 +38,7 @@ export interface UserState {
   teamMembers?: TeamMember[]; // List of team members
   contractAddress?: string; // Dynamic contract address from DB
   version?: number; // Contract version (1 or 2)
+  tierUpdatable?: string | null; // ISO string when tier can be updated
   streamTarget?: boolean;
   streamPercent?: number;
   unitPrice?: number;

@@ -1,8 +1,7 @@
-
 import React, { useEffect, useState, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { sdk } from '@farcaster/miniapp-sdk';
-import { api, canClickCube, getClickPower } from './services/storage';
+import { api, canClickCube, getClickPower, canUpdateTier, getTimeUntilTierUpdate } from './services/storage';
 import { Tab, UserState, LeaderboardEntry } from './types';
 import Cube from './components/Cube';
 import Leaderboard from './components/Leaderboard';
@@ -10,6 +9,7 @@ import Tasks from './components/Tasks';
 import Navigation from './components/Navigation';
 import Stats from './components/Stats';
 import MenuDropdown from './components/modals/MenuDropdown';
+import TierModal from './components/modals/TierModal';
 import PlayerStatsModal from './components/modals/PlayerStatsModal';
 import SuccessModal, { SuccessModalData } from './components/modals/SuccessModal';
 import WinnerModal from './components/modals/WinnerModal';
@@ -19,8 +19,6 @@ import { Menu, Wallet, Loader2 } from 'lucide-react';
 import { useAccount, useConnect, useWriteContract, useReadContract } from 'wagmi';
 import { base } from 'wagmi/chains';
 import { GMLoggerABI } from './src/abi';
-import { readContract } from 'wagmi/actions';
-import { config as wagmiConfig } from './src/config';
 
 // Animation variants for sliding tabs
 const slideVariants = {
@@ -57,6 +55,7 @@ const App: React.FC = () => {
     teamMembers: [],
     contractAddress: undefined,
     version: 1,
+    tierUpdatable: null,
     streamTarget: false,
     streamPercent: 0,
     unitPrice: 0
@@ -65,6 +64,7 @@ const App: React.FC = () => {
   const [canClick, setCanClick] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showMenu, setShowMenu] = useState(false);
+  const [showTierModal, setShowTierModal] = useState(false);
   const [hasNewTask, setHasNewTask] = useState(false);
   const [showWinnerModal, setShowWinnerModal] = useState(false);
   
@@ -91,7 +91,6 @@ const App: React.FC = () => {
   });
 
   // Read Last Stream Details (Day, Count, Target) from contract
-  // We use this instead of previousActiveDay because in V3 that variable is internal
   const { data: lastStreamData } = useReadContract({
     address: userState.contractAddress as `0x${string}`,
     abi: GMLoggerABI,
@@ -149,8 +148,6 @@ const App: React.FC = () => {
 
   // Trigger Winner Modal if user is the target or streamTarget override is enabled
   useEffect(() => {
-    // We show the modal on every app initialization/render if the user is the target.
-    // Removed sessionStorage check to ensure it appears on every fresh enter as requested.
     if ((isContractTarget || userState.streamTarget) && !isLoading) {
       setShowWinnerModal(true);
     }
@@ -208,15 +205,12 @@ const App: React.FC = () => {
             const username = context.user?.username || context.user?.displayName || 'Player';
             const pfpUrl = context.user?.pfpUrl;
 
-            // Sync with DB (pass address if available, though unlikely on first render)
-            // Also pass referrerFid if found in URL
+            // Sync with DB
             const syncedUser = await api.syncUser(fid, username, pfpUrl, address, referrerFid);
             
             setUserState(syncedUser);
             setRank(syncedUser.rank);
 
-            // Check for new tasks for the badge
-            // Corrected: use local 'fid' variable instead of non-existent 'userFid'
             checkTasks(fid);
             
             // Try to connect wallet if available in connector
@@ -261,6 +255,37 @@ const App: React.FC = () => {
     setCanClick(canClickCube(userState.lastClickDate, userState.fid));
     setClickPower(getClickPower(userState.streak, userState.neynarScore, userState.teamScore || 0));
   }, [userState]);
+
+  const handleHUDClick = () => {
+    if (!canUpdateTier(userState.tierUpdatable)) {
+      const timeLeft = getTimeUntilTierUpdate(userState.tierUpdatable);
+      alert(`Tier locked for ${timeLeft}`);
+      return;
+    }
+    setShowTierModal(true);
+  };
+
+  const handleTierConfirm = async (newVersion: number) => {
+    if (!userState.fid) return;
+    if (newVersion === userState.version) {
+      setShowTierModal(false);
+      return;
+    }
+
+    setIsProcessing(true);
+    setShowTierModal(false);
+
+    try {
+      const newState = await api.updateTier(userState.fid, newVersion);
+      setUserState(newState);
+      setRank(newState.rank);
+    } catch (e) {
+      console.error("Tier switch failed", e);
+      alert(e instanceof Error ? e.message : "Failed to switch tier");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const handleCubeClick = async () => {
     if (!canClick || !userState.fid || !userState.contractAddress) return;
@@ -307,7 +332,6 @@ const App: React.FC = () => {
         const earnedPoints = newState.score - oldScore;
         
         // 4. Fetch Leaderboard to show visualization (Snippet)
-        // We fetch the full leaderboard and slice it around the user
         let lbSnippet: LeaderboardEntry[] = [];
         let overtakenUser: string | undefined;
 
@@ -316,19 +340,15 @@ const App: React.FC = () => {
             const userIndex = allEntries.findIndex(e => e.isCurrentUser);
             
             if (userIndex !== -1) {
-                // Determine slice window. 
-                // Ideally we want to show [Above, Me, Below]
                 let start = Math.max(0, userIndex - 1);
                 let end = Math.min(allEntries.length, userIndex + 2);
                 
-                // Adjust if we are at the top (Show 1, 2, 3)
                 if (userIndex === 0) end = Math.min(allEntries.length, 3);
                 
                 lbSnippet = allEntries.slice(start, end);
 
                 // Find overtaken user if we ranked up
                 if (newState.rank < oldRank) {
-                    // The person we displaced is now at (our_rank + 1)
                     const overtakenEntry = allEntries.find(e => e.rank === newState.rank + 1);
                     if (overtakenEntry) {
                         overtakenUser = overtakenEntry.username;
@@ -340,7 +360,6 @@ const App: React.FC = () => {
         }
 
         setUserState(newState);
-        // Correcting rankResult error by using newState directly
         setRank(newState.rank);
         setCanClick(false);
         
@@ -412,7 +431,6 @@ const App: React.FC = () => {
     if (newTab === activeTab) return;
     
     // Determine direction
-    // Game = 0, Leaderboard = 1, Tasks = 2
     const tabOrder = [Tab.GAME, Tab.LEADERBOARD, Tab.TASKS];
     const oldIndex = tabOrder.indexOf(activeTab);
     const newIndex = tabOrder.indexOf(newTab);
@@ -493,9 +511,12 @@ const App: React.FC = () => {
               
               <div className="relative">
                 {/* HUD Indicators */}
-                <div className="absolute -top-4 -left-20 sm:-left-32 w-10 h-10 rounded-full bg-slate-800/40 border border-slate-700/50 backdrop-blur-md flex items-center justify-center z-20 shadow-lg">
-                    <span className="text-[24px] font-black text-slate-300">T{userState.version || 1}</span>
-                </div>
+                <button 
+                    onClick={handleHUDClick}
+                    className="absolute -top-4 -left-20 sm:-left-32 w-10 h-10 rounded-full bg-slate-800/40 border border-slate-700/50 backdrop-blur-md flex items-center justify-center z-20 shadow-lg transition-transform active:scale-90"
+                >
+                    <span className={`text-[24px] font-black ${userState.version === 2 ? 'text-purple-400 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]' : 'text-slate-300'}`}>T{userState.version || 1}</span>
+                </button>
                 <div className="absolute -top-4 -right-20 sm:-right-32 w-10 h-10 rounded-full bg-slate-800/40 border border-slate-700/50 backdrop-blur-md flex items-center justify-center z-20 shadow-lg overflow-hidden">
                     <img src="https://raw.githubusercontent.com/StanleyMorgan/graphics/main/coin/eth.png" alt="ETH" className="w-8 h-8" />
                 </div>
@@ -594,6 +615,13 @@ const App: React.FC = () => {
           rewards={userState.actualRewards}
           teamMembers={userState.teamMembers}
       />
+
+      <TierModal 
+          isOpen={showTierModal}
+          onClose={() => setShowTierModal(false)}
+          userState={userState}
+          onConfirm={handleTierConfirm}
+      />
       
       <PlayerStatsModal 
         player={selectedPlayer} 
@@ -601,7 +629,6 @@ const App: React.FC = () => {
         onSelectPlayer={setSelectedPlayer}
       />
 
-      {/* Navigation - Hidden when Player Stats Modal is open to prevent overlap */}
       {!selectedPlayer && (
         <Navigation 
           activeTab={activeTab} 

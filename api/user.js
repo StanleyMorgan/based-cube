@@ -14,6 +14,9 @@ export default async function handler(request, response) {
       ALTER TABLE users ADD COLUMN IF NOT EXISTS version INTEGER DEFAULT 1;
     `;
     await pool.sql`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS tier_updatable TIMESTAMP DEFAULT NOW();
+    `;
+    await pool.sql`
       ALTER TABLE users ADD COLUMN IF NOT EXISTS stream_target BOOLEAN DEFAULT false;
     `;
     await pool.sql`
@@ -104,7 +107,8 @@ export default async function handler(request, response) {
         unitPrice: parseFloat(user.unit_price || 0),
         stream_target: user.stream_target,
         rewards: parseFloat(user.rewards || 0),
-        actualRewards: parseFloat(user.actual_rewards || user.rewards || 0)
+        actualRewards: parseFloat(user.actual_rewards || user.rewards || 0),
+        tierUpdatable: user.tier_updatable
       });
     }
 
@@ -167,8 +171,8 @@ export default async function handler(request, response) {
       }
 
       const upsertResult = await pool.sql`
-        INSERT INTO users (fid, username, pfp_url, score, streak, neynar_score, neynar_last_updated, primary_address, referrer_fid, neynar_power_change, rewards, actual_rewards, version)
-        VALUES (${fid}, ${username}, ${pfpUrl || null}, 0, 0, ${neynarScore}, ${neynarLastUpdated}, ${primaryAddress || null}, ${referrerValue}, ${neynarPowerChange}, 0, 0, 1)
+        INSERT INTO users (fid, username, pfp_url, score, streak, neynar_score, neynar_last_updated, primary_address, referrer_fid, neynar_power_change, rewards, actual_rewards, version, tier_updatable)
+        VALUES (${fid}, ${username}, ${pfpUrl || null}, 0, 0, ${neynarScore}, ${neynarLastUpdated}, ${primaryAddress || null}, ${referrerValue}, ${neynarPowerChange}, 0, 0, 1, NOW())
         ON CONFLICT (fid) 
         DO UPDATE SET 
           username = EXCLUDED.username,
@@ -259,7 +263,8 @@ export default async function handler(request, response) {
         unitPrice: parseFloat(stats.unit_price || 0),
         stream_target: userRaw.stream_target,
         rewards: parseFloat(userRaw.rewards || 0),
-        actualRewards: parseFloat(userRaw.actual_rewards || userRaw.rewards || 0)
+        actualRewards: parseFloat(userRaw.actual_rewards || userRaw.rewards || 0),
+        tierUpdatable: userRaw.tier_updatable
       });
     }
 
