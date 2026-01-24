@@ -38,6 +38,18 @@ export default async function handler(request, response) {
 
     const updatedUser = updateRes.rows[0];
     
+    // Helper to calculate effective streak based on time (matches logic in api/user.js)
+    const getEffectiveStreak = (u) => {
+        if (!u.last_click_date) return u.streak;
+        const lastClick = new Date(u.last_click_date);
+        const diff = Date.now() - lastClick.getTime();
+        const windowEnd = 48 * 60 * 60 * 1000; // 48 hours
+        if (diff >= windowEnd) {
+            return 0;
+        }
+        return u.streak;
+    };
+
     // Fetch contract details
     const contractRes = await pool.sql`SELECT contract_address, stream_percent, unit_price FROM contracts WHERE version = ${updatedUser.version}`;
     const stats = contractRes.rows[0];
@@ -55,6 +67,7 @@ export default async function handler(request, response) {
 
     return response.status(200).json({
         ...updatedUser,
+        streak: getEffectiveStreak(updatedUser),
         rank: parseInt(rankResult.rows[0].rank),
         tierUpdatable: updatedUser.tier_updatable,
         contractAddress: stats?.contract_address,
