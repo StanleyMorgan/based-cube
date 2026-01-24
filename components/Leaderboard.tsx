@@ -215,8 +215,10 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
                         </div>
 
                         <div className="ml-3 flex-grow min-w-0">
-                            <div className={`font-semibold flex items-center gap-2 truncate ${isTarget ? 'animate-shimmer' : 'text-slate-100'}`}>
-                                {entry.username}
+                            <div className="font-semibold flex items-center gap-2 truncate text-slate-100">
+                                <span className={isTarget ? 'animate-shimmer' : ''}>
+                                    {entry.username}
+                                </span>
                                 {entry.isCurrentUser && (
                                     <span className="text-[10px] bg-sky-500 text-white px-1.5 py-0.5 rounded uppercase font-bold tracking-wide flex-shrink-0">YOU</span>
                                 )}
