@@ -494,7 +494,7 @@ const App: React.FC = () => {
               <div className="relative">
                 {/* HUD Indicators */}
                 <div className="absolute -top-4 -left-20 sm:-left-32 w-10 h-10 rounded-full bg-slate-800/40 border border-slate-700/50 backdrop-blur-md flex items-center justify-center z-20 shadow-lg">
-                    <span className="text-[24px] font-black text-slate-300">T1</span>
+                    <span className="text-[24px] font-black text-slate-300">T{userState.version || 1}</span>
                 </div>
                 <div className="absolute -top-4 -right-20 sm:-right-32 w-10 h-10 rounded-full bg-slate-800/40 border border-slate-700/50 backdrop-blur-md flex items-center justify-center z-20 shadow-lg overflow-hidden">
                     <img src="https://raw.githubusercontent.com/StanleyMorgan/graphics/main/coin/eth.png" alt="ETH" className="w-8 h-8" />
@@ -518,8 +518,8 @@ const App: React.FC = () => {
                 <AnimatePresence>
                   {showReward && (
                     <motion.div
-                      initial={{ opacity: 0, y: 0, scale: 0.5 }}
-                      animate={{ opacity: 1, y: -100, scale: 1.5 }}
+                      initial={{ opacity: 0, x: -20, y: 0, scale: 0.5 }}
+                      animate={{ opacity: 1, x: 0, y: -100, scale: 1.5 }}
                       exit={{ opacity: 0 }}
                       className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-50 flex flex-col items-center"
                     >
