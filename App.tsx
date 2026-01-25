@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useMemo } from 'react';
+
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { sdk } from '@farcaster/miniapp-sdk';
 import { api, canClickCube, getClickPower, canUpdateTier, getTimeUntilTierUpdate } from './services/storage';
@@ -13,6 +14,7 @@ import TierModal from './components/modals/TierModal';
 import PlayerStatsModal from './components/modals/PlayerStatsModal';
 import SuccessModal, { SuccessModalData } from './components/modals/SuccessModal';
 import WinnerModal from './components/modals/WinnerModal';
+import SystemModal, { SystemModalData, SystemModalType } from './components/modals/SystemModal';
 import { Menu, Wallet, Loader2 } from 'lucide-react';
 
 // Wagmi & Contract imports
@@ -77,12 +79,18 @@ const App: React.FC = () => {
   const [selectedPlayer, setSelectedPlayer] = useState<LeaderboardEntry | null>(null);
   
   const [successModal, setSuccessModal] = useState<SuccessModalData | null>(null);
+  const [systemModal, setSystemModal] = useState<SystemModalData | null>(null);
 
   // Wagmi hooks
   const { isConnected, address } = useAccount();
   const { connect, connectors } = useConnect();
   const { writeContractAsync, isPending: isTxPending } = useWriteContract();
   
+  // Helper for system messages
+  const showSystemModal = useCallback((title: string, message: string, type: SystemModalType = 'info') => {
+      setSystemModal({ show: true, title, message, type });
+  }, []);
+
   // Read Fee from contract (chargeFee for V3/V4)
   const { data: contractFee } = useReadContract({
     address: userState.contractAddress as `0x${string}`,
@@ -259,10 +267,18 @@ const App: React.FC = () => {
   const handleHUDClick = () => {
     if (!canUpdateTier(userState.tierUpdatable)) {
       const timeLeft = getTimeUntilTierUpdate(userState.tierUpdatable);
-      alert(`Tier locked for ${timeLeft}`);
+      showSystemModal("Tier Locked", `Switching tiers is temporarily unavailable. Please wait ${timeLeft} for the next synchronization.`, "warning");
       return;
     }
     setShowTierModal(true);
+  };
+
+  const handleEthIconClick = () => {
+      showSystemModal(
+          "Stream Mode",
+          "In Tesseract, a portion of the total fees collected each day is streamed directly to the current Target's wallet. Earn points, reach the top, and attract the flow of ETH.",
+          "info"
+      );
   };
 
   const handleTierConfirm = async (newVersion: number) => {
@@ -279,9 +295,10 @@ const App: React.FC = () => {
       const newState = await api.updateTier(userState.fid, newVersion);
       setUserState(newState);
       setRank(newState.rank);
+      showSystemModal("Tier Switched", `Successfully updated to Tier ${newVersion}. Your new contract is ready.`, "success");
     } catch (e) {
       console.error("Tier switch failed", e);
-      alert(e instanceof Error ? e.message : "Failed to switch tier");
+      showSystemModal("Error", e instanceof Error ? e.message : "Failed to switch tier", "error");
     } finally {
       setIsProcessing(false);
     }
@@ -297,7 +314,7 @@ const App: React.FC = () => {
             connect({ connector: connectors[0] });
             return;
         } else {
-             alert("Please connect your wallet to play.");
+             showSystemModal("Wallet Required", "Please connect your wallet to interact with the Tesseract and collect points.", "warning");
              return;
         }
     }
@@ -379,6 +396,7 @@ const App: React.FC = () => {
 
     } catch (e) {
         console.error("Click failed", e);
+        // showSystemModal("Transaction Error", "The transaction could not be completed. Please ensure you have enough funds for the fee and try again.", "error");
     } finally {
         setIsProcessing(false);
     }
@@ -517,9 +535,12 @@ const App: React.FC = () => {
                 >
                     <span className={`text-[24px] font-black ${userState.version === 2 ? 'text-purple-400 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]' : 'text-slate-300'}`}>T{userState.version || 1}</span>
                 </button>
-                <div className="absolute -top-4 -right-20 sm:-right-32 w-10 h-10 rounded-full bg-slate-800/40 border border-slate-700/50 backdrop-blur-md flex items-center justify-center z-20 shadow-lg overflow-hidden">
+                <button 
+                    onClick={handleEthIconClick}
+                    className="absolute -top-4 -right-20 sm:-right-32 w-10 h-10 rounded-full bg-slate-800/40 border border-slate-700/50 backdrop-blur-md flex items-center justify-center z-20 shadow-lg overflow-hidden active:scale-90 transition-transform"
+                >
                     <img src="https://raw.githubusercontent.com/StanleyMorgan/graphics/main/coin/eth.png" alt="ETH" className="w-8 h-8" />
-                </div>
+                </button>
 
                 {/* Overlay for processing state */}
                 {(isProcessing || isTxPending) && (
@@ -591,6 +612,11 @@ const App: React.FC = () => {
       </main>
 
       {/* Modals */}
+      <SystemModal 
+          data={systemModal}
+          onClose={() => setSystemModal(null)}
+      />
+
       <SuccessModal
           data={successModal}
           onClose={() => setSuccessModal(null)}
