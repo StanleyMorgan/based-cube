@@ -55,7 +55,6 @@ export default async function handler(req: Request) {
     }
 
     // 2. Profile Database (Cache Miss or No Score)
-    const dbStart = performance.now();
     const pool = createPool({
       connectionString: process.env.cube_POSTGRES_URL,
     });
@@ -88,7 +87,6 @@ export default async function handler(req: Request) {
         FROM users u1 
         WHERE u1.fid = ${fid};
     `;
-    const dbEnd = performance.now();
 
     if (result.rows.length === 0) {
        return new Response('User not found', { status: 404 });
@@ -116,7 +114,6 @@ export default async function handler(req: Request) {
     const bgImage = `${origin}/background.jpg`;
 
     // 4. Profile Image Generation
-    const genStart = performance.now();
     const imageResponse = new ImageResponse(
       (
         <div
