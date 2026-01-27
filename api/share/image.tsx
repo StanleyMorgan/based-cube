@@ -1,11 +1,10 @@
 
 import { ImageResponse } from '@vercel/og';
 import { createPool } from '@vercel/postgres';
-import { createClient } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
 
-// Explicitly create the KV client to ensure it picks up the correct environment variables
-// manual creation is more robust for Marketplace integrations.
-const kv = createClient({
+// Use @upstash/redis directly as it's more stable in Edge Runtime
+const redis = new Redis({
   url: process.env.KV_REST_API_URL || '',
   token: process.env.KV_REST_API_TOKEN || '',
 });
@@ -31,9 +30,9 @@ export default async function handler(req: Request) {
     if (score && process.env.KV_REST_API_URL) {
       const cacheKey = `img_v1:${fid}:${score}`;
       try {
-        const cachedBase64 = await kv.get<string>(cacheKey);
+        const cachedBase64 = await redis.get<string>(cacheKey);
         if (cachedBase64) {
-          // In Edge runtime, this is the most compatible way to decode base64 to bytes
+          // In Edge runtime, decode base64 to bytes
           const binaryString = atob(cachedBase64);
           const bytes = new Uint8Array(binaryString.length);
           for (let i = 0; i < binaryString.length; i++) {
@@ -239,7 +238,7 @@ export default async function handler(req: Request) {
       
       try {
         const base64String = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
-        await kv.set(cacheKey, base64String, { ex: 86400 }); // Cache for 24 hours
+        await redis.set(cacheKey, base64String, { ex: 86400 }); // Cache for 24 hours
         
         const genEnd = performance.now();
         console.log(`[ShareImage Miss] FID: ${fid} | Score: ${currentScore} | Saved to Cache | Total: ${(genEnd - startTime).toFixed(2)}ms`);
