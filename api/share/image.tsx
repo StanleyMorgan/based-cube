@@ -1,13 +1,5 @@
-
 import { ImageResponse } from '@vercel/og';
 import { createPool } from '@vercel/postgres';
-import { Redis } from '@upstash/redis';
-
-// Use @upstash/redis directly as it's more stable in Edge Runtime
-const redis = new Redis({
-  url: process.env.KV_REST_API_URL || '',
-  token: process.env.KV_REST_API_TOKEN || '',
-});
 
 export const config = {
   runtime: 'edge', 
@@ -19,37 +11,14 @@ export default async function handler(req: Request) {
   try {
     const url = new URL(req.url);
     const fid = url.searchParams.get('fid');
-    const score = url.searchParams.get('score');
     const origin = url.origin;
 
     if (!fid) {
       return new Response('FID is required', { status: 400 });
     }
 
-    // 1. Redis Cache Check
-    if (score && process.env.KV_REST_API_URL) {
-      const cacheKey = `img_v1:${fid}:${score}`;
-      try {
-        const cachedBase64 = await redis.get<string>(cacheKey);
-        if (cachedBase64) {
-          // Use Buffer for safe decoding in Edge runtime
-          const bytes = Buffer.from(cachedBase64, 'base64');
-          
-          console.log(`[ShareImage Cache Hit] FID: ${fid} | Score: ${score}`);
-          return new Response(bytes, {
-            headers: {
-              'Content-Type': 'image/png',
-              'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable',
-              'X-Cache': 'HIT'
-            },
-          });
-        }
-      } catch (kvError) {
-        console.warn('[Redis Error] Continuing without cache:', kvError);
-      }
-    }
-
-    // 2. Profile Database (Cache Miss or No Score)
+    // 1. Profile Database
+    const dbStart = performance.now();
     const pool = createPool({
       connectionString: process.env.cube_POSTGRES_URL,
     });
@@ -82,6 +51,7 @@ export default async function handler(req: Request) {
         FROM users u1 
         WHERE u1.fid = ${fid};
     `;
+    const dbEnd = performance.now();
 
     if (result.rows.length === 0) {
        return new Response('User not found', { status: 404 });
@@ -89,8 +59,7 @@ export default async function handler(req: Request) {
 
     const user = result.rows[0];
     const username = user.username || 'Player';
-    const currentScore = user.score;
-    const rankNum = `#${user.rank}`;
+    const rank = `#${user.rank}`;
     const pfpUrl = user.pfp_url;
     const rewardsValue = parseFloat(user.rewards || 0);
     const neynarPower = (user.neynar_score || 0).toFixed(2);
@@ -103,13 +72,16 @@ export default async function handler(req: Request) {
     }
     const finalTeamMembers = teamMembers.slice(0, 3);
 
-    // 3. Profile Font Loading
+    // 2. Profile Font Loading
+    const fontStart = performance.now();
     const fontData = await fetch(new URL('/Inter-Bold.ttf', origin), { cache: 'force-cache' }).then((res) => res.arrayBuffer());
+    const fontEnd = performance.now();
 
     const bgImage = `${origin}/background.jpg`;
 
-    // 4. Profile Image Generation
-    const imageResponse = new ImageResponse(
+    // 3. Profile Image Generation (Satori/Yoga layout + SVG generation)
+    const genStart = performance.now();
+    const response = new ImageResponse(
       (
         <div
           style={{
@@ -161,7 +133,7 @@ export default async function handler(req: Request) {
                 <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <div style={{ display: 'flex', fontSize: '24px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rank</div>
-                        <div style={{ display: 'flex', fontSize: '64px', color: '#ffffff', fontWeight: 700, lineHeight: 1 }}>{rankNum}</div>
+                        <div style={{ display: 'flex', fontSize: '64px', color: '#ffffff', fontWeight: 700, lineHeight: 1 }}>{rank}</div>
                     </div>
                     
                     <div style={{ display: 'flex', width: '2px', height: '80px', backgroundColor: '#334155', margin: '0 30px' }}></div>
@@ -177,7 +149,7 @@ export default async function handler(req: Request) {
                         <div style={{ display: 'flex', fontSize: '24px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Team</div>
                         <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', height: '64px' }}>
                             {finalTeamMembers.length > 0 ? (
-                                finalTeamMembers.map((member: any, i: number) => (
+                                finalTeamMembers.map((member: any, i) => (
                                     <img
                                         key={i}
                                         src={member.pfpUrl || `${origin}/logo.png`}
@@ -224,36 +196,17 @@ export default async function handler(req: Request) {
             weight: 700,
           },
         ],
+        headers: {
+            'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable',
+        },
       },
     );
+    const genEnd = performance.now();
+    const totalTime = genEnd - startTime;
 
-    // 5. Store in Redis for future requests
-    if (score && process.env.KV_REST_API_URL) {
-      const imageBuffer = await imageResponse.arrayBuffer();
-      const cacheKey = `img_v1:${fid}:${currentScore}`;
-      
-      try {
-        // Use Buffer for safe base64 encoding without stack size limits
-        const base64String = Buffer.from(imageBuffer).toString('base64');
-        await redis.set(cacheKey, base64String, { ex: 86400 }); // Cache for 24 hours
-        
-        const genEnd = performance.now();
-        console.log(`[ShareImage Miss] FID: ${fid} | Score: ${currentScore} | Saved to Cache | Total: ${(genEnd - startTime).toFixed(2)}ms`);
+    console.log(`[ShareImage Profile] FID: ${fid} | Total: ${totalTime.toFixed(2)}ms | DB: ${(dbEnd - dbStart).toFixed(2)}ms | Font: ${(fontEnd - fontStart).toFixed(2)}ms | RenderInit: ${(genEnd - genStart).toFixed(2)}ms`);
 
-        return new Response(imageBuffer, {
-          headers: {
-            'Content-Type': 'image/png',
-            'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable',
-            'X-Cache': 'MISS'
-          },
-        });
-      } catch (kvError) {
-        console.warn('[Redis Save Error]:', kvError);
-      }
-    }
-
-    return imageResponse;
-
+    return response;
   } catch (e: any) {
     console.error(`[ShareImage Error]`, e);
     return new Response(`Failed to generate image`, { status: 500 });
