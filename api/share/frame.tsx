@@ -14,7 +14,9 @@ export default async function handler(req: Request) {
     const origin = host ? `https://${host}` : 'https://tesseract-base.vercel.app';
 
     // Image URL points to our generator with optional score for caching
-    const imageUrl = `${origin}/api/share/image?fid=${fid}${score ? `&score=${score}` : ''}`;
+    // We use &amp; for HTML safety when injecting into attributes
+    const rawImageUrl = `${origin}/api/share/image?fid=${fid}${score ? `&score=${score}` : ''}`;
+    const htmlSafeImageUrl = rawImageUrl.replace(/&/g, '&amp;');
     
     // App Launch URL (with referral)
     let appUrl = `${origin}/`;
@@ -28,7 +30,7 @@ export default async function handler(req: Request) {
     // MiniApp embed metadata
     const miniAppEmbed = {
       version: '1',
-      imageUrl: imageUrl, // Dynamic image
+      imageUrl: rawImageUrl, // JSON uses raw URL
       button: {
         title: 'Play Tesseract',
         action: {
@@ -53,8 +55,9 @@ export default async function handler(req: Request) {
       },
     };
 
-    const miniAppContent = JSON.stringify(miniAppEmbed).replace(/"/g, '&quot;');
-    const frameContent = JSON.stringify(frameEmbed).replace(/"/g, '&quot;');
+    // We use single quotes for content attributes in HTML to keep JSON clean
+    const miniAppContent = JSON.stringify(miniAppEmbed);
+    const frameContent = JSON.stringify(frameEmbed);
 
     const html = `
       <!DOCTYPE html>
@@ -63,9 +66,9 @@ export default async function handler(req: Request) {
         <meta charset="utf-8" />
         <title>Tesseract Share</title>
         <meta property="og:title" content="Tesseract" />
-        <meta property="og:image" content="${imageUrl}" />
-        <meta name="fc:miniapp" content="${miniAppContent}" />
-        <meta name="fc:frame" content="${frameContent}" />
+        <meta property="og:image" content='${htmlSafeImageUrl}' />
+        <meta name="fc:miniapp" content='${miniAppContent}' />
+        <meta name="fc:frame" content='${frameContent}' />
         
         <!-- Redirect to app if opened in browser -->
         <meta http-equiv="refresh" content="0;url=${appUrl}" />
@@ -81,7 +84,7 @@ export default async function handler(req: Request) {
       status: 200,
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
-        'Cache-Control': 'public, max-age=0', // Do not cache the frame HTML itself aggressively
+        'Cache-Control': 'public, max-age=0',
       },
     });
   } catch (e: any) {
