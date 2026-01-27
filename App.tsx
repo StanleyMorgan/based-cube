@@ -415,8 +415,8 @@ const App: React.FC = () => {
 
     const text = `I collected +${successModal.points} Power on Tesseract! 🧊\n${rankText}\nUse your Neynar Superpower:`;
     
-    // Use a clean URL without score to improve caching efficiency
-    const embedUrl = `https://tesseract-base.vercel.app/api/share/frame?fid=${userState.fid}`;
+    // Include score for optimized Redis caching on the image generator
+    const embedUrl = `https://tesseract-base.vercel.app/api/share/frame?fid=${userState.fid}&score=${userState.score}`;
 
     try {
         await sdk.actions.composeCast({
@@ -432,7 +432,9 @@ const App: React.FC = () => {
   const handleWinnerShare = async () => {
     const todayRewards = userState.actualRewards - userState.rewards;
     const text = `I’ve activated the Tesseract 🧊\nEarned $${todayRewards.toFixed(2)} so far today.\nJoin in — you could be next:`;
-    const embedUrl = `https://tesseract-base.vercel.app/api/share/frame?fid=${userState.fid}`;
+    
+    // Include score for optimized Redis caching on the image generator
+    const embedUrl = `https://tesseract-base.vercel.app/api/share/frame?fid=${userState.fid}&score=${userState.score}`;
 
     try {
         await sdk.actions.composeCast({
