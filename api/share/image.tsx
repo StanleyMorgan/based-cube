@@ -32,12 +32,8 @@ export default async function handler(req: Request) {
       try {
         const cachedBase64 = await redis.get<string>(cacheKey);
         if (cachedBase64) {
-          // In Edge runtime, decode base64 to bytes
-          const binaryString = atob(cachedBase64);
-          const bytes = new Uint8Array(binaryString.length);
-          for (let i = 0; i < binaryString.length; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
-          }
+          // Use Buffer for safe decoding in Edge runtime
+          const bytes = Buffer.from(cachedBase64, 'base64');
           
           console.log(`[ShareImage Cache Hit] FID: ${fid} | Score: ${score}`);
           return new Response(bytes, {
@@ -237,7 +233,8 @@ export default async function handler(req: Request) {
       const cacheKey = `img_v1:${fid}:${currentScore}`;
       
       try {
-        const base64String = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
+        // Use Buffer for safe base64 encoding without stack size limits
+        const base64String = Buffer.from(imageBuffer).toString('base64');
         await redis.set(cacheKey, base64String, { ex: 86400 }); // Cache for 24 hours
         
         const genEnd = performance.now();
