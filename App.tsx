@@ -353,13 +353,18 @@ const App: React.FC = () => {
         let overtakenUser: string | undefined;
 
         try {
-            const allEntries = await api.getLeaderboard(userState.fid);
+            // Calculate which page the user is on to correctly fetch the snippet context
+            const targetPage = Math.ceil(newState.rank / 20);
+            const allEntries = await api.getLeaderboard(userState.fid, targetPage);
+            
             const userIndex = allEntries.findIndex(e => e.isCurrentUser);
             
             if (userIndex !== -1) {
                 let start = Math.max(0, userIndex - 1);
                 let end = Math.min(allEntries.length, userIndex + 2);
                 
+                // Edge case: Top 1 of the page. 
+                // We show user as first and 2 players below within the current page.
                 if (userIndex === 0) end = Math.min(allEntries.length, 3);
                 
                 lbSnippet = allEntries.slice(start, end);
