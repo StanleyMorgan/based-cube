@@ -295,7 +295,7 @@ const App: React.FC = () => {
       const newState = await api.updateTier(userState.fid, newVersion);
       setUserState(newState);
       setRank(newState.rank);
-      showSystemModal("Tier Switched", `Successfully updated to Tier ${newVersion}. Your new contract is ready.`, "success");
+      showSystemModal("Tier Switched", `Successfully updated to Tier ${newVersion}.`, "success");
     } catch (e) {
       console.error("Tier switch failed", e);
       showSystemModal("Error", e instanceof Error ? e.message : "Failed to switch tier", "error");
