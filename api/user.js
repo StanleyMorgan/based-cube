@@ -164,10 +164,26 @@ export default async function handler(request, response) {
         }
       }
 
-      // 3. Upsert user
+      // 3. Upsert user logic with Anti-Circular check
       let referrerValue = referrerFid ? referrerFid : null;
+      
+      // Anti-Self-Referral
       if (referrerValue && String(referrerValue) === String(fid)) {
         referrerValue = null;
+      }
+
+      // Anti-Circular-Referral (A invited B, B cannot invite A)
+      if (referrerValue) {
+         const referrerCheckRes = await pool.sql`
+           SELECT referrer_fid FROM users WHERE fid = ${referrerValue}
+         `;
+         if (referrerCheckRes.rows.length > 0) {
+           const potentialReferrerInviter = referrerCheckRes.rows[0].referrer_fid;
+           if (potentialReferrerInviter && String(potentialReferrerInviter) === String(fid)) {
+              console.log(`[Referral] Circular referral blocked: FID ${fid} tried to use ${referrerValue} as referrer, but ${referrerValue} was invited by ${fid}.`);
+              referrerValue = null;
+           }
+         }
       }
 
       const upsertResult = await pool.sql`
