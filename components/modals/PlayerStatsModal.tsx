@@ -67,33 +67,39 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose, on
                     >
                         {/* Player Header */}
                         <div className="flex flex-col items-center mb-6">
-                            <button 
-                                onClick={handleMainAvatarClick}
-                                className="relative mb-3 transition-transform hover:scale-105 active:scale-95"
-                            >
-                                {player.pfpUrl ? (
-                                    <img 
-                                        src={player.pfpUrl} 
-                                        alt={player.username} 
-                                        className="w-20 h-20 rounded-full border-4 border-slate-700 shadow-lg"
-                                    />
-                                ) : (
-                                    <div className="w-20 h-20 rounded-full bg-slate-700 flex items-center justify-center border-4 border-slate-600">
-                                        <User size={40} className="text-slate-400" />
-                                    </div>
-                                )}
-                                <div className="absolute -bottom-2 -right-2 bg-slate-800 text-white text-xs font-bold px-2 py-1 rounded-full border border-slate-600">
-                                    #{player.rank}
-                                </div>
-                                {/* Tier Badge Overlay */}
-                                <div className={`absolute -top-1 -left-1 w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-black backdrop-blur-md z-10 ${
+                            <div className="flex items-center gap-4 mb-3">
+                                {/* Tier Badge - Left Position */}
+                                <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center text-sm font-black backdrop-blur-md shadow-lg ${
                                     player.version === 2 
                                     ? 'bg-purple-900/80 text-purple-400 border-purple-500/50 shadow-[0_0_10px_rgba(168,85,247,0.5)]' 
                                     : 'bg-slate-800/80 text-slate-400 border-slate-700/50'
                                 }`}>
                                     T{player.version || 1}
                                 </div>
-                            </button>
+
+                                <button 
+                                    onClick={handleMainAvatarClick}
+                                    className="relative transition-transform hover:scale-105 active:scale-95"
+                                >
+                                    {player.pfpUrl ? (
+                                        <img 
+                                            src={player.pfpUrl} 
+                                            alt={player.username} 
+                                            className="w-20 h-20 rounded-full border-4 border-slate-700 shadow-lg"
+                                        />
+                                    ) : (
+                                        <div className="w-20 h-20 rounded-full bg-slate-700 flex items-center justify-center border-4 border-slate-600">
+                                            <User size={40} className="text-slate-400" />
+                                        </div>
+                                    )}
+                                    <div className="absolute -bottom-2 -right-2 bg-slate-800 text-white text-xs font-bold px-2 py-1 rounded-full border border-slate-600">
+                                        #{player.rank}
+                                    </div>
+                                </button>
+
+                                {/* Invisible Spacer to maintain avatar centering */}
+                                <div className="w-10 h-10 invisible" aria-hidden="true" />
+                            </div>
                             <h2 className="text-xl font-bold text-white">{player.username}</h2>
                         </div>
 
