@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from 'react';
 import { LeaderboardEntry, UserState, LeaderboardSort } from '../types';
 import { api } from '../services/storage';
@@ -54,7 +55,6 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
                 // If it's page 1, check if we should show them pinned at top
                 
                 // Construct entry from currentUser state and prepend
-                // Added missing actualRewards property to match LeaderboardEntry interface
                 const userEntry: LeaderboardEntry = {
                     id: currentUser.fid?.toString() || 'user',
                     username: currentUser.username,
@@ -69,7 +69,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
                     neynarPowerChange: currentUser.neynarPowerChange || 0,
                     teamScore: currentUser.teamScore || 0,
                     primaryAddress: currentUser.primaryAddress,
-                    teamMembers: currentUser.teamMembers || []
+                    teamMembers: currentUser.teamMembers || [],
+                    version: currentUser.version
                 };
                 processedEntries.unshift(userEntry);
             }
@@ -189,7 +190,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
                         onClick={() => onPlayerSelect(entry)}
                         className={`w-full flex items-center p-4 rounded-xl border text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
                         entry.isCurrentUser
-                            ? 'bg-sky-900/30 border-sky-500/50 shadow-[0_0_15px_rgba(14,165,233,0.15)] sticky top-0 z-10 backdrop-blur-md mb-2' 
+                            ? 'bg-sky-900/30 border-sky-500/50 shadow-[0_0_15px_rgba(14,165,233,0.15)]' 
                             : 'bg-slate-800/40 border-slate-700/50 hover:bg-slate-800/60'
                         }`}
                     >
@@ -200,7 +201,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
                         {entry.rank > 3 && <span className="text-slate-500">#{entry.rank}</span>}
                         </div>
 
-                        <div className="ml-3 flex-shrink-0">
+                        <div className="ml-3 flex-shrink-0 relative">
                         {entry.pfpUrl ? (
                             <img 
                                 src={entry.pfpUrl} 
@@ -212,6 +213,14 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser, currentRank, cur
                                 <User size={20} className="text-slate-400" />
                             </div>
                         )}
+                        {/* Tier Badge */}
+                        <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border flex items-center justify-center text-[10px] font-black backdrop-blur-md z-10 ${
+                            entry.version === 2 
+                            ? 'bg-purple-900/80 text-purple-400 border-purple-500/50 shadow-[0_0_5px_rgba(168,85,247,0.5)]' 
+                            : 'bg-slate-800/80 text-slate-400 border-slate-700/50'
+                        }`}>
+                            T{entry.version || 1}
+                        </div>
                         </div>
 
                         <div className="ml-3 flex-grow min-w-0">

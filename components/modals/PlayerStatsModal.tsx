@@ -85,6 +85,14 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({ player, onClose, on
                                 <div className="absolute -bottom-2 -right-2 bg-slate-800 text-white text-xs font-bold px-2 py-1 rounded-full border border-slate-600">
                                     #{player.rank}
                                 </div>
+                                {/* Tier Badge Overlay */}
+                                <div className={`absolute -top-1 -left-1 w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-black backdrop-blur-md z-10 ${
+                                    player.version === 2 
+                                    ? 'bg-purple-900/80 text-purple-400 border-purple-500/50 shadow-[0_0_10px_rgba(168,85,247,0.5)]' 
+                                    : 'bg-slate-800/80 text-slate-400 border-slate-700/50'
+                                }`}>
+                                    T{player.version || 1}
+                                </div>
                             </button>
                             <h2 className="text-xl font-bold text-white">{player.username}</h2>
                         </div>

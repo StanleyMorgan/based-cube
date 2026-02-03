@@ -237,7 +237,8 @@ export const api = {
       neynarPowerChange: entry.neynarPowerChange || 0,
       teamScore: entry.teamScore || 0,
       teamMembers: entry.teamMembers || [],
-      primaryAddress: entry.primaryAddress
+      primaryAddress: entry.primaryAddress,
+      version: entry.version
     }));
   },
 
@@ -251,16 +252,17 @@ export const api = {
       username: data.username,
       score: data.score,
       rewards: parseFloat(data.rewards || 0),
-      actualRewards: parseFloat(data.actualRewards || 0),
+      actualRewards: parseFloat(data.actual_rewards || data.rewards || 0),
       rank: data.rank,
       pfpUrl: data.pfp_url,
       isCurrentUser: false, // In modal context typically not current user, or doesn't matter
       streak: data.streak,
       neynarScore: data.neynar_score || 0,
-      neynarPowerChange: data.neynarPowerChange || 0,
+      neynarPowerChange: data.neynar_power_change || 0,
       teamScore: data.teamScore || 0,
       teamMembers: data.teamMembers || [],
-      primaryAddress: data.primary_address
+      primaryAddress: data.primary_address,
+      version: data.version
     };
   },
 

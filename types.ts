@@ -59,6 +59,7 @@ export interface LeaderboardEntry {
   teamScore?: number;
   teamMembers?: TeamMember[]; // List of team members
   primaryAddress?: string;
+  version?: number;
 }
 
 export enum Tab {
