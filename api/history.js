@@ -36,6 +36,10 @@ export default async function handler(request, response) {
       try {
           await pool.query('ALTER TABLE days RENAME TO days_t1;');
           await pool.query('CREATE TABLE IF NOT EXISTS days_t2 (LIKE days_t1 INCLUDING ALL);');
+          
+          // Ensure fee column exists in history tables
+          await pool.query('ALTER TABLE days_t1 ADD COLUMN IF NOT EXISTS fee numeric(18, 0) DEFAULT 0;');
+          await pool.query('ALTER TABLE days_t2 ADD COLUMN IF NOT EXISTS fee numeric(18, 0) DEFAULT 0;');
       } catch(e) { /* Already renamed or existing */ }
 
       const result = await pool.query(`SELECT MAX(day_number) as last_day FROM ${tableName}`);
@@ -43,7 +47,7 @@ export default async function handler(request, response) {
     }
 
     if (request.method === 'POST') {
-      const { day_number, player_count, target_address, version = 1 } = request.body;
+      const { day_number, player_count, target_address, fee, version = 1 } = request.body;
       const tableName = getTableName(version);
       
       if (day_number === undefined || player_count === undefined || !target_address) {
@@ -54,11 +58,11 @@ export default async function handler(request, response) {
       const check = await pool.query(`SELECT 1 FROM ${tableName} WHERE day_number = $1`, [day_number]);
 
       if (check.rowCount === 0) {
-        // 1. Log the day in specific tier history
+        // 1. Log the day in specific tier history with fee
         await pool.query(`
-          INSERT INTO ${tableName} (day_number, player_count, target_address)
-          VALUES ($1, $2, $3)
-        `, [day_number, player_count, target_address]);
+          INSERT INTO ${tableName} (day_number, player_count, target_address, fee)
+          VALUES ($1, $2, $3, $4)
+        `, [day_number, player_count, target_address, fee || 0]);
 
         // 2. Reward Distribution Logic
         // Fetch contract params for THIS EXACT version
@@ -70,9 +74,12 @@ export default async function handler(request, response) {
         
         const contract = contractRes.rows[0];
         
-        if (contract && parseFloat(contract.fee) > 0 && contract.stream_percent > 0) {
+        // Use fee from request if provided, otherwise fallback to contract setting
+        const effectiveFee = fee || (contract ? contract.fee : 0);
+        
+        if (contract && parseFloat(effectiveFee) > 0 && contract.stream_percent > 0) {
           try {
-            const feeWei = BigInt(contract.fee);
+            const feeWei = BigInt(effectiveFee);
             const players = BigInt(player_count);
             const percent = BigInt(contract.stream_percent);
             const unitPrice = parseFloat(contract.unit_price);

@@ -181,7 +181,8 @@ const App: React.FC = () => {
           await api.syncHistory({
             day_number: contractDay,
             player_count: Number(playerCount),
-            target_address: targetAddr
+            target_address: targetAddr,
+            fee: contractFee?.toString()
           }, userState.version || 1);
           console.log(`History auto-synced for day ${contractDay} (Tier ${userState.version || 1})`);
         }
@@ -193,7 +194,7 @@ const App: React.FC = () => {
     if (userState.contractAddress && lastStreamData) {
         syncHistory();
     }
-  }, [lastStreamData, userState.contractAddress, userState.version]);
+  }, [lastStreamData, userState.contractAddress, userState.version, contractFee]);
 
   // Initialize Farcaster SDK and Sync User with DB
   useEffect(() => {

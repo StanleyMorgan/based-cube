@@ -8,6 +8,7 @@ export interface HistoryEntry {
   day_number: number;
   player_count: number;
   target_address: string;
+  fee?: string;
 }
 
 export interface Task {
